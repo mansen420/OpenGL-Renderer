@@ -106,20 +106,9 @@ void render()
 {
     glClearColor(0.65f, 0.45f, 0.75f, 1.f);
     glClear(GL_COLOR_BUFFER_BIT);
-    for (int i = 0; i < 10; i++)
-    {
-        glBindVertexArray(VAO_ids[0]);
-        glUseProgram(program_ids[0]);
-        float ratio = 2*(float(i)/10)-1.0;
-        glUniform3f(glGetUniformLocation(program_ids[0], "pos_offset"), ratio + 2*(float(rand())/RAND_MAX),
-        ratio + 2*(float(rand())/RAND_MAX), ratio);
-        glDrawArrays(GL_TRIANGLES, 0, 3);
-
-        //glBindVertexArray(VAO_ids[1]);
-        //glUseProgram(program_ids[1]);
-        //glDrawArrays(GL_TRIANGLES, 1, 3);
-    }
-//  glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+    glBindVertexArray(VAO_ids[0]);
+    glUseProgram(program_ids[0]);
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 }
 void frame_buffer_callback(GLFWwindow* window, int width, int height)
 {
