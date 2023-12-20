@@ -7,5 +7,6 @@ uniform sampler2D tex_sampler1;
 void main()
 {
     vec2 Atex_coords = 1*tex_coords;
-    fragment_output = mix (texture(tex_sampler0, Atex_coords), texture(tex_sampler1, Atex_coords), 0.0);
+    // fragment_output = vec4(vertex_color, 1);
+    fragment_output = mix (texture(tex_sampler0, Atex_coords), texture(tex_sampler1, Atex_coords), 1.0);
 }
