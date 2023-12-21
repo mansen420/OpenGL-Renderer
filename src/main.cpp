@@ -63,15 +63,21 @@ int main()
     //renderloop
     glEnable(GL_DEPTH_TEST);
     float previous_frame_time = 0.0;
+    float fps_sum = 0.0;
+    int frame_count = 0;
     while (!glfwWindowShouldClose(myWindow))
     {
-        std::cout << '\r' << 1.0/frame_delta << "FPS" << std::flush;
         render();
         frame_delta = glfwGetTime() - previous_frame_time;
         previous_frame_time = glfwGetTime();
         process_input(myWindow);
         glfwSwapBuffers(myWindow);
         glfwPollEvents();
+        //display fps 
+        frame_count++;
+        fps_sum += frame_delta;
+        float fps_avg = fps_sum/frame_count;
+        std::cout << '\r' << 1.0/fps_avg << "FPS" << std::flush;
     }
     glfwTerminate();
     return 0;
