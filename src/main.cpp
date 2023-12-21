@@ -65,6 +65,7 @@ int main()
     float previous_frame_time = 0.0;
     while (!glfwWindowShouldClose(myWindow))
     {
+        std::cout << '\r' << 1.0/frame_delta << "FPS" << std::flush;
         render();
         frame_delta = glfwGetTime() - previous_frame_time;
         previous_frame_time = glfwGetTime();
