@@ -88,6 +88,8 @@ bool linkShaders(unsigned int &program_id, const unsigned int& vertex_shader_id,
     } 
     return true;
 }
+//compiles and links shaders into program_id.
+//Be warned that shader IDs will be inaccessable.
 bool makeShaderProgram(const char* vertex_shader_path, const char* fragment_shader_path, unsigned int &program_id)
 {
     unsigned int vertex_shader_id;
