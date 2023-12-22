@@ -7,8 +7,9 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
 //global constants
+constexpr float aspect_ratio = 16.0/9.0;
 constexpr int WINDOW_H = 600;
-constexpr int WINDOW_W = 800;
+constexpr int WINDOW_W = aspect_ratio * WINDOW_H;
 //statics 
 static GLFWwindow* myWindow;
 
@@ -77,7 +78,7 @@ int main()
         frame_count++;
         fps_sum += frame_delta;
         float fps_avg = fps_sum/frame_count;
-        std::cout << '\r' << 1.0/fps_avg << "FPS" << std::flush;
+        std::cout << '\r' << 1.0f/fps_avg << "FPS" << std::flush;
     }
     glfwTerminate();
     return 0;
@@ -109,57 +110,57 @@ void sendVertexData()
     unsigned int VBO;
     glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    float vertices[] = {
-    //pos                 //tex
-    -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
-     0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
-     0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-     0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-    -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+ float vertices[] = 
+ {   //pos                //normals 
+    -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
+     0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 
+     0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 
+     0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 
+    -0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 
+    -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 
 
-    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-     0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-     0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-     0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-    -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
-    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+    -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+     0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+     0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+     0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+    -0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
+    -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
 
-    -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-    -0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-    -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+    -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+    -0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+    -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+    -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
+    -0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
+    -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
 
-     0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-     0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-     0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-     0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-     0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-     0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+     0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+     0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+     0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+     0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
+     0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
+     0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
 
-    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-     0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
-     0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-     0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+    -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+     0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
+     0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+     0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+    -0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
+    -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
 
-    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-     0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-     0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-     0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-    -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
-    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
+    -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
+     0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
+     0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+     0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+    -0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
+    -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f
 };
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), &vertices, GL_STATIC_DRAW);
 
     glGenVertexArrays(1, &VAO_ids[0]);
     glBindVertexArray(VAO_ids[0]);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3*sizeof(float)));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3*sizeof(float)));
     glEnableVertexAttribArray(1);
 
     glBindVertexArray(0);
@@ -170,8 +171,6 @@ inline void send_transforms()
     mat4 model(1.0f);
     model = rotate(model, radians(0.f), vec3(1, 0, 0));
     mat4 view(1.0f);
-    float theta = glfwGetTime();
-    // cam_pos = vec3(cos(theta)*2.0, 0, sin(theta)*2.0);
     view = lookAt(cam_pos, cam_pos + cam_front, cam_up);
     mat4 projection = perspective(radians(45.f), float(WINDOW_W)/WINDOW_H, 0.1f, 100.f);
     
@@ -179,15 +178,30 @@ inline void send_transforms()
     glUniformMatrix4fv(glGetUniformLocation(program_ids[0], "view_transform"), 1, GL_FALSE, value_ptr(view));
     glUniformMatrix4fv(glGetUniformLocation(program_ids[0], "projection_transform"), 1, GL_FALSE, value_ptr(projection));
 }
+glm::vec3 light_pos(0, 0, 1.2);
+inline void send_light_transforms()
+{
+    using namespace glm;
+    mat4 model(1.0f);
+    model = translate(model, light_pos);
+    model = scale(model, vec3(0.2f));
+    glUniformMatrix4fv(glGetUniformLocation(program_ids[0], "model_transform"), 1, GL_FALSE, value_ptr(model));
+}
+inline void send_light_info()
+{
+    glUniform3f(glGetUniformLocation(program_ids[0], "light_ambient"), 0.15, 0.2, 0.3);
+    glUniform3f(glGetUniformLocation(program_ids[0], "light_diffuse"), 1.0, 1.0, 1.0);
+    glUniform3f(glGetUniformLocation(program_ids[0], "light_pos"), light_pos.x, light_pos.y, light_pos.z);
+    glUniform3f(glGetUniformLocation(program_ids[0], "eye_pos"), cam_pos.x, cam_pos.y, cam_pos.z);
+}
 void render()
 {
-    glClearColor(0.65f, 0.45f, 0.75f, 1.f);
-    // glClearColor(0.45f, 0.35f, 0.70f, 1.f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)  ;
+    //glClearColor(0.65f, 0.45f, 0.75f, 1.f);
+    glClearColor(0.2f, 0.2f, 0.2f, 1.f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
     glBindVertexArray(VAO_ids[0]);
     glUseProgram(program_ids[0]);
-
-    send_transforms();
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, tex_ids[0]);
@@ -198,6 +212,15 @@ void render()
     glUniform1i(glGetUniformLocation(program_ids[0], "tex_sampler0"), 0);
     glUniform1i(glGetUniformLocation(program_ids[0], "tex_sampler1"), 1);
 
+    light_pos = glm::vec3(3*sin(glfwGetTime()), 0, 3*cos(glfwGetTime()));
+    send_light_info();
+
+    glUniform1i(glGetUniformLocation(program_ids[0], "emissive"), GL_FALSE);
+    send_transforms();
+    glDrawArrays(GL_TRIANGLES, 0, 36);
+
+    glUniform1i(glGetUniformLocation(program_ids[0], "emissive"), GL_TRUE);
+    send_light_transforms();
     glDrawArrays(GL_TRIANGLES, 0, 36);
 }
 void frame_buffer_callback(GLFWwindow* window, int width, int height)
