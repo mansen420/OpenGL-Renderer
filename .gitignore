@@ -1,3 +1,6 @@
 *.vscode
 *.exe
 *.o
+*.jpg
+*.png
+*.pdf 
