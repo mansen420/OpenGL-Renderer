@@ -1,11 +1,19 @@
 #include "glad/glad.h"  //include glad.h before glfw3.h
 #include "GLFW/glfw3.h"
-#include "shader_utils.h"
+
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
+
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
+
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
+
+#include "shader_utils.h"
+
 //global constants
 constexpr float aspect_ratio = 16.0/9.0;
 constexpr int WINDOW_H = 600;
@@ -181,7 +189,7 @@ inline void send_transforms()
     glUniformMatrix4fv(glGetUniformLocation(program_ids[0], "view_transform"), 1, GL_FALSE, value_ptr(view));
     glUniformMatrix4fv(glGetUniformLocation(program_ids[0], "projection_transform"), 1, GL_FALSE, value_ptr(projection));
 }
-glm::vec3 light_pos(0, 0, 1.2);
+static glm::vec3 light_pos(0, 0, 1.2);
 inline void send_light_transforms()
 {
     using namespace glm;
@@ -192,10 +200,8 @@ inline void send_light_transforms()
 }
 inline void send_light_info()
 {
-    glUniform3f(glGetUniformLocation(program_ids[0], "test_light.core.color"), 1.0, 1.0, 1.0);
-    glUniform4f(glGetUniformLocation(program_ids[0], "test_light.core.pos"), cam_pos.x, cam_pos.y, cam_pos.z, 1);
-    glUniform3f(glGetUniformLocation(program_ids[0], "test_light.direction"), cam_front.x, cam_front.y, cam_front.z);
-    glUniform1f(glGetUniformLocation(program_ids[0], "test_light.cosine_angle"), glm::cos(glm::radians(15.0)));
+    glUniform3f(glGetUniformLocation(program_ids[0], "lights[0].color"), 1.0, 1.0, 1.0);
+    glUniform4f(glGetUniformLocation(program_ids[0], "lights[0].pos"), light_pos.x, light_pos.y, light_pos.z, 1);
     glUniform3f(glGetUniformLocation(program_ids[0], "eye_pos"), cam_pos.x, cam_pos.y, cam_pos.z);
 }
 void render()
