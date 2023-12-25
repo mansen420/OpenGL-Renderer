@@ -1,24 +1,19 @@
 #include "glad/glad.h"  //include glad.h before glfw3.h
 #include "GLFW/glfw3.h"
 
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
-
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
 
-#include <assimp/Importer.hpp>
-#include <assimp/scene.h>
-#include <assimp/postprocess.h>
-
 #include "shader_utils.h"
+#include "object_interface.h"
 
 //global constants
 constexpr float aspect_ratio = 16.0/9.0;
 constexpr int WINDOW_H = 600;
 constexpr int WINDOW_W = aspect_ratio * WINDOW_H;
-//statics 
+//statics
+static object_3D::object my_object; 
 static GLFWwindow* myWindow;
 
 static unsigned int program_ids[10];    //TODO should support dynamic id numbers
@@ -38,8 +33,7 @@ void frame_buffer_callback(GLFWwindow* window, int width, int height);
 void process_input(GLFWwindow* window);
 inline bool initialize();
 inline void render();
-inline void sendVertexData();
-bool gen_texture(const char* file_path, unsigned int &tex_id);
+void sendVertexData();
 int main()
 {
     if (!initialize())
@@ -47,7 +41,6 @@ int main()
         glfwTerminate();
         return -1;
     }
-    sendVertexData();
     {   //link shaders using a single vertex shader id. Program switching is expensive.
         //the same shader can be attached to multiple programs, and the inverse is true.
         unsigned int vShader, fShader, fShader2;
@@ -66,10 +59,19 @@ int main()
         glDeleteShader(fShader);
         glDeleteShader(fShader2);
     }
-    stbi_set_flip_vertically_on_load(true);
-    gen_texture("container2.png", tex_ids[0]);
-    gen_texture("container2_specular.png", tex_ids[1]);
-    gen_texture("matrix.jpg", tex_ids[2]);
+//    gen_texture("container2.png", tex_ids[0]);
+//    gen_texture("container2_specular.png", tex_ids[1]);
+//    gen_texture("matrix.jpg", tex_ids[2]);
+    if (read_obj("backpack_model/backpack.obj", my_object))
+    {
+        my_object.send_data();
+    }
+    else
+    {
+        glfwTerminate();
+        return -1;
+    }
+    sendVertexData();
     //renderloop
     glEnable(GL_DEPTH_TEST);
     float previous_frame_time = 0.0;
@@ -87,39 +89,17 @@ int main()
         frame_count++;
         fps_sum += frame_delta;
         float fps_avg = fps_sum/frame_count;
-        std::cout << '\r' << 1.0f/fps_avg << "FPS" << std::flush;
+        std::cout << '\r' << 1.0f/frame_delta << "FPS" << std::flush;
     }
     glfwTerminate();
     return 0;
-}
-bool gen_texture(const char* file_path, unsigned int &tex_id)
-{
-    int img_width, img_height, img_nrChannels;
-    unsigned char* data = stbi_load(file_path, &img_width, &img_height, &img_nrChannels, 0);
-    if (!data)
-    {
-        std::cout << "reading texture file failed : " << file_path << std::endl;
-        return false;
-    }
-
-    glGenTextures(1, &tex_id);
-    glBindTexture(GL_TEXTURE_2D, tex_id);
-
-    glTexImage2D(GL_TEXTURE_2D, 0, img_nrChannels == 3 ? GL_RGB : GL_RGBA, img_width, img_height, 0, img_nrChannels == 3 ? GL_RGB : GL_RGBA, GL_UNSIGNED_BYTE, data);
-    glGenerateMipmap(GL_TEXTURE_2D);
-
-    glBindTexture(GL_TEXTURE_2D, 0);
-
-    stbi_image_free(data);
-    
-    return true;
 }
 void sendVertexData()
 {
     unsigned int VBO;
     glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-float vertices[] = {
+    float vertices[] = {
     // positions          // normals           // texture coords
     -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
      0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 0.0f,
@@ -167,12 +147,35 @@ float vertices[] = {
 
     glGenVertexArrays(1, &VAO_ids[0]);
     glBindVertexArray(VAO_ids[0]);
+
+    float vertices2[sizeof(vertices)/sizeof(float)];
+    for (int i = 0; i < sizeof(vertices)/sizeof(float); i++)
+    {
+        vertices2[i] = vertices[i] + 1.f;
+    }   
+
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3*sizeof(float)));
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6*sizeof(float)));
     glEnableVertexAttribArray(2);
+
+   /* glGenBuffers(1, &VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices2), &vertices2, GL_STATIC_DRAW); 
+
+    // glBindVertexArray(0);
+
+    // glGenVertexArrays(1, &VAO_ids[1]);
+    // glBindVertexArray(VAO_ids[1]);
+
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3*sizeof(float)));
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6*sizeof(float)));
+    glEnableVertexAttribArray(2); */
 
     glBindVertexArray(0);
 }
@@ -210,32 +213,11 @@ void render()
     glClearColor(0.1f, 0.1f, 0.1f, 1.f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    glBindVertexArray(VAO_ids[0]);
-    glUseProgram(program_ids[0]);
-
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, tex_ids[0]);
-
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, tex_ids[1]);
-
-    glActiveTexture(GL_TEXTURE2);
-    glBindTexture(GL_TEXTURE_2D, tex_ids[2]);
-
-    glUniform1i(glGetUniformLocation(program_ids[0], "tex_sampler0"), 0);
-    glUniform1i(glGetUniformLocation(program_ids[0], "tex_sampler1"), 1);
-    glUniform1i(glGetUniformLocation(program_ids[0], "tex_sampler2"), 2);
-
     light_pos = glm::vec3(3*sin(glfwGetTime()), 0, 3*cos(glfwGetTime()));
+    glUseProgram(program_ids[0]);
     send_light_info();
-
-    glUniform1i(glGetUniformLocation(program_ids[0], "emissive"), GL_FALSE);
     send_transforms();
-    glDrawArrays(GL_TRIANGLES, 0, 36);
-
-    glUniform1i(glGetUniformLocation(program_ids[0], "emissive"), GL_TRUE);
-    send_light_transforms();
-    glDrawArrays(GL_TRIANGLES, 0, 36);
+    my_object.draw(program_ids[0]);
 }
 void frame_buffer_callback(GLFWwindow* window, int width, int height)
 {
