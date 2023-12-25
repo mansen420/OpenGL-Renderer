@@ -6,6 +6,11 @@ in vec3 surface_normal;
 in vec2 tex_coord;
 in vec3 frag_pos;
 
+uniform sampler2D diffuse_maps[16];
+uniform sampler2D spec_maps[16];
+uniform int nr_valid_diffuse_maps;
+uniform int nr_valid_spec_maps;
+
 uniform sampler2D tex_sampler0;
 uniform sampler2D tex_sampler1;
 uniform sampler2D tex_sampler2;
@@ -21,23 +26,24 @@ struct spotlight
     vec3 direction;
     float cosine_angle;
 };
+
 uniform bool emissive;
 uniform vec3 eye_pos;
 const int NR_LIGHTS = 5;
 uniform light lights[NR_LIGHTS];
 int valid_size = 1;
-//uniform spotlight test_light;
 
 vec3 shade_directional(light dir_light);
 vec3 shade_point(light point_light);
 vec3 shade_spot(spotlight s_light);
 //statics
-vec4 diffuse_map = texture(tex_sampler0, tex_coord);
-vec4 spec_map = texture(tex_sampler1, tex_coord);
+vec4 diffuse_map = vec4(1);
+vec4 spec_map = vec4(1);
 vec3 object_color = vertex_color;
+
 const float SHININESS = 64;
-const float KL = 0.22;    //linear attenuation factor
-const float KQ = 0.20;    //quadratic attenuation factor
+const float KL = 0.22;    //linear distance attenuation factor
+const float KQ = 0.20;    //quadratic distance attenuation factor
 void main()
 {
     if(emissive)
@@ -46,7 +52,7 @@ void main()
         return;
     }
     vec3 light_output = vec3(0,0,0);
-    for (int i = 0; i<valid_size; i++)
+    for (int i = 0; i < valid_size; i++)
     {
         if (lights[i].pos.w==1)
             light_output += shade_point(lights[i]);
