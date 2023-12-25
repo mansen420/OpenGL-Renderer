@@ -59,19 +59,12 @@ int main()
         glDeleteShader(fShader);
         glDeleteShader(fShader2);
     }
-//    gen_texture("container2.png", tex_ids[0]);
-//    gen_texture("container2_specular.png", tex_ids[1]);
-//    gen_texture("matrix.jpg", tex_ids[2]);
-    if (read_obj("backpack_model/backpack.obj", my_object))
-    {
-        my_object.send_data();
-    }
-    else
+    if (!read_obj("backpack_model/backpack.obj", my_object))
     {
         glfwTerminate();
         return -1;
     }
-    sendVertexData();
+    my_object.send_data();
     //renderloop
     glEnable(GL_DEPTH_TEST);
     float previous_frame_time = 0.0;
