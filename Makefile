@@ -1,8 +1,8 @@
 srcFiles := $(shell find src/ -name '*.cpp')
 objectFiles := bin/main.o
 DEPS := $(wildcard include/*/*.h) $(wildcard include/*.h) $(wildcard src/*.frag) $(wildcard src/*.vert)
-cflags := -Wall $(shell pkg-config --cflags glfw3) $(shell pkg-config --cflags assimp) -Iinclude/
-linkerOptions := $(shell pkg-config --static --libs glfw3) $(shell pkg-config --static --libs assimp) 
+cflags := -Wall $(shell pkg-config --cflags glfw3) -Iinclude/
+linkerOptions := $(shell pkg-config --static --libs glfw3)
 
 bin/main.exe: $(objectFiles) bin/glad.o
 	g++ -o $@ $(objectFiles) bin/glad.o $(linkerOptions) && ./$@
