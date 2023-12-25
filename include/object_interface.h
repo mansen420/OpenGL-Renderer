@@ -2,10 +2,12 @@
 #define OBJECT_INTERFACE
 
 #define TINYOBJLOADER_IMPLEMENTATION ;
+#include "tiny_obj_loader.h"
+
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 
 #include "glad/glad.h"
-
-#include "tiny_obj_loader.h"
 
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
@@ -219,4 +221,30 @@ bool read_obj(const char* path, object_3D::object &obj)
     return true;
 }
 
+//reads texture from file and assigns it to the GL_TEXTURE_2D target with tex_id.
+//be warned that this functions expects images with 3 or 4 color channels,
+//otherwise, undefined behaviour will occur.
+bool gen_texture(const char* file_path, unsigned int &tex_id)
+{
+    stbi_set_flip_vertically_on_load(true);
+    int img_width, img_height, img_nrChannels;
+    unsigned char* data = stbi_load(file_path, &img_width, &img_height, &img_nrChannels, 0);
+    if (!data)
+    {
+        std::cout << "reading texture file failed : " << file_path << std::endl;
+        return false;
+    }
+
+    glGenTextures(1, &tex_id);
+    glBindTexture(GL_TEXTURE_2D, tex_id);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, img_nrChannels == 3 ? GL_RGB : GL_RGBA, img_width, img_height, 0, img_nrChannels == 3 ? GL_RGB : GL_RGBA, GL_UNSIGNED_BYTE, data);
+    glGenerateMipmap(GL_TEXTURE_2D);
+
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    stbi_image_free(data);
+    
+    return true;
+}
 #endif
