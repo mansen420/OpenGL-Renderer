@@ -59,17 +59,25 @@ int main()
         glDeleteShader(fShader);
         glDeleteShader(fShader2);
     }
+    gen_texture("marble.jpg", tex_ids[0]);
+    gen_texture("metal.png", tex_ids[1]);
     if (!read_obj("backpack_model/backpack.obj", my_object))
     {
         glfwTerminate();
         return -1;
     }
+    sendVertexData();
     my_object.send_data();
     //renderloop
     glEnable(GL_DEPTH_TEST);
+    glEnable(GL_STENCIL_TEST);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    
     float previous_frame_time = 0.0;
     float fps_sum = 0.0;
     int frame_count = 0;
+
     while (!glfwWindowShouldClose(myWindow))
     {
         render();
@@ -92,7 +100,17 @@ void sendVertexData()
     unsigned int VBO;
     glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    float vertices[] = {
+    float planeVertices[] = {
+        // positions          // texture Coords (note we set these higher than 1 (together with GL_REPEAT as texture wrapping mode). this will cause the floor texture to repeat)
+         5.0f, -0.5f,  5.0f,  2.0f, 0.0f,
+        -5.0f, -0.5f,  5.0f,  0.0f, 0.0f,
+        -5.0f, -0.5f, -5.0f,  0.0f, 2.0f,
+
+         5.0f, -0.5f,  5.0f,  2.0f, 0.0f,
+        -5.0f, -0.5f, -5.0f,  0.0f, 2.0f,
+         5.0f, -0.5f, -5.0f,  2.0f, 2.0f								
+    };
+    float cubeVertices[] = {
     // positions          // normals           // texture coords
     -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
      0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 0.0f,
@@ -136,16 +154,10 @@ void sendVertexData()
     -0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 0.0f,
     -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f
 };
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), &vertices, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), &cubeVertices, GL_STATIC_DRAW);
 
-    glGenVertexArrays(1, &VAO_ids[0]);
+    glGenVertexArrays(1, &VAO_ids[0]);  //cube VAO
     glBindVertexArray(VAO_ids[0]);
-
-    float vertices2[sizeof(vertices)/sizeof(float)];
-    for (int i = 0; i < sizeof(vertices)/sizeof(float); i++)
-    {
-        vertices2[i] = vertices[i] + 1.f;
-    }   
 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
@@ -154,21 +166,17 @@ void sendVertexData()
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6*sizeof(float)));
     glEnableVertexAttribArray(2);
 
-   /* glGenBuffers(1, &VBO);
+    glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices2), &vertices2, GL_STATIC_DRAW); 
+    glBufferData(GL_ARRAY_BUFFER, sizeof(planeVertices), &planeVertices, GL_STATIC_DRAW);
 
-    // glBindVertexArray(0);
+    glGenVertexArrays(1, &VAO_ids[1]);
+    glBindVertexArray(VAO_ids[1]);
 
-    // glGenVertexArrays(1, &VAO_ids[1]);
-    // glBindVertexArray(VAO_ids[1]);
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3*sizeof(float)));
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6*sizeof(float)));
-    glEnableVertexAttribArray(2); */
+    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3*sizeof(float)));
+    glEnableVertexAttribArray(2);
 
     glBindVertexArray(0);
 }
@@ -204,14 +212,31 @@ void render()
 {
     //glClearColor(0.65f, 0.45f, 0.75f, 1.f);
     glClearColor(0.1f, 0.1f, 0.1f, 1.f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
     light_pos = glm::vec3(3*sin(glfwGetTime()), 0, 3*cos(glfwGetTime()));
     glUseProgram(program_ids[0]);
     send_light_info();
     send_transforms();
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, tex_ids[0]);
+    glUniform1i(glGetUniformLocation(program_ids[0], "diffuse_maps[0]"), 0);
+    glUniform1i(glGetUniformLocation(program_ids[0], "spec_maps[0]"), 0);
+
+    glm::mat4 model = glm::mat4(1);
+    //draw cube
+    model = glm::translate(model, glm::vec3(-1, 0, 0));
+    glUniformMatrix4fv(glGetUniformLocation(program_ids[0], "model_transform"), 1, GL_FALSE, value_ptr(model));
+    
+    glBindVertexArray(VAO_ids[0]);
+    glDrawArrays(GL_TRIANGLES, 0, 36); 
+
+    //draw backpack 
+    model = glm::mat4(1);
+    glUniformMatrix4fv(glGetUniformLocation(program_ids[0], "model_transform"), 1, GL_FALSE, value_ptr(model));
     my_object.activate_texture_ids(program_ids[0]);
-    my_object.draw(program_ids[0]);
+    my_object.draw();
 }
 void frame_buffer_callback(GLFWwindow* window, int width, int height)
 {

@@ -33,8 +33,8 @@ const int NR_LIGHTS = 5;
 uniform light lights[NR_LIGHTS];
 int valid_size = 1;
 
-vec3 shade_directional(light dir_light);
-vec3 shade_point(light point_light);
+vec4 shade_directional(light dir_light);
+vec4 shade_point(light point_light);
 vec3 shade_spot(spotlight s_light);
 //statics
 vec4 diffuse_map = texture(diffuse_maps[0], tex_coord);
@@ -45,13 +45,9 @@ const float SHININESS = 64;
 const float KL = 0.22;    //linear distance attenuation factor
 const float KQ = 0.20;    //quadratic distance attenuation factor
 void main()
-{
-    if(emissive)
-    {
-        fragment_output = vec4(1.0);
-        return;
-    }
-    vec3 light_output = vec3(0,0,0);
+{   
+    diffuse_map = vec4(diffuse_map.xyz, 0.5);
+    vec4 light_output = vec4(0.0);
     for (int i = 0; i < valid_size; i++)
     {
         if (lights[i].pos.w==1)
@@ -59,12 +55,19 @@ void main()
         else if (lights[i].pos.w==0)
         {
             if(lights[i].pos == vec4(0.0))
-                light_output += lights[i].color;
+                light_output += vec4(lights[i].color, 1.0);
             else
                    light_output += shade_directional(lights[i]);
         }
     }
-    fragment_output = vec4(light_output, 1);
+    spotlight s;
+    s.core.color = vec3(1.0);
+    s.core.pos = vec4(eye_pos, 1);
+    s.direction = vec3(0, 0, -1);
+    s.cosine_angle = cos(radians(12.5));
+    //light_output += shade_spot(s);
+
+    fragment_output = diffuse_map;
 }
 float spec(vec3 light_dir)
 {   //expects light_dir TOWARDS the surface
@@ -90,16 +93,16 @@ vec3 shade_spot(spotlight s_light)
     }
     return vec3(0, 0, 0);
 }
-vec3 shade_point(light point_light)
+vec4 shade_point(light point_light)
 {
     vec3 light_dir = normalize(vec3(point_light.pos)-frag_pos);
     float diffuse_intensity = max(dot(light_dir,  normalize(surface_normal)), 0.0);
     float d = length(frag_pos-vec3(point_light.pos));
     float attenuation = 1.0/(1.0+KL*d+KQ*d*d);
-    return attenuation*((vec3(diffuse_intensity*diffuse_map)*point_light.color)+vec3(spec(-light_dir)*spec_map));
+    return attenuation*((vec4(diffuse_intensity*diffuse_map)*vec4(point_light.color, 1))+(spec(-light_dir)*spec_map));
 }
-vec3 shade_directional(light dir_light)
+vec4 shade_directional(light dir_light)
 {
     float diffuse_intensity = max(dot(normalize(-vec3(dir_light.pos)),  normalize(surface_normal)), 0.0);
-    return vec3(spec(vec3(dir_light.pos))*spec_map + diffuse_intensity*diffuse_map)*dir_light.color;
+    return (spec(vec3(dir_light.pos))*spec_map + diffuse_intensity*diffuse_map)*vec4(dir_light.color, 1.0);
 }

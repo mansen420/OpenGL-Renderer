@@ -134,7 +134,7 @@ namespace object_3D
                 meshes[i].send_index_data();       
             }
         }
-        void draw(const unsigned int &program_id)
+        void draw()
         {
             for (auto mesh : meshes)
             {
