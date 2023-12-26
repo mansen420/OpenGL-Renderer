@@ -31,21 +31,26 @@ namespace object_3D
     enum texture_type_option
     {
         DIFFUSE,
-        SPECULAR
+        SPECULAR,
+        OTHER
     };
     struct texture
     {
-        unsigned int id;
+        unsigned int id = 0;   //id of 0 implies non-existence
         texture_type_option type;
-        string path;
+    };
+    struct material
+    {
+        texture diffuse_map;
+        texture spec_map;
+        material() {spec_map.type=SPECULAR, diffuse_map.type=DIFFUSE;}
     };
     struct mesh
     {
-        vector<texture> textures;
         vector<unsigned int> indices; 
         unsigned int VAO_id;
         mesh(){}
-        mesh(vector<texture> textures, vector<unsigned int> indices) : textures(textures), indices(indices){}
+        mesh(vector<unsigned int> indices) : indices(indices){}
 
         void send_index_data()
         {   //glVertexAttribPointer will only have effect on the data sent by the last call to glBufferData
@@ -67,38 +72,7 @@ namespace object_3D
 
             glBindVertexArray(0);
         }
-        //sends textures to the specified shader program.
-        void send_texture_data(const unsigned int &program_id)
-        {
-            int nr_diffuse = 0, nr_spec = 0;
-            int texture_unit_limit;
-            glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &texture_unit_limit);
-            for (unsigned int i = 0; i < textures.size(); i++)
-            {
-                if (i > texture_unit_limit)
-                {
-                    break;
-                }
-                if (textures[i].type == DIFFUSE)
-                {
-                    string type = "diffuse_maps";
-                    string index = "["+std::to_string(nr_diffuse)+"]";
-                    glActiveTexture(GL_TEXTURE0 + i);
-                    glBindTexture(GL_TEXTURE_2D, textures[i].id);
-                    glUniform1i(glGetUniformLocation(program_id, (type+index).c_str()), i);
-                    glUniform1i(glGetUniformLocation(program_id, "nr_valid_diffuse_maps"), ++nr_diffuse);
-                }
-                else if(textures[i].type == SPECULAR)
-                {
-                    string type = "spec_maps";
-                    string index = "["+std::to_string(nr_spec)+"]";
-                    glActiveTexture(GL_TEXTURE0 + i);
-                    glBindTexture(GL_TEXTURE_2D, textures[i].id);
-                    glUniform1i(glGetUniformLocation(program_id, (type+index).c_str()), i);
-                    glUniform1i(glGetUniformLocation(program_id, "nr_valid_spec_maps"), ++nr_spec);       
-                }
-            }
-        }
+    
         //be sure to call send_texture_data() before this.
         void draw()
         {
@@ -111,9 +85,41 @@ namespace object_3D
     {
         vector<vertex> vertices;
         vector<mesh> meshes;
+        vector<material> materials;
+        //sends textures to the specified shader program.
+        void activate_texture_ids(const unsigned int &program_id)
+        {
+            int nr_diffuse = 0, nr_spec = 0;
+            int texture_unit_limit;
+            glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &texture_unit_limit);
+            for (size_t i = 0; i < materials.size(); i++)
+            {
+                if (nr_diffuse + nr_spec > texture_unit_limit)
+                {
+                    break;
+                }
+                if (materials[i].diffuse_map.id > 0)
+                {
+                    string type = "diffuse_maps";
+                    string index = "["+std::to_string(nr_diffuse)+"]";
+                    glActiveTexture(GL_TEXTURE0 + nr_diffuse + nr_spec);
+                    glBindTexture(GL_TEXTURE_2D, materials[i].diffuse_map.id);
+                    glUniform1i(glGetUniformLocation(program_id, (type+index).c_str()), nr_diffuse + nr_spec);
+                    glUniform1i(glGetUniformLocation(program_id, "nr_valid_diffuse_maps"), ++nr_diffuse);
+                }
+                if (materials[i].spec_map.id > 0)
+                {
+                    string type = "spec_maps";
+                    string index = "["+std::to_string(nr_spec)+"]";
+                    glActiveTexture(GL_TEXTURE0 + nr_diffuse + nr_spec);
+                    glBindTexture(GL_TEXTURE_2D, materials[i].spec_map.id);
+                    glUniform1i(glGetUniformLocation(program_id, (type+index).c_str()), nr_diffuse + nr_spec);
+                    glUniform1i(glGetUniformLocation(program_id, "nr_valid_diffuse_maps"), ++nr_spec);
+                }
+            }
+        }
         void send_vertex_data()
         {
-            
             unsigned int VBO_id;
             glGenBuffers(1, &VBO_id);
             glBindBuffer(GL_ARRAY_BUFFER, VBO_id);
@@ -137,8 +143,10 @@ namespace object_3D
         }
     };
 }
+bool gen_texture(const char* file_path, unsigned int &tex_id);
+
 tinyobj::ObjReader obj_parser;
-bool read_obj(const char* path, object_3D::object &obj)
+bool read_obj(std::string path, object_3D::object &obj)
 {
     if (!obj_parser.ParseFromFile(path, tinyobj::ObjReaderConfig()))
     {
@@ -165,7 +173,7 @@ bool read_obj(const char* path, object_3D::object &obj)
         const std::vector<tinyobj::index_t> &raw_indices = shapes[i].mesh.indices;
         for (size_t j = 0; j < raw_indices.size(); j++)
         {
-            const unsigned int vertex_index = raw_indices[j].vertex_index;  //1 based obj indices
+            const unsigned int vertex_index = raw_indices[j].vertex_index;
             bool new_vertex = true;
             for (size_t k = 0; k < recorded_indices.size(); k++) //is this vertex index recorded?
             {
@@ -218,6 +226,20 @@ bool read_obj(const char* path, object_3D::object &obj)
         }
         meshes[i] = temp_mesh;
     }
+
+    std::vector<object_3D::material> &obj_materials = obj.materials;
+    obj_materials = std::vector<object_3D::material>(materials.size());
+    for (size_t i = 0; i < materials.size(); i++)
+    {
+        //within this directory, we will search for the texture names
+        const std::string directory = path.substr(0, path.find_last_of("/\\")+1);
+
+        std::string file_name = materials[i].diffuse_texname;
+        gen_texture((directory+file_name).c_str(), obj_materials[i].diffuse_map.id);
+        
+        file_name = materials[i].specular_texname;
+        gen_texture((directory+file_name).c_str(), obj_materials[i].spec_map.id);
+    }
     return true;
 }
 
@@ -226,7 +248,7 @@ bool read_obj(const char* path, object_3D::object &obj)
 //otherwise, undefined behaviour will occur.
 bool gen_texture(const char* file_path, unsigned int &tex_id)
 {
-    stbi_set_flip_vertically_on_load(true);
+    stbi_set_flip_vertically_on_load(false);
     int img_width, img_height, img_nrChannels;
     unsigned char* data = stbi_load(file_path, &img_width, &img_height, &img_nrChannels, 0);
     if (!data)
@@ -245,6 +267,7 @@ bool gen_texture(const char* file_path, unsigned int &tex_id)
 
     stbi_image_free(data);
     
+    std::cout << "Loaded texture : " << file_path <<std::endl;
     return true;
 }
 #endif

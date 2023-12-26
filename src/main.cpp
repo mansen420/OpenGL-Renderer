@@ -210,6 +210,7 @@ void render()
     glUseProgram(program_ids[0]);
     send_light_info();
     send_transforms();
+    my_object.activate_texture_ids(program_ids[0]);
     my_object.draw(program_ids[0]);
 }
 void frame_buffer_callback(GLFWwindow* window, int width, int height)

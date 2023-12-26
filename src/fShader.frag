@@ -37,8 +37,8 @@ vec3 shade_directional(light dir_light);
 vec3 shade_point(light point_light);
 vec3 shade_spot(spotlight s_light);
 //statics
-vec4 diffuse_map = vec4(1);
-vec4 spec_map = vec4(1);
+vec4 diffuse_map = texture(diffuse_maps[0], tex_coord);
+vec4 spec_map = texture(spec_maps[0], tex_coord);
 vec3 object_color = vertex_color;
 
 const float SHININESS = 64;
@@ -63,7 +63,7 @@ void main()
             else
                    light_output += shade_directional(lights[i]);
         }
-    }    
+    }
     fragment_output = vec4(light_output, 1);
 }
 float spec(vec3 light_dir)
