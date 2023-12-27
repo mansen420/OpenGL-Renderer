@@ -19,6 +19,8 @@
 #include <string>
 #include <variant>
 
+bool gen_texture(const char* file_path, unsigned int &tex_id);
+
 namespace object_3D
 {
     using namespace glm;
@@ -118,10 +120,11 @@ namespace object_3D
             glBindVertexArray(0);
         }
     };
+    //holds an array of drawable meshes. Initialize with read_obj()
     class object : public drawable
     {
         virtual void bind_VAO() const override {}
-                virtual void send_model_transform(const unsigned int &program_id) const override
+        virtual void send_model_transform(const unsigned int &program_id) const override
         {
             glUniformMatrix4fv(glGetUniformLocation(program_id, VS_TRNSFRM_MDL_NAME), 1, GL_FALSE, value_ptr(model_transform));
         }
@@ -186,8 +189,76 @@ namespace object_3D
             }
         }
     };
+    
+    //a drawable object with a manually generated float array of vertices. assumes coordinate order of pos, normals, texture 
+    class array_drawable : public drawable
+    {
+        const float* const vertices;
+        unsigned int VAO_id;
+        const int array_size;
+        bool texture, normals;
+
+        virtual void bind_VAO() const override {glBindVertexArray(VAO_id);}
+        virtual void gl_draw(const unsigned int &program_id) const override
+        {
+            const size_t nr_floats = size_t(array_size/sizeof(float));
+            const unsigned int nr_floats_per_vertex = 3 + (2*texture) + (3*normals);
+            glDrawArrays(GL_TRIANGLES, 0, nr_floats/nr_floats_per_vertex);
+        }
+        virtual void set_samplers(const unsigned int &program_id) const 
+        {
+            if (textures.diffuse_map.id > 0)
+            {
+                glActiveTexture(GL_TEXTURE0);
+                glBindTexture(GL_TEXTURE_2D, textures.diffuse_map.id);
+                glUniform1i(glGetUniformLocation(program_id, "diffuse_maps[0]"), 0);
+            }
+            if (textures.spec_map.id > 0)
+            {
+                const unsigned int texture_unit = 0 + (textures.diffuse_map.id > 0);
+                glActiveTexture(texture_unit);
+                glBindTexture(GL_TEXTURE_2D, textures.spec_map.id);
+                glUniform1i(glGetUniformLocation(program_id, "spec_maps[0]"), texture_unit);
+            }
+            else if (textures.diffuse_map.id > 0)
+            {
+                glUniform1i(glGetUniformLocation(program_id, "spec_maps[0]"), 0);   //specular map points to diffuse map as fallback 
+            }
+        }
+        virtual void send_model_transform(const unsigned int &program_id) const
+        {
+            glUniformMatrix4fv(glGetUniformLocation(program_id, VS_TRNSFRM_MDL_NAME), 1, GL_FALSE, value_ptr(model_transform));
+        }
+        public :
+        array_drawable(const float* const vertices, const int array_byte_size, bool has_normal_coords = true, 
+        bool has_texture_coords = true): vertices(vertices), array_size(array_byte_size), texture(has_texture_coords), 
+        normals(has_normal_coords), model_transform(mat4(1.0)) {}
+
+        mat4 model_transform;
+        material textures;
+
+        virtual void send_data() override
+        {
+            unsigned int VBO;
+            glGenBuffers(1, &VBO);
+            glBindBuffer(GL_ARRAY_BUFFER, VBO);
+            glBufferData(GL_ARRAY_BUFFER, array_size, vertices, GL_STATIC_DRAW);
+
+            glGenVertexArrays(1, &VAO_id);
+            glBindVertexArray(VAO_id);
+            
+            const int nr_floats_per_vertex = (3 + (2*texture) + (3*normals));
+            glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, nr_floats_per_vertex * sizeof(float), (void*)0);
+            glEnableVertexAttribArray(0);
+            glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, nr_floats_per_vertex * sizeof(float), (void*)(3*sizeof(float)));
+            glEnableVertexAttribArray(1*normals);
+            glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, nr_floats_per_vertex * sizeof(float), (void*)((3+3*normals)*sizeof(float)));
+            glEnableVertexAttribArray(2*texture);
+        
+            glBindVertexArray(0);
+        }
+    };
 }
-bool gen_texture(const char* file_path, unsigned int &tex_id);
 
 tinyobj::ObjReader obj_parser;
 bool read_obj(std::string path, object_3D::object &obj)
