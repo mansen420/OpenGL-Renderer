@@ -1,6 +1,8 @@
 #ifndef OBJECT_INTERFACE
 #define OBJECT_INTERFACE
 
+#define VS_TRNSFRM_MDL_NAME "model_transform"
+
 #define TINYOBJLOADER_IMPLEMENTATION ;
 #include "tiny_obj_loader.h"
 
@@ -15,6 +17,7 @@
 
 #include <iostream>
 #include <string>
+#include <variant>
 
 namespace object_3D
 {
@@ -27,12 +30,43 @@ namespace object_3D
     };
     using std::vector;
     using std::string;
+    using std::variant;
+    class drawable
+    {
+    protected:
+        //assigns textures IDs, if any, to samplers. note that most recently assigned value will apply if you leave this function empty.
+        virtual void set_samplers(const unsigned int &program_id) const = 0;
+        //assigns model transform matrix to vertex shader. note that most recently assigned value will apply if you leave this function empty.
+        virtual void send_model_transform(const unsigned int &program_id) const = 0;
+        //Binds VAOs, if any, for the draw call.
+        virtual void bind_VAO() const = 0;
+        //overridable draw command. this function should handle the drawing of your object(s).
+        virtual void gl_draw(const unsigned int &program_id) const = 0;
+        //sends all uniforms to the shader programs 
+        virtual void send_uniforms(const unsigned int &program_id) const final 
+        {
+            glUseProgram(program_id);
+            send_model_transform(program_id);
+            set_samplers(program_id);
+        }
+    public:
+        //generates VAO(s) and/or sends buffer data.
+        virtual void send_data() = 0;
+
+        //caller must ensure that send_data() has been called before this. 
+        virtual void draw(const unsigned int &program_id) const final 
+        {
+            send_uniforms(program_id);
+            bind_VAO();
+            gl_draw(program_id);
+            glBindVertexArray(0);
+        }
+    };
 
     enum texture_type_option
     {
         DIFFUSE,
-        SPECULAR,
-        OTHER
+        SPECULAR
     };
     struct texture
     {
@@ -45,14 +79,25 @@ namespace object_3D
         texture spec_map;
         material() {spec_map.type=SPECULAR, diffuse_map.type=DIFFUSE;}
     };
-    struct mesh
+    
+    class mesh : public drawable
     {
-        vector<unsigned int> indices; 
         unsigned int VAO_id;
-        mesh(){}
-        mesh(vector<unsigned int> indices) : indices(indices){}
+        virtual void bind_VAO() const override { glBindVertexArray(VAO_id);}
+        virtual void set_samplers(const unsigned int &program_id) const override{} //a mesh has no texture IDs
+        virtual void send_model_transform(const unsigned int &program_id) const override
+        {
+        }
+        virtual void gl_draw(const unsigned int &program_id) const override
+        {
+            glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
+        }
+    public :
+        vector<unsigned int> indices;
 
-        void send_index_data()
+        mesh(){}
+
+        virtual void send_data()
         {   //glVertexAttribPointer will only have effect on the data sent by the last call to glBufferData
             //VAOs only store the last call to glVertexAttribPointer
             glGenVertexArrays(1, &VAO_id);
@@ -72,22 +117,15 @@ namespace object_3D
 
             glBindVertexArray(0);
         }
-    
-        //be sure to call send_texture_data() before this.
-        void draw()
-        {
-            glBindVertexArray(VAO_id);
-            glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
-            glBindVertexArray(0);
-        }
     };
-    struct object 
+    class object : public drawable
     {
-        vector<vertex> vertices;
-        vector<mesh> meshes;
-        vector<material> materials;
-        //sends textures to the specified shader program.
-        void activate_texture_ids(const unsigned int &program_id)
+        virtual void bind_VAO() const override {}
+                virtual void send_model_transform(const unsigned int &program_id) const override
+        {
+            glUniformMatrix4fv(glGetUniformLocation(program_id, VS_TRNSFRM_MDL_NAME), 1, GL_FALSE, value_ptr(model_transform));
+        }
+        virtual void set_samplers(const unsigned int &program_id) const override
         {
             int nr_diffuse = 0, nr_spec = 0;
             int texture_unit_limit;
@@ -118,27 +156,33 @@ namespace object_3D
                 }
             }
         }
-        void send_vertex_data()
+        void send_vertex_data() const 
         {
             unsigned int VBO_id;
             glGenBuffers(1, &VBO_id);
             glBindBuffer(GL_ARRAY_BUFFER, VBO_id);
             glBufferData(GL_ARRAY_BUFFER, vertices.size()*sizeof(vertex), &vertices[0], GL_STATIC_DRAW);
         }
-        //call this before any calls to draw()
-        void send_data()
+        virtual void gl_draw(const unsigned int &program_id) const override
+        {
+            for (auto mesh : meshes)
+            {
+                mesh.draw(program_id);
+            }
+        }
+    public:
+        object(){model_transform = mat4(1.0);}
+        vector<vertex> vertices;
+        vector<mesh> meshes;
+        vector<material> materials;
+        mat4 model_transform;
+
+        virtual void send_data() override
         {
             send_vertex_data();
             for (size_t i = 0; i < meshes.size(); i++)
             {
-                meshes[i].send_index_data();       
-            }
-        }
-        void draw()
-        {
-            for (auto mesh : meshes)
-            {
-                mesh.draw();
+                meshes[i].send_data();       
             }
         }
     };
