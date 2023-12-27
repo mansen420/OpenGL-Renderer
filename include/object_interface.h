@@ -227,6 +227,7 @@ bool read_obj(std::string path, object_3D::object &obj)
         meshes[i] = temp_mesh;
     }
 
+    //get textures 
     std::vector<object_3D::material> &obj_materials = obj.materials;
     obj_materials = std::vector<object_3D::material>(materials.size());
     for (size_t i = 0; i < materials.size(); i++)
