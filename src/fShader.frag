@@ -46,8 +46,7 @@ const float KL = 0.22;    //linear distance attenuation factor
 const float KQ = 0.20;    //quadratic distance attenuation factor
 void main()
 {   
-    diffuse_map = vec4(diffuse_map.xyz, 0.5);
-    vec4 light_output = vec4(0.0);
+    vec4 light_output = vec4(0, 0, 0, 1);
     for (int i = 0; i < valid_size; i++)
     {
         if (lights[i].pos.w==1)
@@ -65,7 +64,11 @@ void main()
     s.core.pos = vec4(eye_pos, 1);
     s.direction = vec3(0, 0, -1);
     s.cosine_angle = cos(radians(12.5));
-    //light_output += shade_spot(s);
+    //light_output += vec4(shade_spot(s), 1);
+    light sunlight;
+    sunlight.pos = vec4(0.0, -1.0, 0.0, 0.0);
+    sunlight.color = vec3(1.0, 0.85, 0.65);
+    light_output += shade_directional(sunlight);
 
     fragment_output = diffuse_map;
 }
