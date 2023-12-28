@@ -17,7 +17,6 @@
 
 #include <iostream>
 #include <string>
-#include <variant>
 
 bool gen_texture(const char* file_path, unsigned int &tex_id);
 
@@ -32,7 +31,6 @@ namespace object_3D
     };
     using std::vector;
     using std::string;
-    using std::variant;
     class drawable
     {
     protected:
