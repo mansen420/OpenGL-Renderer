@@ -15,6 +15,7 @@ constexpr int WINDOW_W = aspect_ratio * WINDOW_H;
 //statics
 static object_3D::object my_object; 
 static object_3D::array_drawable* cube_ptr;
+static object_3D::array_drawable* plane_ptr;
 static GLFWwindow* myWindow;
 
 static unsigned int program_ids[10];    //TODO should support dynamic id numbers
@@ -123,10 +124,14 @@ int main()
     -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f
 };
    
+    object_3D::array_drawable plane(planeVertices, sizeof(planeVertices), false, true);
+    plane.send_data();
+    plane.textures.diffuse_map.id = tex_ids[1];
     object_3D::array_drawable cube(cubeVertices, sizeof(cubeVertices), true, true);
-    cube_ptr = &cube;
     cube.send_data();
     cube.textures.diffuse_map.id = tex_ids[0];
+    cube_ptr = &cube;
+    plane_ptr = &plane;
     my_object.send_data();
     //renderloop
     glEnable(GL_DEPTH_TEST);
@@ -155,113 +160,17 @@ int main()
     glfwTerminate();
     return 0;
 }
-void sendVertexData()
-{
-    unsigned int VBO;
-    glGenBuffers(1, &VBO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    float planeVertices[] = {
-        // positions          // texture Coords (note we set these higher than 1 (together with GL_REPEAT as texture wrapping mode). this will cause the floor texture to repeat)
-         5.0f, -0.5f,  5.0f,  2.0f, 0.0f,
-        -5.0f, -0.5f,  5.0f,  0.0f, 0.0f,
-        -5.0f, -0.5f, -5.0f,  0.0f, 2.0f,
-
-         5.0f, -0.5f,  5.0f,  2.0f, 0.0f,
-        -5.0f, -0.5f, -5.0f,  0.0f, 2.0f,
-         5.0f, -0.5f, -5.0f,  2.0f, 2.0f								
-    };
-    float cubeVertices[] = {
-    // positions          // normals           // texture coords
-    -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
-     0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 0.0f,
-     0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f,
-     0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 1.0f,
-    -0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 1.0f,
-    -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
-
-    -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 0.0f,
-     0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 0.0f,
-     0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 1.0f,
-     0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   1.0f, 1.0f,
-    -0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 1.0f,
-    -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,   0.0f, 0.0f,
-
-    -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
-    -0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
-    -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
-    -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
-    -0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
-    -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
-
-     0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
-     0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f,
-     0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
-     0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 1.0f,
-     0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  0.0f, 0.0f,
-     0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f,
-
-    -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f,
-     0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 1.0f,
-     0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f,
-     0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  1.0f, 0.0f,
-    -0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 0.0f,
-    -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,  0.0f, 1.0f,
-
-    -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f,
-     0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 1.0f,
-     0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f,
-     0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  1.0f, 0.0f,
-    -0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 0.0f,
-    -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f
-};
-    glBufferData(GL_ARRAY_BUFFER, sizeof(cubeVertices), &cubeVertices, GL_STATIC_DRAW);
-
-    glGenVertexArrays(1, &VAO_ids[0]);  //cube VAO
-    glBindVertexArray(VAO_ids[0]);
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3*sizeof(float)));
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6*sizeof(float)));
-    glEnableVertexAttribArray(2);
-
-    glGenBuffers(1, &VBO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(planeVertices), &planeVertices, GL_STATIC_DRAW);
-
-    glGenVertexArrays(1, &VAO_ids[1]);
-    glBindVertexArray(VAO_ids[1]);
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3*sizeof(float)));
-    glEnableVertexAttribArray(2);
-
-    glBindVertexArray(0);
-}
 inline void send_transforms()
 {
     using namespace glm;
-    mat4 model(1.0f);
-    model = rotate(model, radians(0.f), vec3(1, 0, 0));
     mat4 view(1.0f);
     view = lookAt(cam_pos, cam_pos + cam_front, cam_up);
     mat4 projection = perspective(radians(45.f), float(WINDOW_W)/WINDOW_H, 0.1f, 100.f);
     
-    glUniformMatrix4fv(glGetUniformLocation(program_ids[0], "model_transform"), 1, GL_FALSE, value_ptr(model));
     glUniformMatrix4fv(glGetUniformLocation(program_ids[0], "view_transform"), 1, GL_FALSE, value_ptr(view));
     glUniformMatrix4fv(glGetUniformLocation(program_ids[0], "projection_transform"), 1, GL_FALSE, value_ptr(projection));
 }
 static glm::vec3 light_pos(0, 0, 1.2);
-inline void send_light_transforms()
-{
-    using namespace glm;
-    mat4 model(1.0f);
-    model = translate(model, light_pos);
-    model = scale(model, vec3(0.2f));
-    glUniformMatrix4fv(glGetUniformLocation(program_ids[0], "model_transform"), 1, GL_FALSE, value_ptr(model));
-}
 inline void send_light_info()
 {
     glUniform3f(glGetUniformLocation(program_ids[0], "lights[0].color"), 1.0, 1.0, 1.0);
@@ -275,11 +184,10 @@ void render()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
     light_pos = glm::vec3(3*sin(glfwGetTime()), 0, 3*cos(glfwGetTime()));
-    glUseProgram(program_ids[0]);
     send_light_info();
     send_transforms();
-
-
+    //draw plane
+    plane_ptr->draw(program_ids[0]);
     //draw cube
     cube_ptr->draw(program_ids[0]);
     //draw backpack 
