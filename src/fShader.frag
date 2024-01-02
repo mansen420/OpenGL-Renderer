@@ -41,8 +41,8 @@ vec4 diffuse_map = texture(diffuse_maps[0], tex_coord);
 vec4 spec_map = texture(spec_maps[0], tex_coord);
 vec3 object_color = vertex_color;
 
-const float SHININESS = 64;
-const float KL = 0.22;    //linear distance attenuation factor
+const float SHININESS = 24.0;
+const float KL = 0.20;    //linear distance attenuation factor
 const float KQ = 0.20;    //quadratic distance attenuation factor
 void main()
 {   
@@ -68,15 +68,20 @@ void main()
     light sunlight;
     sunlight.pos = vec4(0.0, -1.0, 0.0, 0.0);
     sunlight.color = vec3(1.0, 0.85, 0.65);
-    light_output += shade_directional(sunlight);
-
-    fragment_output = diffuse_map;
+    //light_output += shade_directional(sunlight);
+    float gamma = 2.2;
+    fragment_output = vec4(pow(light_output.rgb, vec3(1/gamma)), 1.0);
 }
 float spec(vec3 light_dir)
 {   //expects light_dir TOWARDS the surface
     vec3 view_direction = normalize(eye_pos-frag_pos);
-    vec3 reflect_direction = reflect(vec3(light_dir), normalize(surface_normal));
-    float angular_intensity = max(dot(view_direction, normalize(reflect_direction)), 0);
+    //vec3 reflect_direction = reflect(vec3(light_dir), normalize(surface_normal));
+    vec3 halfway_vector;
+    if (dot(normalize(surface_normal), normalize(light_dir))>0)
+        return 0;
+    else 
+        halfway_vector = normalize(view_direction+light_dir);
+    float angular_intensity = max(dot(halfway_vector, normalize(surface_normal)), 0);
     float spec_intensity = pow(angular_intensity, SHININESS);
     return spec_intensity;
 }
