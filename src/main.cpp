@@ -13,7 +13,7 @@ constexpr float aspect_ratio = 16.0/9.0;
 constexpr int WINDOW_H = 600;
 constexpr int WINDOW_W = aspect_ratio * WINDOW_H;
 //statics
-static object_3D::object my_object; 
+static object_3D::object my_object;
 static object_3D::array_drawable* cube_ptr;
 static object_3D::array_drawable* plane_ptr;
 static GLFWwindow* myWindow;
@@ -69,13 +69,13 @@ int main()
     //sendVertexData();
     float planeVertices[] = {
         // positions          // texture Coords (note we set these higher than 1 (together with GL_REPEAT as texture wrapping mode). this will cause the floor texture to repeat)
-         5.0f, -0.5f,  5.0f,  2.0f, 0.0f,
-        -5.0f, -0.5f,  5.0f,  0.0f, 0.0f,
-        -5.0f, -0.5f, -5.0f,  0.0f, 2.0f,
+         5.0f, -0.5f,  5.0f, 0.0, 1.0, 0.0, 2.0f, 0.0f,
+        -5.0f, -0.5f,  5.0f, 0.0, 1.0, 0.0, 0.0f, 0.0f,
+        -5.0f, -0.5f, -5.0f, 0.0, 1.0, 0.0, 0.0f, 2.0f,
 
-         5.0f, -0.5f,  5.0f,  2.0f, 0.0f,
-        -5.0f, -0.5f, -5.0f,  0.0f, 2.0f,
-         5.0f, -0.5f, -5.0f,  2.0f, 2.0f								
+         5.0f, -0.5f,  5.0f, 0.0, 1.0, 0.0, 2.0f, 0.0f,
+        -5.0f, -0.5f, -5.0f, 0.0, 1.0, 0.0, 0.0f, 2.0f,
+         5.0f, -0.5f, -5.0f, 0.0, 1.0, 0.0, 2.0f, 2.0f								
     };
     float cubeVertices[] = {
     // positions          // normals           // texture coords
@@ -122,7 +122,7 @@ int main()
     -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f
 };
    
-    object_3D::array_drawable plane(planeVertices, sizeof(planeVertices), false, true);
+    object_3D::array_drawable plane(planeVertices, sizeof(planeVertices), true, true);
     plane.send_data();
     plane.textures.diffuse_map.id = tex_ids[1];
     object_3D::array_drawable cube(cubeVertices, sizeof(cubeVertices), true, true);
@@ -193,7 +193,7 @@ void render()
     glClearColor(0.1f, 0.1f, 0.1f, 1.f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-    light_pos = glm::vec3(3*sin(glfwGetTime()), 0, 3*cos(glfwGetTime()));
+    light_pos = glm::vec3(3*sin(glfwGetTime()), 1.2f, 3*cos(glfwGetTime()));
     glUseProgram(program_ids[0]);
     send_light_info();
     send_transforms();
