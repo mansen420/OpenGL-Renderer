@@ -385,7 +385,7 @@ bool gen_texture(const char* file_path, unsigned int &tex_id)
     glGenTextures(1, &tex_id);
     glBindTexture(GL_TEXTURE_2D, tex_id);
 
-    glTexImage2D(GL_TEXTURE_2D, 0, img_nrChannels == 3 ? GL_RGB : GL_RGBA, img_width, img_height, 0, img_nrChannels == 3 ? GL_RGB : GL_RGBA, GL_UNSIGNED_BYTE, data);
+    glTexImage2D(GL_TEXTURE_2D, 0, img_nrChannels == 3 ? GL_SRGB : GL_SRGB_ALPHA, img_width, img_height, 0, img_nrChannels == 3 ? GL_RGB : GL_RGBA, GL_UNSIGNED_BYTE, data);
     glGenerateMipmap(GL_TEXTURE_2D);
 
     glBindTexture(GL_TEXTURE_2D, 0);
@@ -413,7 +413,8 @@ bool gen_cubemap(const std::vector<std::string> &file_paths, unsigned int &cubem
         }
         std::cout << "Loaded texture : " << file_paths[i] <<std::endl;
         GLenum format = img_nrChannels == 3 ? GL_RGB : GL_RGBA;
-        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X+i, 0, format, img_width, img_height, 0, format,
+        GLenum internal_format = img_nrChannels == 3 ? GL_SRGB : GL_SRGB_ALPHA;
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X+i, 0, internal_format, img_width, img_height, 0, format,
         GL_UNSIGNED_BYTE, data);
         glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
         stbi_image_free(data);
