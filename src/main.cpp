@@ -45,13 +45,11 @@ int main()
     }
     {   //link shaders using a single vertex shader id. Program switching is expensive.
         //the same shader can be attached to multiple programs, and the inverse is true.
-        unsigned int vShader, fShader, fShader2;
+        unsigned int vShader, fShader;
         bool shaders_made = 
         compileShaderFromPath(VERTEX_SHADER, vShader, "src/vShader.vert") &&
         compileShaderFromPath(FRAGMENT_SHADER, fShader, "src/fShader.frag")&&
-        compileShaderFromPath(FRAGMENT_SHADER, fShader2, "src/fShader2.frag")&&
-        linkShaders(program_ids[0], vShader, fShader) &&
-        linkShaders(program_ids[1], vShader, fShader2);
+        linkShaders(program_ids[0], vShader, fShader);
         if (!shaders_made)
         {
             glfwTerminate();
@@ -59,7 +57,6 @@ int main()
         }
         glDeleteShader(vShader);
         glDeleteShader(fShader);
-        glDeleteShader(fShader2);
     }
     gen_texture("marble.jpg", tex_ids[0]);
     gen_texture("metal.png", tex_ids[1]);
