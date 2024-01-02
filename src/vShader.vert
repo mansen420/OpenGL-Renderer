@@ -8,7 +8,13 @@ out vec3 surface_normal;
 out vec3 frag_pos;
 out vec2 tex_coord;
 
-uniform mat4 model_transform, view_transform, projection_transform;
+layout (std140, binding = 0) uniform matrices
+{
+    mat4 view_transform;    //0-->64
+    mat4 projection_transform; //64--128
+};
+uniform mat4 model_transform;
+
 void main()
 {
     surface_normal  = mat3(transpose(inverse(model_transform)))*vertex_normal;
