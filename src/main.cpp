@@ -21,6 +21,7 @@ static GLFWwindow* myWindow;
 static unsigned int program_ids[10];    //TODO should support dynamic id numbers
 static unsigned int VAO_ids[10];
 static unsigned int tex_ids[10];
+static unsigned int uniform_buffer_block_ids[10];
 
 static glm::vec3 cam_pos(0, 0, 1);
 static glm::vec3 cam_front(0, 0, -1);
@@ -130,6 +131,14 @@ int main()
     cube_ptr = &cube;
     plane_ptr = &plane;
     my_object.send_data();
+    //*****************************
+    unsigned int &ubo = uniform_buffer_block_ids[0];
+    glGenBuffers(1, &ubo);
+    glBindBuffer(GL_UNIFORM_BUFFER, ubo);
+    glBufferData(GL_UNIFORM_BUFFER, 2*sizeof(glm::mat4), NULL, GL_STATIC_DRAW);
+    glBindBufferBase(GL_UNIFORM_BUFFER, 0, ubo);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+    //*****************************
     //renderloop
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_STENCIL_TEST);
@@ -164,8 +173,12 @@ inline void send_transforms()
     view = lookAt(cam_pos, cam_pos + cam_front, cam_up);
     mat4 projection = perspective(radians(45.f), float(WINDOW_W)/WINDOW_H, 0.1f, 100.f);
     
-    glUniformMatrix4fv(glGetUniformLocation(program_ids[0], "view_transform"), 1, GL_FALSE, value_ptr(view));
-    glUniformMatrix4fv(glGetUniformLocation(program_ids[0], "projection_transform"), 1, GL_FALSE, value_ptr(projection));
+    glBindBuffer(GL_UNIFORM_BUFFER, uniform_buffer_block_ids[0]);
+
+    mat4 data[2]{view, projection};
+    glBufferData(GL_UNIFORM_BUFFER, 2*sizeof(mat4), data, GL_STATIC_DRAW);
+
+    glBindBuffer(GL_UNIFORM_BUFFER,  0);
 }
 static glm::vec3 light_pos(0, 0, 1.2);
 inline void send_light_info()
@@ -181,6 +194,7 @@ void render()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
     light_pos = glm::vec3(3*sin(glfwGetTime()), 0, 3*cos(glfwGetTime()));
+    glUseProgram(program_ids[0]);
     send_light_info();
     send_transforms();
     //draw plane
