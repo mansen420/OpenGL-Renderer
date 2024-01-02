@@ -42,10 +42,12 @@ vec4 spec_map = texture(spec_maps[0], tex_coord);
 vec3 object_color = vertex_color;
 
 const float SHININESS = 24.0;
-const float KL = 0.20;    //linear distance attenuation factor
-const float KQ = 0.20;    //quadratic distance attenuation factor
+const float KL = 0.00;    //linear distance attenuation factor
+const float KQ = 1.00;    //quadratic distance attenuation factor
 void main()
-{   
+{
+    float gamma = 2.2;
+    spec_map = vec4(pow(spec_map.rgb, vec3(1/gamma)), spec_map.a);
     vec4 light_output = vec4(0, 0, 0, 1);
     for (int i = 0; i < valid_size; i++)
     {
@@ -64,12 +66,11 @@ void main()
     s.core.pos = vec4(eye_pos, 1);
     s.direction = vec3(0, 0, -1);
     s.cosine_angle = cos(radians(12.5));
-    //light_output += vec4(shade_spot(s), 1);
+    light_output += vec4(shade_spot(s), 1);
     light sunlight;
     sunlight.pos = vec4(0.0, -1.0, 0.0, 0.0);
     sunlight.color = vec3(1.0, 0.85, 0.65);
     //light_output += shade_directional(sunlight);
-    float gamma = 2.2;
     fragment_output = vec4(pow(light_output.rgb, vec3(1/gamma)), 1.0);
 }
 float spec(vec3 light_dir)
@@ -92,11 +93,11 @@ vec3 shade_spot(spotlight s_light)
     if (cos_phi>=s_light.cosine_angle)
     {
         float d = length(frag_pos-vec3(s_light.core.pos));
-        float distance_attenuation = 1.0/(1.0+0*d+(0.1)*d*d);
+        float distance_attenuation = 1.0/(d*d);
         //the higher this is, the closer we are to the center of the spotlight
         float attenuation_factor = (cos_phi-s_light.cosine_angle);  //[0, 1-cosine_angle]
         attenuation_factor /= (1-s_light.cosine_angle); //[0, 1]
-        return distance_attenuation*(0.5*attenuation_factor + 1.5*pow(attenuation_factor, 2))*   //sharpness factor * attenuation factor 
+        return distance_attenuation*(0.5*attenuation_factor + 0.5*pow(attenuation_factor, 2))*   //sharpness factor * attenuation factor 
         (vec3(diffuse_map)*s_light.core.color + vec3(spec_map)*spec(s_light.direction));
     }
     return vec3(0, 0, 0);
