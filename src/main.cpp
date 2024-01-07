@@ -36,7 +36,6 @@ void frame_buffer_callback(GLFWwindow* window, int width, int height);
 void process_input(GLFWwindow* window);
 inline bool initialize();
 inline void render();
-void sendVertexData();
 int main()
 {
     if (!initialize())
