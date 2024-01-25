@@ -1,28 +1,32 @@
-srcFiles := $(shell find src/ -name '*.cpp')
-objectFiles := bin/main.o
-DEPS := $(wildcard include/*/*.h) $(wildcard include/*.h) $(wildcard src/*.frag) $(wildcard src/*.vert)
-cflags := -Wall $(shell pkg-config --cflags glfw3) -Iinclude/
-linkerOptions := $(shell pkg-config --static --libs glfw3)
+EXE := main.exe
+SRC_DIR := src
+IMGUI_DIR := imgui
+BIN_DIR := bin
 
-bin/main.exe: $(objectFiles) bin/glad.o
-	g++ -o $@ $(objectFiles) bin/glad.o $(linkerOptions) && ./$@
+SRC_FILES := $(wildcard $(SRC_DIR)/*.cpp)
+SRC_FILES += $(wildcard $(IMGUI_DIR)/*.cpp)
+SRC_FILES += $(IMGUI_DIR)/backends/imgui_impl_glfw.cpp $(IMGUI_DIR)/backends/imgui_impl_opengl3.cpp
+OBJ_FILES := $(addsuffix .o, $(basename $(notdir $(SRC_FILES))))
+OBJ_FILES += glad.o
+BIN_OBJ_FILES = $(addprefix $(BIN_DIR)/, $(OBJ_FILES))
 
-$(objectFiles): bin/%.o : src/%.cpp $(DEPS)
-	g++ -c $(cflags) $< && mv *.o bin/
+CXXFLAGS := -Wall $(shell pkg-config --cflags glfw3) -Iinclude/ -I$(IMGUI_DIR)/ -I$(IMGUI_DIR)/backends
+LIBS := $(shell pkg-config --static --libs glfw3)
 
-bin/glad.o: src/glad.c 	#special rule for glad.c
-	g++ -c $(cflags) src/glad.c && mv glad.o bin/
+$(BIN_DIR)/%.o:$(SRC_DIR)/%.cpp
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
-clean:
-	cd bin/ && rm *.o *.exe
-run:
-	./bin/main.exe
+$(BIN_DIR)/%.o:$(IMGUI_DIR)/%.cpp
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
-#how I linked with assimp : for future reference
-#	1. I cloned and built the project
-#	2. I copied the assimp.pc file to usr/local/lib/pkconfig
-#	3. I specifeid the pkg-config path in my .bashrc
-#	4. I included pkg-config --cflags --libs Assimp in my makefile
-#	5. I specified the LD_LIBRARY_PATH to usr/local/lib in my .bashrc
-#	6. I moved libassimp.so.5 to the library path
-#	7. profit
+$(BIN_DIR)/%.o:$(IMGUI_DIR)/backends/%.cpp
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
+
+$(BIN_DIR)/$(EXE):$(BIN_OBJ_FILES)
+	$(CXX) -o $@ $^ $(CXXFLAGS) $(LIBS) && ./$@
+
+$(BIN_DIR)/glad.o : $(SRC_DIR)/glad.c
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
+
+run : 
+	./$(BIN_DIR)/$(EXE)
