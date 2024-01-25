@@ -6,7 +6,9 @@
 #include "glm/gtc/type_ptr.hpp"
 
 #include <iostream>
+
 #include "global_constants.h"
+
 #include "imgui.h"
 #include "backends/imgui_impl_glfw.h"
 #include "backends/imgui_impl_opengl3.h"
@@ -40,7 +42,7 @@ int main()
 
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-        
+
         glfwSwapBuffers(myWindow);
     }
     ImGui_ImplOpenGL3_Shutdown();
