@@ -362,6 +362,8 @@ bool read_obj(std::string path, object_3D::object &obj)
         std::string file_name = materials[i].diffuse_texname;
         gen_texture((directory+file_name).c_str(), obj_materials[i].diffuse_map.id);
         
+        //TODO what if there are no textures? what if there are more textures?
+
         file_name = materials[i].specular_texname;
         gen_texture((directory+file_name).c_str(), obj_materials[i].spec_map.id);
     }

@@ -10,7 +10,8 @@
 enum shader_type_option
 {
     VERTEX_SHADER,
-    FRAGMENT_SHADER
+    FRAGMENT_SHADER,
+    GEOMETRY_SHADER
 };
 //reads file into file_contents_holder
 //WARNING : caller must ensure that file_contents_holder is properly delete[]`d.
