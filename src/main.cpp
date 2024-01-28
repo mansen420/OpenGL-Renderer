@@ -2,15 +2,16 @@
 #include "renderer.h"
 
 //what we need :
-//1. input handling ()
+//1. input handling (1/2)
 //2. GUI elements (x)
-//3. Import feature ()
+//3. Import feature (1/2)
 //4. Screen space processing
 //5. shader pre-processor 
 //6. shader post-processor
 //7. center and rescale objects on load
 //8. have default objects (cube or sphere) for experimenting with shaders
 //9. allow editing of object physical attributes on gui 
+//we need abstraction for ()shaders, ()uniforms, (x)drawing
 int main()
 {   
     if (!window::init())

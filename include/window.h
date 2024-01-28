@@ -59,10 +59,14 @@ namespace window
         | ImGuiWindowFlags_MenuBar;
 
         if (!Begin("Work Space", NULL, flags))
-        {
+        {   
             End();
             return;
         }
+        Text("Some really convenient stuff!");
+        ImGui::Spacing();
+        SeparatorText("Something");
+        SeparatorText("Something else");
         End();
     }
     inline void main_bar()

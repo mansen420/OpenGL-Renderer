@@ -49,7 +49,6 @@ namespace renderer
         my_object.model_transform = model_transform;
         my_object.draw(program_id);
     }
-    //we need abstraction for ()shaders, ()uniforms, (x)drawing
     inline void init()
     {
         read_obj("assets/backpack/backpack.obj", my_object);
