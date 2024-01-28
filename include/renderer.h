@@ -10,6 +10,8 @@
 #include "shader_utils.h"
 #include "object_interface.h"
 
+#include "global_constants.h"
+
 //render settings
 bool DEPTH_CLR_ENBLD = 1, COLOR_CLR_ENBLD = 1;
 bool DEPTH_TEST_ENBLD = 1;

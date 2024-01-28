@@ -8,10 +8,11 @@
 #include "imgui.h"
 #include "backends/imgui_impl_glfw.h"
 #include "backends/imgui_impl_opengl3.h"
+#include "callbacks.h"
+#include "event_handling.h"
 
 namespace window
 {
-    GLFWwindow* myWindow;
     bool init()
     {
         //glfw boilerplate
@@ -33,20 +34,70 @@ namespace window
             std::cout << "failed to initialize GLAD" << std::endl;
             return false;
         }
-        glViewport(0, 0, WINDOW_W, WINDOW_H);
+
+        glViewport(OPENGL_VIEWPORT_X, OPENGL_VIEWPORT_Y, OPENGL_VIEWPORT_W, OPENGL_VIEWPORT_H);
+
+        register_GLFW_callbacks();
+
         IMGUI_CHECKVERSION();
         ImGui::CreateContext();
         ImGui_ImplGlfw_InitForOpenGL(myWindow, true);
         ImGui_ImplOpenGL3_Init();
+
         return true;
     }
-    void poll_events()
+    
+    inline void workspace_panel()
     {
-        glfwPollEvents();
+        using namespace ImGui;
+        ImGuiViewport* whole_window = GetMainViewport();
+        ImVec2 pos(whole_window->Pos.x+OPENGL_VIEWPORT_W, whole_window->Pos.y);
+        SetNextWindowPos(ImVec2(pos));
+        SetNextWindowSize(ImVec2((WINDOW_W-OPENGL_VIEWPORT_W), WINDOW_H));
+        ImGuiWindowFlags flags = 0;
+        flags |= ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse
+        | ImGuiWindowFlags_MenuBar;
+
+        if (!Begin("Work Space", NULL, flags))
+        {
+            End();
+            return;
+        }
+        End();
     }
-    void swap_buffers()
+    inline void main_bar()
     {
-        glfwSwapBuffers(myWindow);
+        using namespace ImGui;
+        ImGuiViewport* whole_window = GetMainViewport();
+        ImVec2 pos(whole_window->Pos.x, whole_window->Pos.y);
+        SetNextWindowPos(ImVec2(pos));
+        SetNextWindowSize(ImVec2(OPENGL_VIEWPORT_W, WINDOW_H-OPENGL_VIEWPORT_H));
+        ImGuiWindowFlags flags = 0;
+        flags |= ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse
+        | ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoTitleBar;
+
+        if (!Begin("Menu Bar", NULL, flags))
+        {
+            End();
+            return;
+        }
+        PushItemWidth(GetFontSize());
+        if(BeginMenuBar())  //main menu bar
+        {
+            if(BeginMenu("File"))
+            {
+                if(MenuItem("Import", "ctrl+o", &should_import)){}
+                EndMenu();
+            }
+            if(BeginMenu("Options", false))
+            {
+                EndMenu();
+            }
+            ImGui::Separator();
+            MenuItem("Quit", "esc", &should_quit);
+            EndMenuBar();
+        }
+        End();
     }
     void render_gui()
     {
@@ -55,10 +106,22 @@ namespace window
         ImGui::NewFrame();
 
         ImGui::ShowDemoWindow();
-
+        ImFont* font_ptr = ImGui::GetFont();
+        font_ptr->Scale = 1.5f;
+        workspace_panel();
+        main_bar();
 
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+    }
+    void poll_events()
+    {
+        events::poll();
+        glfwPollEvents();
+    }
+    void swap_buffers()
+    {
+        glfwSwapBuffers(myWindow);
     }
     void terminate()
     {
