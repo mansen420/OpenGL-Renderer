@@ -9,38 +9,12 @@
 #include "callbacks.h"
 
 #include <iostream>
+#include "window.h"
 //event handler
 namespace events
 {
-    void import()
-    {
-        std::cout << "IMPORT!" << std::endl;    //temporary, obviously
-    }
-    void quit(){glfwSetWindowShouldClose(myWindow, true);}
-    void quit_window()
-    {
-        //maybe do this?
-        using namespace ImGui;
-        bool pause_main_loop = true;
-        while (pause_main_loop)
-        {
-            ImGui_ImplOpenGL3_NewFrame();
-            ImGui_ImplGlfw_NewFrame();
-            ImGui::NewFrame();
-
-            if(Begin("Quit", NULL, ImGuiWindowFlags_NoDecoration))
-            {
-                Text("Do you want to quit?");
-                End();            
-            }
-            
-            ImGui::Render();
-            ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-        }
-    }
-    inline void poll()
-    {
-        if(should_import) {should_import = false; import();}
-        if (should_quit){should_quit = false; quit();}
-    }
+    void import();
+    void quit();
+    void quit_window();
+    void react();
 }

@@ -1,20 +1,17 @@
-#ifndef GLOBAL_CONST
-#define GLOBAL_CONST
-
+#pragma once
+#include "GLFW/glfw3.h"
 constexpr float aspect_ratio = 16.0/9.0;
 constexpr int OPENGL_VIEWPORT_H = 720;
 constexpr int OPENGL_VIEWPORT_W = aspect_ratio * OPENGL_VIEWPORT_H;
 
-int OPENGL_VIEWPORT_X = 0;
-int OPENGL_VIEWPORT_Y = 0;
+extern int OPENGL_VIEWPORT_X;
+extern int OPENGL_VIEWPORT_Y;
 
-int WINDOW_H = 1.05*OPENGL_VIEWPORT_H;
-int WINDOW_W = 1.2*OPENGL_VIEWPORT_W;
+extern int WINDOW_H;
+extern int WINDOW_W;
 
-GLFWwindow* myWindow;
+extern GLFWwindow* myWindow;    
 
 //event stuff
-bool should_import = false;
-bool should_quit = false;
-
-#endif
+extern bool should_import;
+extern bool should_quit;

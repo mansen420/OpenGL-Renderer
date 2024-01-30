@@ -3,10 +3,8 @@
 
 #define VS_TRNSFRM_MDL_NAME "model_transform"
 
-#define TINYOBJLOADER_IMPLEMENTATION ;
 #include "tiny_obj_loader.h"
 
-#define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
 #include "glad/glad.h"

@@ -29,5 +29,5 @@ int main()
         window::swap_buffers();
     }
     window::terminate();
-    return 0;
+       return 0;
 }
