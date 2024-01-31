@@ -17,5 +17,5 @@ namespace renderer
 {
     void clear_buffers();
     void render_scene();
-    void init();
+    int init();
 }
