@@ -2,7 +2,7 @@
 
 #include "glad/glad.h"  //include glad.h before glfw3.h
 #include "GLFW/glfw3.h"
-#include <iostream>
+
 #include "imgui.h"
 #include "imfilebrowser.h"
 #include "backends/imgui_impl_glfw.h"

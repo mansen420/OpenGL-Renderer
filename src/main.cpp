@@ -16,7 +16,8 @@ int main()
 {   
     if (!window::init())
         return -1;
-    renderer::init();
+    if (!renderer::init())
+        return -1;
     while (!glfwWindowShouldClose(myWindow))
     {
         window::poll_events();
@@ -29,5 +30,5 @@ int main()
         window::swap_buffers();
     }
     window::terminate();
-       return 0;
+    return 0;
 }

@@ -27,7 +27,7 @@ void main_bar()
     ImGuiViewport* whole_window = GetMainViewport();
     ImVec2 pos(whole_window->Pos.x, whole_window->Pos.y);
     SetNextWindowPos(ImVec2(pos));
-    SetNextWindowSize(ImVec2(OPENGL_VIEWPORT_W, WINDOW_H-OPENGL_VIEWPORT_H));
+    SetNextWindowSize(ImVec2(OPENGL_VIEWPORT_W, -1));
     ImGuiWindowFlags flags = 0;
     flags |= ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoCollapse
     | ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoTitleBar;
