@@ -3,9 +3,9 @@
 
 //what we need :
 //1. input handling (1/2)
-//2. GUI elements (x)
+//2. GUI elements (1/2)
 //3. Import feature (1/2)
-//4. Screen space processing
+//4. Screen space processing (1/2)
 //5. shader pre-processor 
 //6. shader post-processor
 //7. center and rescale objects on load
