@@ -13,7 +13,7 @@
 #include "event_handling.h"
 #include "gui.h"
 
-bool window::init()
+int window::init()
 {
     //glfw boilerplate
     glfwInit();

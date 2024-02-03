@@ -21,6 +21,7 @@ namespace renderer
         extern bool PP_ENBLD;
         extern unsigned int RENDER_W, RENDER_H;
     }
+    void terminate();
     void clear_buffers();
     void render_scene();
     void update_screen_tex_coords();

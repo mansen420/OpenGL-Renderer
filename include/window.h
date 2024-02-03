@@ -2,7 +2,7 @@
 
 namespace window
 {
-    bool init();
+    int init();
     
     void render_gui();
     void poll_events();
