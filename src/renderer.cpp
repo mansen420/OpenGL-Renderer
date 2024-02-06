@@ -5,10 +5,9 @@
 //TODO fix these
 #include "shader_utils.h"
 #include "object_interface.h"
-//render settings
-
 namespace renderer
 {   
+
     //renderer configuration
     namespace settings
     {
@@ -19,8 +18,8 @@ namespace renderer
 
         const unsigned int *active_object_shader, *active_pp_shader;
 
-        bool display_object_colorbuffer = 1, display_object_depthbuffer = 0,
-        display_object_stencilbuffer = 0;
+        scr_display_mode display_mode = COLOR;
+        renderport_behaviour rndrprt_behaviour = CONSTANT_ASPECT_RATIO;
 
         bool PP_ENBLD = 1;
         unsigned int RENDER_W = 1920, RENDER_H = 1080;
@@ -120,7 +119,7 @@ namespace renderer
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-        //depth+depth since we need both, and the author's machine only supports the combined format in this case
+        //depth+stencil since we need both, and the author's machine only supports the combined format in this case
         glBindTexture(GL_TEXTURE_2D, offscreen_tex_ids[1]);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, rendering_width, rendering_height, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, NULL);
         glGenerateMipmap(GL_TEXTURE_2D);
@@ -171,10 +170,23 @@ namespace renderer
         float viewport_aspect_ratio = float(OPENGL_VIEWPORT_W)/OPENGL_VIEWPORT_H;
         float ratio = render_aspect_ratio/viewport_aspect_ratio;
 
+        //determine renderport cut-out 
         ratio > 1.0 ? SCR_TEX_RIGHT = 1/ratio :  SCR_TEX_TOP = ratio;
-        std::cout << SCR_TEX_TOP << '\t' << SCR_TEX_RIGHT << std::endl;
-        delete[] screen_coords;
-        screen_coords = new float[]
+
+        //shift viewport into middle of renderport 
+        float remainder = 1.0 - SCR_TEX_RIGHT;
+        SCR_TEX_RIGHT += remainder/2;
+        SCR_TEX_LEFT = remainder/2;
+
+        remainder = 1.0 - SCR_TEX_TOP;
+        SCR_TEX_TOP += remainder/2;
+        SCR_TEX_BOTTOM = remainder;
+
+        std::cout << SCR_TEX_TOP << ' ' << SCR_TEX_BOTTOM << '\t' << SCR_TEX_RIGHT << ' ' <<SCR_TEX_LEFT << std::endl;
+
+        //free old memory, alloc new memory. Maybe better to simply modify the old memory?
+        delete[] screen_coords; 
+        screen_coords = new float[] 
         {
         // positions    // texCoords
         -1.0f,  1.0f,  SCR_TEX_LEFT, SCR_TEX_TOP, 
@@ -185,6 +197,7 @@ namespace renderer
          1.0f,  1.0f,  SCR_TEX_RIGHT, SCR_TEX_TOP, 
          1.0f, -1.0f,  SCR_TEX_RIGHT, SCR_TEX_BOTTOM
         };
+
         send_screen_coords();
     }
     int init()
