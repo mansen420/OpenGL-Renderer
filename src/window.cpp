@@ -54,6 +54,7 @@ void window::render_gui()
     ImGui::NewFrame();
 
     ImGui::ShowDemoWindow();
+    //TODO something about fonts
     ImFont* font_ptr = ImGui::GetFont();
     font_ptr->Scale = 1.5f;
     
