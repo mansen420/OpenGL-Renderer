@@ -289,6 +289,7 @@ bool read_obj(std::string path, object_3D::object &obj)
     //build object vertex array
     std::vector<object_3D::vertex> &vertices = obj.vertices;
     vertices = std::vector<object_3D::vertex>(vertex_attribs.vertices.size()/3);
+
     for(size_t i = 0; i < shapes.size(); i++)
     {   
         std::vector<unsigned int> recorded_indices;
@@ -305,25 +306,31 @@ bool read_obj(std::string path, object_3D::object &obj)
                     break;
                 }
             }
+
             if (new_vertex)  //construct and record the vertex
             {
                 recorded_indices.push_back(vertex_index);
                 object_3D::vertex temp_vert;
 
+
                 temp_vert.pos_coords.x = vertex_attribs.vertices[3*vertex_index + 0];
                 temp_vert.pos_coords.y = vertex_attribs.vertices[3*vertex_index + 1];
                 temp_vert.pos_coords.z = vertex_attribs.vertices[3*vertex_index + 2];
-
+                
+                //index of -1 signifies non-available data
                 const unsigned int normal_index = raw_indices[j].normal_index;
-                if(normal_index >= 0)   //-1 signifies non-available data
+                bool should_add_normals = normal_index >= 0 && vertex_attribs.normals.size() > 0;
+
+                if(should_add_normals)
                 {
                     temp_vert.normal_coords.x = vertex_attribs.normals[3*normal_index + 0];
                     temp_vert.normal_coords.y = vertex_attribs.normals[3*normal_index + 1];
                     temp_vert.normal_coords.z = vertex_attribs.normals[3*normal_index + 2];
-                }
+                } 
 
                 const unsigned int tex_index = raw_indices[j].texcoord_index;
-                if (tex_index >= 0)
+                bool should_add_texture_coords = tex_index >=0 && vertex_attribs.texcoords.size() > 0;
+                if (should_add_texture_coords)
                 {
                     temp_vert.tex_coords.x = vertex_attribs.texcoords[2*tex_index + 0];
                     temp_vert.tex_coords.y = vertex_attribs.texcoords[2*tex_index + 1];
@@ -356,14 +363,17 @@ bool read_obj(std::string path, object_3D::object &obj)
     {
         //within this directory, we will search for the texture names
         const std::string directory = path.substr(0, path.find_last_of("/\\")+1);
-
-        std::string file_name = materials[i].diffuse_texname;
-        gen_texture((directory+file_name).c_str(), obj_materials[i].diffuse_map.id);
+        std::string file_name;
+        //TODO the below command is a candidate for a function that takes any texture type as paramater
+        file_name = materials[i].diffuse_texname;
+        if (!file_name.empty())
+            gen_texture((directory+file_name).c_str(), obj_materials[i].diffuse_map.id);
         
         //TODO what if there are no textures? what if there are more textures?
 
         file_name = materials[i].specular_texname;
-        gen_texture((directory+file_name).c_str(), obj_materials[i].spec_map.id);
+        if (!file_name.empty())
+            gen_texture((directory+file_name).c_str(), obj_materials[i].spec_map.id);
     }
     return true;
 }
