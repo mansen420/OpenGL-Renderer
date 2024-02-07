@@ -1,13 +1,11 @@
 #define STB_IMAGE_IMPLEMENTATION
 #define TINYOBJLOADER_IMPLEMENTATION ;
 #include "renderer.h"
-
 //TODO fix these
 #include "shader_utils.h"
 #include "object_interface.h"
 namespace renderer
 {   
-
     //renderer configuration
     namespace settings
     {
@@ -22,7 +20,8 @@ namespace renderer
         renderport_behaviour rndrprt_behaviour = CONSTANT_ASPECT_RATIO;
 
         bool PP_ENBLD = 1;
-        unsigned int RENDER_W = 1920, RENDER_H = 1080;
+        size_t RENDER_W = 1920, RENDER_H = 1080;
+        float RENDER_AR = 16.0/9.0;
     }
     using namespace settings;
 
@@ -42,7 +41,7 @@ namespace renderer
     static float SCR_TEX_TOP = 1.0 , SCR_TEX_BOTTOM = 0.0;
     static float SCR_TEX_RIGHT = 1.0, SCR_TEX_LEFT = 0.0;
 
-    static float* screen_coords = new float[] 
+    static float* screen_coords = new float[24] 
     {
         // positions   // texCoords
         -1.0f,  1.0f,  SCR_TEX_LEFT, SCR_TEX_TOP, 
@@ -56,6 +55,9 @@ namespace renderer
     
     void send_uniforms()
     {
+        using namespace glm;
+        view_transform = lookAt(vec3(0.f, 0.f, 3.f), vec3(0.f, 0.f, 0.f), vec3(0.f, 1.f, 0.f));
+
         glUniformMatrix4fv(glGetUniformLocation(*active_object_shader, "projection_transform"), 1, GL_FALSE,
         glm::value_ptr(perspective_transform));
         glUniformMatrix4fv(glGetUniformLocation(*active_object_shader, "view_transform"), 1, GL_FALSE,
@@ -65,9 +67,8 @@ namespace renderer
     {
         glViewport(OPENGL_VIEWPORT_X, OPENGL_VIEWPORT_Y, RENDER_W, RENDER_H);
         glBindFramebuffer(GL_FRAMEBUFFER, offscreen_framebuffer_id);
-        if (DEPTH_TEST_ENBLD)
-            glEnable(GL_DEPTH_TEST);
-        glClear(GL_COLOR_BUFFER_BIT*COLOR_CLR_ENBLD | GL_DEPTH_BUFFER_BIT*DEPTH_CLR_ENBLD);
+        glEnable(GL_DEPTH_TEST*DEPTH_TEST_ENBLD);
+        glClear(GL_COLOR_BUFFER_BIT*COLOR_CLR_ENBLD | GL_DEPTH_BUFFER_BIT*DEPTH_CLR_ENBLD | GL_STENCIL_BUFFER_BIT*STENCIL_CLR_ENBLD);
 
         glUseProgram(*active_object_shader);
 
@@ -82,7 +83,7 @@ namespace renderer
     {
         glViewport(OPENGL_VIEWPORT_X, OPENGL_VIEWPORT_Y, OPENGL_VIEWPORT_W, OPENGL_VIEWPORT_H);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        glClear(GL_COLOR_BUFFER_BIT*COLOR_CLR_ENBLD);
+        glClear(GL_COLOR_BUFFER_BIT);
         glDisable(GL_DEPTH_TEST);
         glUseProgram(postprocess_shader);
 
@@ -97,6 +98,7 @@ namespace renderer
     }
     void render_scene()
     {
+        glClearColor(CLR_COLOR.r, CLR_COLOR.g, CLR_COLOR.b, CLR_COLOR.a);
         offscreen_pass();
         main_pass();
     }
@@ -109,6 +111,10 @@ namespace renderer
         glGenFramebuffers(1, &offscreen_framebuffer_id);
         glBindFramebuffer(GL_FRAMEBUFFER, offscreen_framebuffer_id);
 
+        if(glIsTexture(offscreen_tex_ids[0]) == GL_TRUE)
+        {
+            glDeleteTextures(2, offscreen_tex_ids);
+        }
         glGenTextures(2, offscreen_tex_ids);
 
         //color attachment
@@ -135,7 +141,7 @@ namespace renderer
             std::cout << "FRAMEBUFFER INCOMPLETE : "<< glCheckFramebufferStatus(GL_FRAMEBUFFER) << std::endl;
             //TODO throw some eror or smth 
             return false;
-        } 
+        }
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         return true;
     }
@@ -163,12 +169,26 @@ namespace renderer
 
         glBindVertexArray(0);
     }
+    void update_projection()
+    {
+        //TODO
+        // setting the aspect to RENDER_W/RENDER_H causes the image to stop shearing at high width,
+        // setting it to OPENGL_W/OPENGL_H causes the image to "fit" to the viewport
+        // I decided to set it to a user-specified value intead, and completely separate it from
+        // window or render dimensions. This gives the best behaviour
+        using namespace glm;
+        perspective_transform = perspective(radians(45.f), RENDER_AR, 0.1f, 100.f);
+    }
     //chef's kiss. works perfectly! next step is to be able to position the viewport inside the render space...
     void update_screen_tex_coords()
     {
         float render_aspect_ratio = float(RENDER_W)/RENDER_H;
         float viewport_aspect_ratio = float(OPENGL_VIEWPORT_W)/OPENGL_VIEWPORT_H;
         float ratio = render_aspect_ratio/viewport_aspect_ratio;
+
+        //reset coords 
+        SCR_TEX_TOP = 1.0;
+        SCR_TEX_RIGHT = 1.0;
 
         //determine renderport cut-out 
         ratio > 1.0 ? SCR_TEX_RIGHT = 1/ratio :  SCR_TEX_TOP = ratio;
@@ -180,13 +200,17 @@ namespace renderer
 
         remainder = 1.0 - SCR_TEX_TOP;
         SCR_TEX_TOP += remainder/2;
-        SCR_TEX_BOTTOM = remainder;
+        SCR_TEX_BOTTOM = remainder/2; 
 
-        std::cout << SCR_TEX_TOP << ' ' << SCR_TEX_BOTTOM << '\t' << SCR_TEX_RIGHT << ' ' <<SCR_TEX_LEFT << std::endl;
+        
+        std::cout << SCR_TEX_TOP << ' ' << SCR_TEX_BOTTOM << '\t' << SCR_TEX_RIGHT << ' ' << SCR_TEX_LEFT << std::endl;
+        std::cout << RENDER_W << ' ' << RENDER_H <<std::endl;
+        std::cout << OPENGL_VIEWPORT_W << ' ' << OPENGL_VIEWPORT_H <<std::endl;
+        std::cout << "*\t*" <<std::endl; 
 
         //free old memory, alloc new memory. Maybe better to simply modify the old memory?
         delete[] screen_coords; 
-        screen_coords = new float[] 
+        screen_coords = new float[24] 
         {
         // positions    // texCoords
         -1.0f,  1.0f,  SCR_TEX_LEFT, SCR_TEX_TOP, 
@@ -198,17 +222,18 @@ namespace renderer
          1.0f, -1.0f,  SCR_TEX_RIGHT, SCR_TEX_BOTTOM
         };
 
+        update_projection();
+        setup_offscreen_framebuffer(RENDER_W, RENDER_H);
         send_screen_coords();
     }
     int init()
     {
-        read_obj("assets/backpack/backpack.obj", my_object);
+        read_obj("assets/car/car.obj", my_object);
         my_object.send_data();
 
         if (!setup_offscreen_framebuffer(RENDER_W, RENDER_H))
             return false;
         update_screen_tex_coords();       
-        send_screen_coords();
 
         glClearColor(CLR_COLOR.r, CLR_COLOR.g, CLR_COLOR.b, CLR_COLOR.a);
 
@@ -219,10 +244,6 @@ namespace renderer
         "src/shaders/screen_PP.fs", postprocess_shader);
         active_pp_shader = &postprocess_shader;
 
-        using namespace glm;
-        model_transform = mat4(1.0);
-        view_transform = lookAt(vec3(0.f, 0.f, 3.f), vec3(0.f, 0.f, 0.f), vec3(0.f, 1.f, 0.f));
-        perspective_transform = perspective(radians(45.f), aspect_ratio, 0.1f, 100.f);
         return true;
     }
     void terminate()

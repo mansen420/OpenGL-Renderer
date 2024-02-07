@@ -33,7 +33,8 @@ namespace renderer
         extern scr_display_mode display_mode;
         extern renderport_behaviour rndrprt_behaviour;
         extern bool PP_ENBLD;
-        extern unsigned int RENDER_W, RENDER_H;
+        extern size_t RENDER_W, RENDER_H;
+        extern float RENDER_AR;
     }
     void terminate();
     void clear_buffers();
