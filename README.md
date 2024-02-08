@@ -31,9 +31,13 @@ Typically you would build the project inside your `` build `` directory. \
 This will compile and link with the GLFW library, and generate an executable called `` my_renderer `` inside the build directory.
 
 
-You have probably run into an error at the final step, or any of the steps before it. \
+You have probably run into an error at the final step, or any of the steps before it. 
+
+
 This project is **heavily a work in progress** and so far is only maintained for Linux. \
 GCC compiles the project with no issue. The Visual Studio compiler is known to throw many errors.
 We have not tested with MinGW, but you can try compiling with it if you are on Windows. \
-And finally, whether or not it will compile for MacOS, I do not know. \
+Whether or not it will compile for macOS, I do not know.
+
+
 In any case, this project is still in very early development, and we will consider extending support for more systems once the project reaches a mature state. 
