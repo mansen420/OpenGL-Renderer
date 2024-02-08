@@ -18,28 +18,26 @@ void workspace_panel()
     }
     PushItemWidth(GetWindowWidth()*0.15);
 
-    SeparatorText("Framebuffer Settings");
+    SeparatorText("Render Target Framebuffer Settings");
 
     using namespace renderer;
     using namespace settings;
 
-    Checkbox("Clear Depth Buffer", &DEPTH_CLR_ENBLD);
-    Checkbox("Clear Color Buffer", &COLOR_CLR_ENBLD);
+    Checkbox("Clear Depth Buffer", &DEPTH_CLR_ENBLD); SameLine();
+    Checkbox("Clear Color Buffer", &COLOR_CLR_ENBLD); SameLine();
     Checkbox("Clear Stencil Buffer", &STENCIL_CLR_ENBLD);
     Spacing();
-    Checkbox("Enable Depth Testing", &DEPTH_TEST_ENBLD);
-    Checkbox("Enable Stencil Testing", &STENCIL_TEST_ENBLD);
+    Checkbox("Enable Depth Testing", &DEPTH_TEST_ENBLD); SameLine();
+    Checkbox("Enable Stencil Testing", &STENCIL_TEST_ENBLD); SameLine();
     Spacing();
     ColorEdit4("Framebuffer Clear Color", &CLR_COLOR.r, ImGuiColorEditFlags_NoInputs);
-
-    SeparatorText("Render Settings");
-
+    Spacing();
     PopItemWidth();
     PushItemWidth(GetWindowWidth()*0.25);
     int render_w_candidate, render_h_candidate;
     render_w_candidate = int(RENDER_W); render_h_candidate = int(RENDER_H);
     bool should_update_screen_coords = false;
-    if (InputInt("Rendering Width", &render_w_candidate, 50.0, 500.0, ImGuiInputTextFlags_None))
+    if (InputInt("Width", &render_w_candidate, 50.0, 500.0, ImGuiInputTextFlags_None))
     {
         if(render_w_candidate >= 0 && render_w_candidate <= MAX_RENDER_W)
         {
@@ -47,7 +45,7 @@ void workspace_panel()
             should_update_screen_coords = true;
         }
     }
-    if (InputInt("Rendering Height", &render_h_candidate, 50.0, 500.0, ImGuiInputTextFlags_None))
+    if (InputInt("Height", &render_h_candidate, 50.0, 500.0, ImGuiInputTextFlags_None))
     {
         if(render_h_candidate >= 0 && render_h_candidate <= MAX_RENDER_H)
         {
@@ -56,7 +54,7 @@ void workspace_panel()
         }
     }
     float RENDER_AR_candidate = RENDER_AR;
-    if (InputFloat("Rendering Aspect Ratio", &RENDER_AR_candidate, 0.1, 1.0))
+    if (InputFloat("Projection Aspect Ratio", &RENDER_AR_candidate, 0.1, 1.0))
     {
         if (RENDER_AR_candidate >= 0)
         {
