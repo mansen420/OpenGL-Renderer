@@ -28,7 +28,7 @@ If you do not want to compile and build your project manually, use cmake to do i
 cmake --build path/to/build
 ```
 Typically you would build the project inside your `` build `` directory. \
-This will compile and link with the GLFW library, and generate an executable called `` my_renderer `` inside the build directory.
+This will compile and link with the GLFW library, and generate an executable called `` my_renderer `` inside ``src`` within the build directory.
 
 
 You have probably run into an error at the final step, or any of the steps before it. 
