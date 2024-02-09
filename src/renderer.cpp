@@ -1,5 +1,3 @@
-#define STB_IMAGE_IMPLEMENTATION
-#define TINYOBJLOADER_IMPLEMENTATION ;
 #include "renderer.h"
 //TODO fix these
 #include "shader_utils.h"

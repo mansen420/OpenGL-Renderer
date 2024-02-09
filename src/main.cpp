@@ -15,6 +15,7 @@
 //11. write manual ()
 //12. display GL state information on gui ()
 //13. make camera system
+//14. display render stats and read-only info on gui ()
 //we need abstraction for (1/2)shaders, ()uniforms, (x)drawing
 int main()
 {   
