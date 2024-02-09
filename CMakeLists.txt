@@ -13,6 +13,7 @@ add_executable(my_renderer src/main.cpp src/callbacks.cpp src/event_handling.cpp
 
 set (CMAKE_CXX_STANDARD 11)
 set (CMAKE_CXX_STANDARD_REQUIRED true)
+target_compile_options(my_renderer PRIVATE "-Wall" "-Wextra" "-Wpedantic" "-O3")
 
 
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
