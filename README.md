@@ -4,7 +4,7 @@
 ## Dependencies
   This project uses cmake as its build system, so you should have it installed.\
   Additionally, you should have all the [dependencies required for GLFW](https://www.glfw.org/docs/3.3/compile.html#compile_deps).\
-  Also, your system should support a relatively modern version of OpenGL. Anything above 3.3 will probably work, although the renderer is currently only tested on version 4.5.
+  Also, your system should support OpenGL 4.5+.
 ## Building this project
   Provided that you have cmake installed, building this project is the following process :
 
