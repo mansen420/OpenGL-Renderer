@@ -6,7 +6,7 @@ void events::import()
 }
 void events::quit(){glfwSetWindowShouldClose(myWindow, true);}
 void events::quit_window()
-{
+{   //TODO use modal popups to do this
     //maybe do this?
     using namespace ImGui;
     ImGuiViewport* whole_window = GetMainViewport();

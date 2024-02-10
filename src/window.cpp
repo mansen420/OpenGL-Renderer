@@ -53,14 +53,12 @@ void window::render_gui()
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
 
-    ImGui::ShowDemoWindow();
     //TODO something about fonts
-    //ImFont* font_ptr = ImGui::GetFont();
-    //font_ptr->Scale = 1.5f;
     
     workspace_panel();
     main_bar();
-    events::react();
+    ImGui::ShowDemoWindow();
+    
 
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -68,6 +66,7 @@ void window::render_gui()
 void window::poll_events()
 {
     glfwPollEvents();
+    events::react();
 }
 void window::swap_buffers()
 {
