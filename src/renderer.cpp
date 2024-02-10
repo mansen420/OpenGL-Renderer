@@ -8,24 +8,31 @@ namespace renderer
     namespace settings
     {
         glm::vec4 CLR_COLOR(0.6, 0.3, 0.3, 1.0);
+        glm::vec3 DEPTH_VIEW_COLOR(1.0, 1.0, 1.0);
 
         bool DEPTH_CLR_ENBLD = 1, COLOR_CLR_ENBLD = 1, STENCIL_CLR_ENBLD = 1;
         bool DEPTH_TEST_ENBLD = 1, STENCIL_TEST_ENBLD = 1;
 
         const unsigned int *active_object_shader, *active_pp_shader;
 
-        scr_display_mode display_mode = COLOR;
+        scr_display_mode_option scr_display_mode = COLOR;
         renderport_behaviour rndrprt_behaviour = CONSTANT_ASPECT_RATIO;
 
         bool PP_ENBLD = 1;
         size_t RENDER_W = 1920, RENDER_H = 1080;
         float RENDER_AR = 16.0/9.0;
+        float near_plane = 0.1f, far_plane = 100.0f;
+        float fov = 45.0;
+
+        bool use_mipmaps = false;
+        texture_filtering scr_tex_mag_filter = LINEAR, scr_tex_min_filter = LINEAR, mipmap_filter = LINEAR;
     }
     using namespace settings;
 
     static unsigned int postprocess_shader;
     static unsigned int default_object_shader;
     static unsigned int offscreen_tex_ids[2];  // [0] = color, [1] = depth+stencil
+    static unsigned int depth_view;
     static unsigned int offscreen_framebuffer_id;
     static unsigned int screen_vao;
     static unsigned int screen_vbo;
@@ -51,6 +58,8 @@ namespace renderer
          1.0f, -1.0f,  SCR_TEX_RIGHT, SCR_TEX_BOTTOM
     };
     
+    void update_projection();
+
     void send_uniforms()
     {
         using namespace glm;
@@ -65,7 +74,8 @@ namespace renderer
     {
         glViewport(OPENGL_VIEWPORT_X, OPENGL_VIEWPORT_Y, RENDER_W, RENDER_H);
         glBindFramebuffer(GL_FRAMEBUFFER, offscreen_framebuffer_id);
-        glEnable(GL_DEPTH_TEST*DEPTH_TEST_ENBLD);
+
+        DEPTH_TEST_ENBLD ? glEnable(GL_DEPTH_TEST) : glDisable(GL_DEPTH_TEST);
         glClear(GL_COLOR_BUFFER_BIT*COLOR_CLR_ENBLD | GL_DEPTH_BUFFER_BIT*DEPTH_CLR_ENBLD | GL_STENCIL_BUFFER_BIT*STENCIL_CLR_ENBLD);
 
         glUseProgram(*active_object_shader);
@@ -82,14 +92,25 @@ namespace renderer
         glViewport(OPENGL_VIEWPORT_X, OPENGL_VIEWPORT_Y, OPENGL_VIEWPORT_W, OPENGL_VIEWPORT_H);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glClear(GL_COLOR_BUFFER_BIT);
-        glDisable(GL_DEPTH_TEST);
+        //if we do not disable the depth test here, the screen will draw over itself
+        glDisable(GL_DEPTH_TEST);   
         glUseProgram(postprocess_shader);
 
         glBindVertexArray(screen_vao);
 
-        //TODO implement viewing depth and stencil textures
+        //TODO implement viewing depth and stencil textures (1/2)
         glActiveTexture(GL_TEXTURE0); 
-        glBindTexture(GL_TEXTURE_2D, offscreen_tex_ids[0]);
+        if(scr_display_mode == DEPTH)
+        {
+            glBindTexture(GL_TEXTURE_2D, offscreen_tex_ids[1]);
+            glUniform1i(glGetUniformLocation(*active_pp_shader, "rendering_depth"), GL_TRUE);
+            glUniform3f(glGetUniformLocation(*active_pp_shader, "depth_view_color"), DEPTH_VIEW_COLOR.r, DEPTH_VIEW_COLOR.g, DEPTH_VIEW_COLOR.b);
+        }
+        else
+        {
+            glBindTexture(GL_TEXTURE_2D, offscreen_tex_ids[0]);
+            glUniform1i(glGetUniformLocation(*active_pp_shader, "rendering_depth"), GL_FALSE);
+        }
         glUniform1i(glGetUniformLocation(postprocess_shader, "screen_texture"), 0);
         
         glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -99,6 +120,7 @@ namespace renderer
         glClearColor(CLR_COLOR.r, CLR_COLOR.g, CLR_COLOR.b, CLR_COLOR.a);
         offscreen_pass();
         main_pass();
+        update_projection(); //TODO maybe handle this elsewhere
     }
     bool setup_offscreen_framebuffer(const size_t rendering_width, const size_t rendering_height)
     {
@@ -123,9 +145,9 @@ namespace renderer
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-        //depth+stencil since we need both, and the author's machine only supports the combined format in this case
+        //depth+stencil for maximum portability. glTexStorage2D is necessary to view the depth buffer
         glBindTexture(GL_TEXTURE_2D, offscreen_tex_ids[1]);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, rendering_width, rendering_height, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, NULL);
+        glTexStorage2D(GL_TEXTURE_2D, 1, GL_DEPTH24_STENCIL8, rendering_width, rendering_height); 
         glGenerateMipmap(GL_TEXTURE_2D);
 
         //attaching a texture that is bound might cause undefined behaviour
@@ -175,7 +197,7 @@ namespace renderer
         // I decided to set it to a user-specified value intead, and completely separate it from
         // window or render dimensions. This gives the best behaviour
         using namespace glm;
-        perspective_transform = perspective(radians(45.f), RENDER_AR, 0.1f, 100.f);
+        perspective_transform = perspective(radians(fov), RENDER_AR, near_plane, far_plane);
     }
     //chef's kiss. works perfectly! next step is to be able to position the viewport inside the render space...
     void update_screen_tex_coords()

@@ -10,7 +10,7 @@
 
 namespace renderer
 {
-    enum scr_display_mode
+    enum scr_display_mode_option
     {
         COLOR,
         DEPTH,
@@ -21,20 +21,26 @@ namespace renderer
         FOLLOW_VIEWPORT,
         CONSTANT_ASPECT_RATIO
     };
-    enum screen_texture_filtering
-    { //TODO fill this
+    enum texture_filtering
+    {
+        LINEAR,
+        NEAREST
     };
     namespace settings 
     {
         extern bool DEPTH_CLR_ENBLD, COLOR_CLR_ENBLD, STENCIL_CLR_ENBLD;
         extern bool DEPTH_TEST_ENBLD, STENCIL_TEST_ENBLD;
         extern glm::vec4 CLR_COLOR;
+        extern glm::vec3 DEPTH_VIEW_COLOR;
         extern const unsigned int *active_object_shader, *active_pp_shader;
-        extern scr_display_mode display_mode;
+        extern scr_display_mode_option scr_display_mode;
         extern renderport_behaviour rndrprt_behaviour;
+        extern texture_filtering scr_tex_mag_filter, scr_tex_min_filter, mipmap_filter;
+        extern bool use_mipmaps;
         extern bool PP_ENBLD;
         extern size_t RENDER_W, RENDER_H;
         extern float RENDER_AR;
+        extern float near_plane, far_plane, fov;
     }
     void terminate();
     void clear_buffers();
