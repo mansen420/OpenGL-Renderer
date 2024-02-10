@@ -41,9 +41,10 @@ Whether or not it will compile for macOS, I do not know.
 
 
 In any case, this project is still in very early development, and we will consider extending support for more systems once the project reaches a mature state. 
+#
 
-### Check Out This Cool Bug That I got
-The bugs are a big part of what makes me love graphics.
+#### Check Out This Cool Bug That I got
+The bugs are a big part of what makes us love graphics.
 
 ![ezgif-4-d1f9f9570a](https://github.com/mansen420/OpenGL-Renderer/assets/50342436/89135a95-0c12-46be-ae08-1ce1f8c873f2) ![ezgif-4-de017a9ae1](https://github.com/mansen420/OpenGL-Renderer/assets/50342436/29af8ebc-d648-4e9a-9e3d-1bb119e73fc0) 
 
