@@ -25,7 +25,7 @@ namespace renderer
         float fov = 45.0;
 
         bool use_mipmaps = false;
-        texture_filtering scr_tex_mag_filter = LINEAR, scr_tex_min_filter = LINEAR, mipmap_filter = LINEAR;
+        texture_filtering scr_tex_mag_filter = LINEAR, scr_tex_min_filter = LINEAR;
     }
     using namespace settings;
 
@@ -122,6 +122,19 @@ namespace renderer
         main_pass();
         update_projection(); //TODO maybe handle this elsewhere
     }
+    void update_offscreen_tex_params()
+    {
+        glBindTexture(GL_TEXTURE_2D, offscreen_tex_ids[0]);
+        //TODO check that the magnification filter is not set to use mipmaps
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, scr_tex_min_filter);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, scr_tex_mag_filter);
+
+        glBindTexture(GL_TEXTURE_2D, offscreen_tex_ids[1]);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, scr_tex_min_filter);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, scr_tex_mag_filter);
+
+        glBindTexture(GL_TEXTURE_2D, 0);
+    }
     bool setup_offscreen_framebuffer(const size_t rendering_width, const size_t rendering_height)
     {
         if (glIsFramebuffer(offscreen_framebuffer_id) == GL_TRUE)
@@ -142,8 +155,9 @@ namespace renderer
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, rendering_width, rendering_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
         glGenerateMipmap(GL_TEXTURE_2D);
 
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        //TODO check that the magnification filter is not set to use mipmaps
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, scr_tex_min_filter);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, scr_tex_mag_filter);
 
         //depth+stencil for maximum portability. glTexStorage2D is necessary to view the depth buffer
         glBindTexture(GL_TEXTURE_2D, offscreen_tex_ids[1]);
@@ -248,7 +262,7 @@ namespace renderer
     }
     int init()
     {
-        read_obj("assets/car/car.obj", my_object);
+        read_obj("assets/cube.obj", my_object);
         my_object.send_data();
 
         if (!setup_offscreen_framebuffer(RENDER_W, RENDER_H))

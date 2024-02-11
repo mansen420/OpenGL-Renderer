@@ -12,7 +12,8 @@
 #include "callbacks.h"
 #include "event_handling.h"
 #include "gui.h"
-
+//TODO the current situation with the file dialog is not the final solution but a proof of concept.
+ImGui::FileBrowser window::file_dialog;
 int window::init()
 {
     //glfw boilerplate
@@ -44,6 +45,9 @@ int window::init()
     ImGui_ImplGlfw_InitForOpenGL(myWindow, true);
     ImGui_ImplOpenGL3_Init();
 
+    file_dialog.SetTitle("Import");
+    file_dialog.SetTypeFilters({".obj"});
+    file_dialog.Open();
     return true;
 }
 
@@ -57,6 +61,7 @@ void window::render_gui()
     
     workspace_panel();
     main_bar();
+    events_gui();
     ImGui::ShowDemoWindow();
     
 
@@ -65,8 +70,8 @@ void window::render_gui()
 }
 void window::poll_events()
 {
-    glfwPollEvents();
     events::react();
+    glfwPollEvents();
 }
 void window::swap_buffers()
 {
@@ -76,6 +81,7 @@ void window::terminate()
 {
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
+    file_dialog.Close();
     ImGui::DestroyContext();
     glfwTerminate();
 }

@@ -120,7 +120,7 @@ namespace object_3D
     };
     //holds an array of drawable meshes. Initialize with read_obj()
     class object : public drawable
-    {
+    {   //TODO ensure objects are properly terminated 
         virtual void bind_VAO() const override {}
         virtual void send_model_transform(const unsigned int &program_id) const override
         {

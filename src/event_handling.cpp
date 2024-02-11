@@ -1,8 +1,7 @@
 #include "event_handling.h"
 #include "renderer.h"
 void events::import()
-{
-    std::cout << "IMPORT!" << std::endl;    //temporary, obviously
+{ 
 }
 void events::quit(){glfwSetWindowShouldClose(myWindow, true);}
 void events::quit_window()
@@ -20,5 +19,5 @@ void events::quit_window()
 void events::react()
 {
     if(should_import) {import();}
-    if (should_quit){quit();}
+    if (should_quit) {quit();}
 }

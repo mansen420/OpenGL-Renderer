@@ -23,8 +23,12 @@ namespace renderer
     };
     enum texture_filtering
     {
-        LINEAR,
-        NEAREST
+        LINEAR = GL_LINEAR,
+        NEAREST = GL_NEAREST,
+        MIPMAP_LINEAR_LINEAR = GL_LINEAR_MIPMAP_LINEAR,
+        MIPMAP_NEAREST_NEAREST = GL_NEAREST_MIPMAP_NEAREST,
+        MIPMAP_LINEAR_NEAREST = GL_LINEAR_MIPMAP_NEAREST,
+        MIPMAP_NEAREST_LINEAR = GL_NEAREST_MIPMAP_LINEAR
     };
     namespace settings 
     {
@@ -35,7 +39,7 @@ namespace renderer
         extern const unsigned int *active_object_shader, *active_pp_shader;
         extern scr_display_mode_option scr_display_mode;
         extern renderport_behaviour rndrprt_behaviour;
-        extern texture_filtering scr_tex_mag_filter, scr_tex_min_filter, mipmap_filter;
+        extern texture_filtering scr_tex_mag_filter, scr_tex_min_filter;
         extern bool use_mipmaps;
         extern bool PP_ENBLD;
         extern size_t RENDER_W, RENDER_H;
@@ -46,5 +50,6 @@ namespace renderer
     void clear_buffers();
     void render_scene();
     void update_screen_tex_coords();
+    void update_offscreen_tex_params();
     int init();
 }

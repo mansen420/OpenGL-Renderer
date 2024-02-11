@@ -1,5 +1,6 @@
 #include "renderer.h"
 #include "gui.h"
+//TODO separate the logic into the event handler module...
 void workspace_panel()
 {
     using namespace ImGui;
@@ -78,11 +79,57 @@ void workspace_panel()
                 }
             }
             
-            //TODO finish this
-        /* Spacing();
+            Spacing();
             Text("Framebuffer Texture Filtering");
             Spacing();
-            Checkbox("Use Mipmaps",&use_mipmaps); SameLine();  */
+
+            //TODO the depth texture and color texture both use the same settings, maybe worth it to separate them?
+            static int minification_filter = 0;
+            static int mipmap_filter = 0;
+            if (Combo("Minification", &minification_filter, "Linear\0Nearest\0\0"))
+            {
+                //FIXME please find a better way to do this, this is ugly as fuck 
+                if(use_mipmaps)
+                {
+                    if(minification_filter == 0)
+                    {
+                        if(mipmap_filter == 0)
+                            scr_tex_min_filter = MIPMAP_LINEAR_LINEAR;
+                        if (mipmap_filter == 1)
+                            scr_tex_min_filter = MIPMAP_NEAREST_LINEAR;
+                    }
+                    if(minification_filter == 1)
+                    {
+                        if(mipmap_filter == 0)
+                            scr_tex_min_filter = MIPMAP_LINEAR_NEAREST;
+                        if (mipmap_filter == 1)
+                            scr_tex_min_filter = MIPMAP_NEAREST_NEAREST;
+                    }
+                }
+                else
+                {
+                    if(minification_filter == 0)
+                        scr_tex_min_filter = LINEAR;
+                    if(minification_filter == 1)
+                        scr_tex_min_filter = NEAREST;
+                }
+                update_offscreen_tex_params();
+            } SameLine();
+            Checkbox("Use Mipmaps", &use_mipmaps);
+            if (use_mipmaps)
+            {   
+                SameLine();
+                Combo("Mipmap Filtering", &mipmap_filter, "Linear\0Nearest\0\0");
+            }
+            static int magnification_filter = 0;
+            if (Combo("Magnification", &magnification_filter, "Linear\0Nearest\0\0"))
+            {
+                if (magnification_filter == 0)
+                    scr_tex_mag_filter = LINEAR;
+                if (magnification_filter == 1)
+                    scr_tex_mag_filter = NEAREST;
+                update_offscreen_tex_params();
+            }
 
             Spacing();
             SeparatorText("Projection Settings");
@@ -107,6 +154,20 @@ void workspace_panel()
     }
     End();
 }
+void events_gui()
+{
+    using namespace window;
+    using namespace ImGui;
+    if (should_import)
+    {
+        file_dialog.Display();
+        if (file_dialog.HasSelected())
+        {
+            file_dialog.ClearSelected();
+            should_import = false;
+        }
+    }
+}
 void main_bar()
 {
     using namespace ImGui;
@@ -128,7 +189,12 @@ void main_bar()
     {
         if(BeginMenu("File"))
         {
-            if(MenuItem("Import", "ctrl+o", &should_import)){}
+            if(MenuItem("Import", "ctrl+o", false))
+            {
+                //this is pretty retarded
+                window::file_dialog.Open();
+                should_import = true;
+            }
             EndMenu();
         }
         if(BeginMenu("Options", false))

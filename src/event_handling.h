@@ -4,6 +4,7 @@
 #include "GLFW/glfw3.h"
 #include "global_constants.h"
 #include "imgui.h"
+#include "imfilebrowser.h"
 #include "backends/imgui_impl_glfw.h"
 #include "backends/imgui_impl_opengl3.h"
 #include "callbacks.h"
