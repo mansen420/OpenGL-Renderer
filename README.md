@@ -4,7 +4,7 @@
 ## Dependencies
   This project uses cmake as its build system, so you should have it installed.\
   Additionally, you should have all the [dependencies required for GLFW](https://www.glfw.org/docs/3.3/compile.html#compile_deps).\
-  Also, your system should support a relatively modern version of OpenGL. Anything above 3.3 will probably work, although the renderer is currently only tested on version 4.5.
+  Also, your system should support OpenGL 4.5+.
 ## Building this project
   Provided that you have cmake installed, building this project is the following process :
 
@@ -41,10 +41,11 @@ Whether or not it will compile for macOS, I do not know.
 
 
 In any case, this project is still in very early development, and we will consider extending support for more systems once the project reaches a mature state. 
+#
 
-### Check Out This Cool Bug That I got
-The bugs are a big part of what makes me love graphics.
+#### Check Out This Cool Bug That I got
+The bugs are a big part of what makes us love graphics.
 
 ![ezgif-4-d1f9f9570a](https://github.com/mansen420/OpenGL-Renderer/assets/50342436/89135a95-0c12-46be-ae08-1ce1f8c873f2) ![ezgif-4-de017a9ae1](https://github.com/mansen420/OpenGL-Renderer/assets/50342436/29af8ebc-d648-4e9a-9e3d-1bb119e73fc0) 
 
-What's really cool here is that there is no texture informatio at all. This is a one-line fragment shader that's outputting memory garbage.
+What's really cool here is that there is no texture information at all. This is a one-line fragment shader that's outputting memory garbage.
