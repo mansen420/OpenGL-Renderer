@@ -41,21 +41,30 @@ namespace renderer
     glm::mat4 view_transform;
     glm::mat4 perspective_transform;
 
-    object_3D::object my_object;
+    object_3D::object* my_object = new object_3D::object;
+    std::string path_to_object = "assets/cube.obj"; //default
 
-    static float SCR_TEX_TOP = 1.0 , SCR_TEX_BOTTOM = 0.0;
-    static float SCR_TEX_RIGHT = 1.0, SCR_TEX_LEFT = 0.0;
+    //on-screen texture data
+    static float SCR_TEX_TOP   = 1.0, SCR_TEX_BOTTOM = 0.0;
+    static float SCR_TEX_RIGHT = 1.0, SCR_TEX_LEFT   = 0.0;
+    //parameters
+              float SCR_TEX_MAX_RATIO   =  1.0;
+              float SCR_TEX_MIN_RATIO   =  0.0;
+    constexpr float LEFT_EDGE           = -1.0;
+    constexpr float RIGHT_EDGE          =  1.0;
+    constexpr float BOTTOM_EDGE         = -1.0;
+    constexpr float TOP_EDGE            = -1.0;
 
-    static float* screen_coords = new float[24] 
+    static float*   SCR_COORDS  = new float[24] 
     {
-        // positions   // texCoords
-        -1.0f,  1.0f,  SCR_TEX_LEFT, SCR_TEX_TOP, 
-        -1.0f, -1.0f,  SCR_TEX_LEFT, SCR_TEX_BOTTOM,
-         1.0f, -1.0f,  SCR_TEX_RIGHT, SCR_TEX_BOTTOM, 
+        // positions           // texCoords
+        LEFT_EDGE ,  TOP_EDGE   ,  SCR_TEX_LEFT ,    SCR_TEX_TOP, 
+        LEFT_EDGE ,  BOTTOM_EDGE,  SCR_TEX_LEFT , SCR_TEX_BOTTOM,
+        TOP_EDGE  ,  BOTTOM_EDGE,  SCR_TEX_RIGHT, SCR_TEX_BOTTOM, 
 
-        -1.0f,  1.0f,  SCR_TEX_LEFT, SCR_TEX_TOP, 
-         1.0f,  1.0f,  SCR_TEX_RIGHT, SCR_TEX_TOP, 
-         1.0f, -1.0f,  SCR_TEX_RIGHT, SCR_TEX_BOTTOM
+        LEFT_EDGE ,  TOP_EDGE   ,  SCR_TEX_LEFT ,    SCR_TEX_TOP, 
+        RIGHT_EDGE,  TOP_EDGE   ,  SCR_TEX_RIGHT,    SCR_TEX_TOP, 
+        RIGHT_EDGE,  BOTTOM_EDGE,  SCR_TEX_RIGHT, SCR_TEX_BOTTOM
     };
     
     void update_projection();
@@ -83,9 +92,9 @@ namespace renderer
         model_transform = glm::rotate(glm::mat4(1.0f), (float)glfwGetTime(), 
         glm::vec3(0.f, 1.f, 0.f));
         send_uniforms();
-        my_object.model_transform = model_transform;
+        my_object->model_transform = model_transform;
 
-        my_object.draw(*active_object_shader);
+        my_object->draw(*active_object_shader);
     }
     void main_pass()
     {
@@ -164,6 +173,9 @@ namespace renderer
         glTexStorage2D(GL_TEXTURE_2D, 1, GL_DEPTH24_STENCIL8, rendering_width, rendering_height); 
         glGenerateMipmap(GL_TEXTURE_2D);
 
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, scr_tex_min_filter);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, scr_tex_mag_filter);
+
         //attaching a texture that is bound might cause undefined behaviour
         glBindTexture(GL_TEXTURE_2D, 0);
 
@@ -186,7 +198,7 @@ namespace renderer
         glGenBuffers(1, &screen_vbo);
         glBindBuffer(GL_ARRAY_BUFFER, screen_vbo);
         //TODO maybe hardcoding the 24 floats in is not the best solution
-        glBufferData(GL_ARRAY_BUFFER, sizeof(float)*24, screen_coords, GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(float)*24, SCR_COORDS, GL_STATIC_DRAW);
         
         if (glIsVertexArray(screen_vao))
             glDeleteVertexArrays(1, &screen_vao);
@@ -213,47 +225,58 @@ namespace renderer
         using namespace glm;
         perspective_transform = perspective(radians(fov), RENDER_AR, near_plane, far_plane);
     }
-    //chef's kiss. works perfectly! next step is to be able to position the viewport inside the render space...
+    //chef's kiss. works perfectly! love this function!
     void update_screen_tex_coords()
     {
-        float render_aspect_ratio = float(RENDER_W)/RENDER_H;
+        if (SCR_TEX_MAX_RATIO > 1.0 || SCR_TEX_MAX_RATIO < SCR_TEX_MIN_RATIO || SCR_TEX_MIN_RATIO < 0)
+        {
+            //TODO throw error
+            std::cout << "BAD TEX RATIOS"<<std::endl;
+            return;
+        }
+        
+        float render_aspect_ratio   =                   float(RENDER_W)/RENDER_H;
         float viewport_aspect_ratio = float(OPENGL_VIEWPORT_W)/OPENGL_VIEWPORT_H;
-        float ratio = render_aspect_ratio/viewport_aspect_ratio;
+        float ratio                 =  render_aspect_ratio/viewport_aspect_ratio;
 
         //reset coords 
-        SCR_TEX_TOP = 1.0;
-        SCR_TEX_RIGHT = 1.0;
+        SCR_TEX_TOP   =  SCR_TEX_RIGHT = SCR_TEX_MAX_RATIO;
 
-        //determine renderport cut-out 
-        ratio > 1.0 ? SCR_TEX_RIGHT = 1/ratio :  SCR_TEX_TOP = ratio;
+        SCR_TEX_LEFT  = SCR_TEX_BOTTOM = SCR_TEX_MIN_RATIO;
 
-        //shift viewport into middle of renderport 
-        float remainder = 1.0 - SCR_TEX_RIGHT;
-        SCR_TEX_RIGHT += remainder/2;
-        SCR_TEX_LEFT = remainder/2;
+        //determine renderport cut-out of render target
+        ratio > 1.0 ? SCR_TEX_RIGHT = std::min(std::max(1.0f/ratio, SCR_TEX_MIN_RATIO), SCR_TEX_MAX_RATIO) 
+                    : SCR_TEX_TOP   = std::max(std::min(   ratio,   SCR_TEX_MAX_RATIO), SCR_TEX_MIN_RATIO);
 
-        remainder = 1.0 - SCR_TEX_TOP;
-        SCR_TEX_TOP += remainder/2;
-        SCR_TEX_BOTTOM = remainder/2; 
+        //TODO 2 modes for viewport positioning : decide center then claculate shift vector, or decide shift vector arbitrarily.
+        //shift viewport into appropriate location
+        glm::vec2 viewport_center ((SCR_TEX_RIGHT-SCR_TEX_LEFT)/2.0, (SCR_TEX_TOP-SCR_TEX_BOTTOM)/2.0);
+        glm::vec2 render_center   (1.0, 1.0);       
 
+        glm::vec2 shift_vec = render_center - viewport_center;
+
+        SCR_TEX_RIGHT   = shift_vec.x + SCR_TEX_RIGHT    > SCR_TEX_MAX_RATIO ? SCR_TEX_MAX_RATIO : shift_vec.x +  SCR_TEX_RIGHT;
+        SCR_TEX_LEFT    = shift_vec.x + SCR_TEX_LEFT     < SCR_TEX_MIN_RATIO ? SCR_TEX_MIN_RATIO : shift_vec.x +   SCR_TEX_LEFT;
+        SCR_TEX_TOP     = shift_vec.y + SCR_TEX_TOP      > SCR_TEX_MAX_RATIO ? SCR_TEX_MAX_RATIO : shift_vec.y +    SCR_TEX_TOP;
+        SCR_TEX_BOTTOM  = shift_vec.y + SCR_TEX_BOTTOM   < SCR_TEX_MIN_RATIO ? SCR_TEX_MIN_RATIO : shift_vec.y + SCR_TEX_BOTTOM;
         
-        std::cout << SCR_TEX_TOP << ' ' << SCR_TEX_BOTTOM << '\t' << SCR_TEX_RIGHT << ' ' << SCR_TEX_LEFT << std::endl;
-        std::cout << RENDER_W << ' ' << RENDER_H <<std::endl;
+        std::cout << SCR_TEX_TOP       << ' ' << SCR_TEX_BOTTOM << '\t' << SCR_TEX_RIGHT << ' ' << SCR_TEX_LEFT << std::endl;
+        std::cout << RENDER_W          << ' ' << RENDER_H <<std::endl;
         std::cout << OPENGL_VIEWPORT_W << ' ' << OPENGL_VIEWPORT_H <<std::endl;
         std::cout << "*\t*" <<std::endl; 
 
         //free old memory, alloc new memory. Maybe better to simply modify the old memory?
-        delete[] screen_coords; 
-        screen_coords = new float[24] 
+        delete[] SCR_COORDS; 
+        SCR_COORDS = new float[24] 
         {
-        // positions    // texCoords
-        -1.0f,  1.0f,  SCR_TEX_LEFT, SCR_TEX_TOP, 
-        -1.0f, -1.0f,  SCR_TEX_LEFT, SCR_TEX_BOTTOM,
-         1.0f, -1.0f,  SCR_TEX_RIGHT, SCR_TEX_BOTTOM, 
+            // positions               // texCoords
+            LEFT_EDGE ,  TOP_EDGE   ,  SCR_TEX_LEFT ,    SCR_TEX_TOP, 
+            LEFT_EDGE ,  BOTTOM_EDGE,  SCR_TEX_LEFT , SCR_TEX_BOTTOM,
+            TOP_EDGE  ,  BOTTOM_EDGE,  SCR_TEX_RIGHT, SCR_TEX_BOTTOM, 
 
-        -1.0f,  1.0f,  SCR_TEX_LEFT, SCR_TEX_TOP, 
-         1.0f,  1.0f,  SCR_TEX_RIGHT, SCR_TEX_TOP, 
-         1.0f, -1.0f,  SCR_TEX_RIGHT, SCR_TEX_BOTTOM
+            LEFT_EDGE ,  TOP_EDGE   ,  SCR_TEX_LEFT ,    SCR_TEX_TOP, 
+            RIGHT_EDGE,  TOP_EDGE   ,  SCR_TEX_RIGHT,    SCR_TEX_TOP, 
+            RIGHT_EDGE,  BOTTOM_EDGE,  SCR_TEX_RIGHT, SCR_TEX_BOTTOM
         };
 
         update_projection();
@@ -262,8 +285,8 @@ namespace renderer
     }
     int init()
     {
-        read_obj("assets/cube.obj", my_object);
-        my_object.send_data();
+        read_obj(path_to_object, *my_object);
+        my_object->send_data();
 
         if (!setup_offscreen_framebuffer(RENDER_W, RENDER_H))
             return false;
@@ -280,8 +303,16 @@ namespace renderer
 
         return true;
     }
+    void update_import()
+    {
+        delete my_object;
+        my_object = new object_3D::object;
+        read_obj(path_to_object, *my_object);
+        my_object->send_data();
+    }
     void terminate()
     {
-        delete[] screen_coords;
+        delete my_object;
+        delete[] SCR_COORDS;
     }
 }
