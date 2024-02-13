@@ -9,7 +9,8 @@
 #include "global_constants.h"
 
 namespace renderer
-{
+{ //TODO this defines the public interface to the event handler.
+  // We will later define a const reflection of the engine state to the gui
     enum scr_display_mode_option
     {
         COLOR,
