@@ -1,5 +1,6 @@
 #include "renderer.h"
 #include "gui.h"
+#include "event_handling.h"
 //TODO separate the logic into the event handler module...
 void workspace_panel()
 {
@@ -14,6 +15,7 @@ void workspace_panel()
 
     if (!Begin("Work Space", NULL, flags))
     {   
+        //TODO throw error 
         End();
         return;
     }
@@ -42,7 +44,6 @@ void workspace_panel()
             ColorEdit3("Depth Viewing Color", &DEPTH_VIEW_COLOR.r, ImGuiColorEditFlags_NoInputs);
             Spacing();
 
-            //bool color_active = true, depth_active = false;
             static int active_1 = 0;
             if (RadioButton("View Color Buffer", &active_1, 0))
             {
@@ -163,6 +164,7 @@ void events_gui()
         file_dialog.Display();
         if (file_dialog.HasSelected())
         {
+            events::import_new(file_dialog.GetSelected());
             file_dialog.ClearSelected();
             should_import = false;
         }

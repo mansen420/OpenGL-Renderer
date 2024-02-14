@@ -29,19 +29,19 @@ namespace renderer
     }
     using namespace settings;
 
-    static unsigned int postprocess_shader;
-    static unsigned int default_object_shader;
-    static unsigned int offscreen_tex_ids[2];  // [0] = color, [1] = depth+stencil
-    static unsigned int depth_view;
+    static unsigned int       postprocess_shader;
+    static unsigned int    default_object_shader;
+    static unsigned int     offscreen_tex_ids[2];  // [0] = color, [1] = depth+stencil
+    static unsigned int               depth_view;
     static unsigned int offscreen_framebuffer_id;
-    static unsigned int screen_vao;
-    static unsigned int screen_vbo;
+    static unsigned int               screen_vao;
+    static unsigned int               screen_vbo;
 
     glm::mat4 model_transform;
     glm::mat4 view_transform;
     glm::mat4 perspective_transform;
 
-    object_3D::object* my_object = new object_3D::object;
+    object_3D::object my_object;
     std::string path_to_object = "assets/cube.obj"; //default
 
     //on-screen texture data
@@ -53,7 +53,7 @@ namespace renderer
     constexpr float LEFT_EDGE           = -1.0;
     constexpr float RIGHT_EDGE          =  1.0;
     constexpr float BOTTOM_EDGE         = -1.0;
-    constexpr float TOP_EDGE            = -1.0;
+    constexpr float TOP_EDGE            =  1.0;
 
     static float*   SCR_COORDS  = new float[24] 
     {
@@ -92,9 +92,9 @@ namespace renderer
         model_transform = glm::rotate(glm::mat4(1.0f), (float)glfwGetTime(), 
         glm::vec3(0.f, 1.f, 0.f));
         send_uniforms();
-        my_object->model_transform = model_transform;
+        my_object.model_transform = model_transform;
 
-        my_object->draw(*active_object_shader);
+        my_object.draw(*active_object_shader);
     }
     void main_pass()
     {
@@ -226,23 +226,23 @@ namespace renderer
         perspective_transform = perspective(radians(fov), RENDER_AR, near_plane, far_plane);
     }
     //chef's kiss. works perfectly! love this function!
+    //DO NOT touch this function. ever.
     void update_screen_tex_coords()
-    {
+    {    
         if (SCR_TEX_MAX_RATIO > 1.0 || SCR_TEX_MAX_RATIO < SCR_TEX_MIN_RATIO || SCR_TEX_MIN_RATIO < 0)
         {
             //TODO throw error
             std::cout << "BAD TEX RATIOS"<<std::endl;
             return;
-        }
+        } 
         
         float render_aspect_ratio   =                   float(RENDER_W)/RENDER_H;
         float viewport_aspect_ratio = float(OPENGL_VIEWPORT_W)/OPENGL_VIEWPORT_H;
         float ratio                 =  render_aspect_ratio/viewport_aspect_ratio;
 
         //reset coords 
-        SCR_TEX_TOP   =  SCR_TEX_RIGHT = SCR_TEX_MAX_RATIO;
-
-        SCR_TEX_LEFT  = SCR_TEX_BOTTOM = SCR_TEX_MIN_RATIO;
+        SCR_TEX_TOP   =  SCR_TEX_RIGHT  = SCR_TEX_MAX_RATIO;
+        SCR_TEX_LEFT  =  SCR_TEX_BOTTOM = SCR_TEX_MIN_RATIO;
 
         //determine renderport cut-out of render target
         ratio > 1.0 ? SCR_TEX_RIGHT = std::min(std::max(1.0f/ratio, SCR_TEX_MIN_RATIO), SCR_TEX_MAX_RATIO) 
@@ -251,7 +251,7 @@ namespace renderer
         //TODO 2 modes for viewport positioning : decide center then claculate shift vector, or decide shift vector arbitrarily.
         //shift viewport into appropriate location
         glm::vec2 viewport_center ((SCR_TEX_RIGHT-SCR_TEX_LEFT)/2.0, (SCR_TEX_TOP-SCR_TEX_BOTTOM)/2.0);
-        glm::vec2 render_center   (1.0, 1.0);       
+        glm::vec2 render_center   (0.5, 0.5);       
 
         glm::vec2 shift_vec = render_center - viewport_center;
 
@@ -272,7 +272,7 @@ namespace renderer
             // positions               // texCoords
             LEFT_EDGE ,  TOP_EDGE   ,  SCR_TEX_LEFT ,    SCR_TEX_TOP, 
             LEFT_EDGE ,  BOTTOM_EDGE,  SCR_TEX_LEFT , SCR_TEX_BOTTOM,
-            TOP_EDGE  ,  BOTTOM_EDGE,  SCR_TEX_RIGHT, SCR_TEX_BOTTOM, 
+            RIGHT_EDGE,  BOTTOM_EDGE,  SCR_TEX_RIGHT, SCR_TEX_BOTTOM, 
 
             LEFT_EDGE ,  TOP_EDGE   ,  SCR_TEX_LEFT ,    SCR_TEX_TOP, 
             RIGHT_EDGE,  TOP_EDGE   ,  SCR_TEX_RIGHT,    SCR_TEX_TOP, 
@@ -285,8 +285,8 @@ namespace renderer
     }
     int init()
     {
-        read_obj(path_to_object, *my_object);
-        my_object->send_data();
+        read_obj(path_to_object, my_object);
+        my_object.send_data();
 
         if (!setup_offscreen_framebuffer(RENDER_W, RENDER_H))
             return false;
@@ -305,14 +305,15 @@ namespace renderer
     }
     void update_import()
     {
-        delete my_object;
+        //TODO write virutal destructor 
+    /*    delete my_object;
         my_object = new object_3D::object;
         read_obj(path_to_object, *my_object);
-        my_object->send_data();
+        my_object->send_data(); */
     }
     void terminate()
     {
-        delete my_object;
+        //delete my_object;
         delete[] SCR_COORDS;
     }
 }
