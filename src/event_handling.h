@@ -15,8 +15,11 @@
 //event handler
 namespace events
 {
-    void import_new(std::string path);
-    void quit();
-    void quit_window();
+    extern bool   should_update_scr_tex_coords;
+    extern bool           should_update_import;
+    extern bool should_update_offscr_tex_param;
+    extern bool       should_update_projection;
+    extern bool                    should_quit;
+    
     void react();
 }

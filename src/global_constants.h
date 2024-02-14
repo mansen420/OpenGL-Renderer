@@ -16,8 +16,4 @@ extern int OPENGL_VIEWPORT_Y;
 extern int WINDOW_H;
 extern int WINDOW_W;
 
-extern GLFWwindow* myWindow;    
-
-//event stuff
-extern bool should_import;
-extern bool should_quit;
+extern GLFWwindow* myWindow;

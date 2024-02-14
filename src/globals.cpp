@@ -8,9 +8,4 @@ int OPENGL_VIEWPORT_W = aspect_ratio*OPENGL_VIEWPORT_H;
 int WINDOW_W = 1.2*OPENGL_VIEWPORT_W;
 int WINDOW_H = OPENGL_VIEWPORT_H;
 
-
 GLFWwindow* myWindow = nullptr;
-
-//event stuff
-bool should_import = false;
-bool should_quit = false;

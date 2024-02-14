@@ -1,28 +1,32 @@
-#include "renderer.h"
+#include "renderer.h"       //includes callback functions
+#include "engine_state.h"   //includes engine state 
+
 //TODO fix these
 #include "shader_utils.h"
 #include "object_interface.h"
+
 namespace renderer
 {   
     //renderer configuration
     namespace settings
     {
-        glm::vec4 CLR_COLOR(0.6, 0.3, 0.3, 1.0);
+        glm::vec4   CLR_COLOR(0.6, 0.3, 0.3, 1.0);
         glm::vec3 DEPTH_VIEW_COLOR(1.0, 1.0, 1.0);
 
-        bool DEPTH_CLR_ENBLD = 1, COLOR_CLR_ENBLD = 1, STENCIL_CLR_ENBLD = 1;
+        bool DEPTH_CLR_ENBLD  = 1, COLOR_CLR_ENBLD    = 1, STENCIL_CLR_ENBLD = 1;
         bool DEPTH_TEST_ENBLD = 1, STENCIL_TEST_ENBLD = 1;
 
         const unsigned int *active_object_shader, *active_pp_shader;
 
-        scr_display_mode_option scr_display_mode = COLOR;
-        renderport_behaviour rndrprt_behaviour = CONSTANT_ASPECT_RATIO;
+        scr_display_mode_option scr_display_mode =                 COLOR;
+        renderport_behaviour rndrprt_behaviour   = CONSTANT_ASPECT_RATIO;
 
-        bool PP_ENBLD = 1;
-        size_t RENDER_W = 1920, RENDER_H = 1080;
-        float RENDER_AR = 16.0/9.0;
+        bool PP_ENBLD    = 1;
+
+        size_t RENDER_W  = 1920, RENDER_H = 1080;
+        float RENDER_AR  = 16.0/9.0;
         float near_plane = 0.1f, far_plane = 100.0f;
-        float fov = 45.0;
+        float fov        = 45.0;
 
         bool use_mipmaps = false;
         texture_filtering scr_tex_mag_filter = LINEAR, scr_tex_min_filter = LINEAR;
@@ -37,12 +41,12 @@ namespace renderer
     static unsigned int               screen_vao;
     static unsigned int               screen_vbo;
 
-    glm::mat4 model_transform;
-    glm::mat4 view_transform;
-    glm::mat4 perspective_transform;
+    static glm::mat4       model_transform;
+    static glm::mat4        view_transform;
+    static glm::mat4 perspective_transform;
 
-    object_3D::object* my_object = new object_3D::object;
-    std::string path_to_object = "assets/cube.obj"; //default
+    object_3D::object*    my_object        = new object_3D::object;
+    std::string settings::path_to_object   =     "assets/cube.obj"; //default
 
     //on-screen texture data
     static float SCR_TEX_TOP   = 1.0, SCR_TEX_BOTTOM = 0.0;
@@ -57,7 +61,7 @@ namespace renderer
 
     static float*   SCR_COORDS  = new float[24] 
     {
-        // positions           // texCoords
+        // positions               // texCoords
         LEFT_EDGE ,  TOP_EDGE   ,  SCR_TEX_LEFT ,    SCR_TEX_TOP, 
         LEFT_EDGE ,  BOTTOM_EDGE,  SCR_TEX_LEFT , SCR_TEX_BOTTOM,
         TOP_EDGE  ,  BOTTOM_EDGE,  SCR_TEX_RIGHT, SCR_TEX_BOTTOM, 

@@ -7,7 +7,7 @@
 #include "global_constants.h"
 #include "window.h"
 
-//gui stuff
-void workspace_panel();
-void main_bar();
-void events_gui();
+namespace GUI
+{   //define gui global variables here
+    void render();
+}

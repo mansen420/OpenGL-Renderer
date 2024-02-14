@@ -1,6 +1,6 @@
 #include "window.h"
 #include "renderer.h"
-
+#include "global_constants.h"
 //planned features :
 //1. input handling (x)
 //2. GUI elements (x)

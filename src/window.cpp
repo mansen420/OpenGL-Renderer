@@ -58,13 +58,9 @@ void window::render_gui()
     ImGui::NewFrame();
 
     //TODO something about fonts
-    
-    workspace_panel();
-    main_bar();
-    events_gui();
+    GUI::render();
     ImGui::ShowDemoWindow();
     
-
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
