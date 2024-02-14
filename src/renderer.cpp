@@ -41,7 +41,7 @@ namespace renderer
     glm::mat4 view_transform;
     glm::mat4 perspective_transform;
 
-    object_3D::object my_object;
+    object_3D::object* my_object = new object_3D::object;
     std::string path_to_object = "assets/cube.obj"; //default
 
     //on-screen texture data
@@ -92,9 +92,9 @@ namespace renderer
         model_transform = glm::rotate(glm::mat4(1.0f), (float)glfwGetTime(), 
         glm::vec3(0.f, 1.f, 0.f));
         send_uniforms();
-        my_object.model_transform = model_transform;
+        my_object->model_transform = model_transform;
 
-        my_object.draw(*active_object_shader);
+        my_object->draw(*active_object_shader);
     }
     void main_pass()
     {
@@ -285,8 +285,8 @@ namespace renderer
     }
     int init()
     {
-        read_obj(path_to_object, my_object);
-        my_object.send_data();
+        read_obj(path_to_object, *my_object);
+        my_object->send_data();
 
         if (!setup_offscreen_framebuffer(RENDER_W, RENDER_H))
             return false;
@@ -306,14 +306,14 @@ namespace renderer
     void update_import()
     {
         //TODO write virutal destructor 
-    /*    delete my_object;
+        delete my_object;
         my_object = new object_3D::object;
         read_obj(path_to_object, *my_object);
-        my_object->send_data(); */
+        my_object->send_data(); 
     }
     void terminate()
     {
-        //delete my_object;
+        delete my_object;
         delete[] SCR_COORDS;
     }
 }
