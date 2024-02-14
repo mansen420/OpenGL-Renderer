@@ -11,10 +11,11 @@
 
 #include <iostream>
 #include "window.h"
+#include <string>
 //event handler
 namespace events
 {
-    void import();
+    void import_new(std::string path);
     void quit();
     void quit_window();
     void react();
