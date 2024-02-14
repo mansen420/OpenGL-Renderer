@@ -6,8 +6,10 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
 
-#include "global_constants.h"
+#include "global_constants.h" 
+#include <string> 
 
+/// @brief Core engine module
 namespace renderer
 { //TODO this defines the public interface to the event handler.
   // We will later define a const reflection of the engine state to the gui
@@ -31,6 +33,9 @@ namespace renderer
         MIPMAP_LINEAR_NEAREST = GL_LINEAR_MIPMAP_NEAREST,
         MIPMAP_NEAREST_LINEAR = GL_NEAREST_MIPMAP_LINEAR
     };
+
+    extern std::string path_to_object;
+
     namespace settings 
     {
         extern bool DEPTH_CLR_ENBLD, COLOR_CLR_ENBLD, STENCIL_CLR_ENBLD;
@@ -48,6 +53,7 @@ namespace renderer
         extern float near_plane, far_plane, fov;
     }
     void terminate();
+    void update_import();
     void clear_buffers();
     void render_scene();
     void update_screen_tex_coords();
