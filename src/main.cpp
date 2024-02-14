@@ -16,6 +16,7 @@
 //12. display GL state information on gui ()
 //13. make camera system
 //14. display render stats and read-only info on gui ()
+//15. separate engine interface from gui engine reflection ()
 //we need abstraction for (1/2)shaders, ()uniforms, (x)drawing
 int main()
 {   
