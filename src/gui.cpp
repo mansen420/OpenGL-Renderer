@@ -69,35 +69,6 @@ void workspace_panel()
                 }   
             }
             Spacing();
-            Text("Framebuffer Dimensions");
-            Spacing();
-            {
-                PopItemWidth();
-                PushItemWidth(GetWindowWidth()*0.25);
-
-                int render_w_candidate = int(RENDER_W), render_h_candidate = int(RENDER_H);
-
-                if (InputInt("Width", &render_w_candidate, 50.0, 500.0, ImGuiInputTextFlags_None))
-                {
-                    if(render_w_candidate >= 0 && render_w_candidate <= MAX_RENDER_W)
-                    {
-                        RENDER_W = size_t(render_w_candidate);
-
-                        events::should_update_scr_tex_coords = true;
-                    }
-                } 
-                SameLine();
-                if (InputInt("Height", &render_h_candidate, 50.0, 500.0, ImGuiInputTextFlags_None))
-                {
-                    if(render_h_candidate >= 0 && render_h_candidate <= MAX_RENDER_H)
-                    {
-                        RENDER_H = size_t(render_h_candidate);
-
-                        events::should_update_scr_tex_coords = true;
-                    }
-                }
-            }
-            Spacing();
             Text("Framebuffer Texture Filtering");
             Spacing();
             {
@@ -155,7 +126,46 @@ void workspace_panel()
                 }
             }
             Spacing();
-            SeparatorText("Projection Settings");
+            Text("Render Dimensions");
+            Spacing();
+            {
+                PopItemWidth();
+                PushItemWidth(GetWindowWidth()*0.25);
+
+                int render_w_candidate = int(RENDER_W), render_h_candidate = int(RENDER_H);
+
+                if (InputInt("Width", &render_w_candidate, 50.0, 500.0, ImGuiInputTextFlags_None))
+                {
+                    if(render_w_candidate >= 0 && render_w_candidate <= MAX_RENDER_W)
+                    {
+                        RENDER_W = size_t(render_w_candidate);
+
+                        events::should_update_scr_tex_coords = true;
+                    }
+                } 
+                SameLine();
+                if (InputInt("Height", &render_h_candidate, 50.0, 500.0, ImGuiInputTextFlags_None))
+                {
+                    if(render_h_candidate >= 0 && render_h_candidate <= MAX_RENDER_H)
+                    {
+                        RENDER_H = size_t(render_h_candidate);
+
+                        events::should_update_scr_tex_coords = true;
+                    }
+                }
+            }
+            Spacing();
+            {
+                static int current_item = 1;
+                if (Combo("Render View Mode", &current_item, "Fit To Viewport\0Keep Aspect Ratio"))
+                    events::should_update_scr_tex_coords = true;
+                if(current_item == 0)
+                    settings::RENDER_TO_VIEW_MODE = FIT_TO_VIEW;
+                if(current_item == 1)
+                    settings::RENDER_TO_VIEW_MODE = CROP;
+            }
+            Spacing();
+            SeparatorText("Render Projection Matrix Settings");
             Spacing();
             {
                 float RENDER_AR_candidate = RENDER_AR;
@@ -172,7 +182,6 @@ void workspace_panel()
                 SameLine();
                 static int current_item = 1;
                 Combo("Aspect Ratio Behavior", &current_item, "Independent\0Follows Render Dimensions\0Follows View Dimensions\0\0");
-
                 if (current_item == 0)
                 {
                     flags = ImGuiInputTextFlags_None;
@@ -187,6 +196,8 @@ void workspace_panel()
                     flags = flags|ImGuiInputTextFlags_ReadOnly;
                     RENDER_AR = float(OPENGL_VIEWPORT_W)/OPENGL_VIEWPORT_H;
                 }
+
+                Spacing();
 
                 DragFloat("FOV", &FOV, 0.65, 0.0, 180.0  ); 
                 SameLine();

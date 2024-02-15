@@ -19,8 +19,8 @@ namespace renderer{
     };
     enum renderport_behaviour
     {
-        FOLLOW_VIEWPORT,
-        KEEP_ASPECT_RATIO
+        FIT_TO_VIEW,
+        CROP
     };
     enum texture_filtering
     {

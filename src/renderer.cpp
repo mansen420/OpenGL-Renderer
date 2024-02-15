@@ -17,8 +17,8 @@ namespace renderer
 
         const unsigned int *ACTV_OBJ_SHDR_PRG_ID, *ACTV_PP_SHDR_PRG_ID;
 
-        scr_display_mode_option DISPLAY_BUFFER   =             COLOR;
-        renderport_behaviour RENDER_TO_VIEW_MODE = KEEP_ASPECT_RATIO;
+        scr_display_mode_option DISPLAY_BUFFER   = COLOR;
+        renderport_behaviour RENDER_TO_VIEW_MODE =  CROP;
 
         bool PP_ENBLD    = 1;
 
@@ -235,7 +235,7 @@ namespace renderer
     //chef's kiss. works perfectly! love this function!
     //DO NOT touch this function. ever.
     void update_screen_tex_coords()
-    {    
+    {   
         if (settings::SCR_TEX_MAX_RATIO > 1.0 || settings::SCR_TEX_MAX_RATIO < settings::SCR_TEX_MIN_RATIO || settings::SCR_TEX_MIN_RATIO < 0)
         {
             //TODO throw error
@@ -249,26 +249,27 @@ namespace renderer
 
         scr_tex_top_edge   =  scr_tex_right_edge  = settings::SCR_TEX_MAX_RATIO;
         scr_tex_left_edge  =  scr_tex_bottom_edge = settings::SCR_TEX_MIN_RATIO;
+        if(settings::RENDER_TO_VIEW_MODE == CROP)
+        {
+            ratio > 1.0 ? scr_tex_right_edge = std::min(std::max(1.0f/ratio, settings::SCR_TEX_MIN_RATIO), settings::SCR_TEX_MAX_RATIO) 
+            : scr_tex_top_edge   = std::max(std::min(   ratio,   settings::SCR_TEX_MAX_RATIO), settings::SCR_TEX_MIN_RATIO);
 
-        ratio > 1.0 ? scr_tex_right_edge = std::min(std::max(1.0f/ratio, settings::SCR_TEX_MIN_RATIO), settings::SCR_TEX_MAX_RATIO) 
-                    : scr_tex_top_edge   = std::max(std::min(   ratio,   settings::SCR_TEX_MAX_RATIO), settings::SCR_TEX_MIN_RATIO);
+            //TODO 2 modes for viewport positioning : decide center then claculate shift vector,
+            //     or decide shift vector arbitrarily.
+            glm::vec2 view_center ((scr_tex_right_edge-scr_tex_left_edge)/2.0, (scr_tex_top_edge-scr_tex_bottom_edge)/2.0);
+            const glm::vec2& render_center = settings::RENDER_VIEW_POS;  
 
-        //TODO 2 modes for viewport positioning : decide center then claculate shift vector,
-        //     or decide shift vector arbitrarily.
-        glm::vec2 view_center ((scr_tex_right_edge-scr_tex_left_edge)/2.0, (scr_tex_top_edge-scr_tex_bottom_edge)/2.0);
-        const glm::vec2& render_center = settings::RENDER_VIEW_POS;  
+            glm::vec2 shift_vec = render_center - view_center;
 
-        glm::vec2 shift_vec = render_center - view_center;
-
-        scr_tex_right_edge   = shift_vec.x + scr_tex_right_edge    > settings::SCR_TEX_MAX_RATIO ? 
-        settings::SCR_TEX_MAX_RATIO : shift_vec.x +  scr_tex_right_edge;
-        scr_tex_left_edge    = shift_vec.x + scr_tex_left_edge     < settings::SCR_TEX_MIN_RATIO ? 
-        settings::SCR_TEX_MIN_RATIO : shift_vec.x +   scr_tex_left_edge;
-        scr_tex_top_edge     = shift_vec.y + scr_tex_top_edge      > settings::SCR_TEX_MAX_RATIO ? 
-        settings::SCR_TEX_MAX_RATIO : shift_vec.y +    scr_tex_top_edge;
-        scr_tex_bottom_edge  = shift_vec.y + scr_tex_bottom_edge   < settings::SCR_TEX_MIN_RATIO ? 
-        settings::SCR_TEX_MIN_RATIO : shift_vec.y + scr_tex_bottom_edge;
-        
+            scr_tex_right_edge   = shift_vec.x + scr_tex_right_edge    > settings::SCR_TEX_MAX_RATIO ? 
+            settings::SCR_TEX_MAX_RATIO : shift_vec.x +  scr_tex_right_edge;
+            scr_tex_left_edge    = shift_vec.x + scr_tex_left_edge     < settings::SCR_TEX_MIN_RATIO ? 
+            settings::SCR_TEX_MIN_RATIO : shift_vec.x +   scr_tex_left_edge;
+            scr_tex_top_edge     = shift_vec.y + scr_tex_top_edge      > settings::SCR_TEX_MAX_RATIO ? 
+            settings::SCR_TEX_MAX_RATIO : shift_vec.y +    scr_tex_top_edge;
+            scr_tex_bottom_edge  = shift_vec.y + scr_tex_bottom_edge   < settings::SCR_TEX_MIN_RATIO ? 
+            settings::SCR_TEX_MIN_RATIO : shift_vec.y + scr_tex_bottom_edge;
+        }
         std::cout << scr_tex_top_edge       << ' ' << scr_tex_bottom_edge << '\t' << scr_tex_right_edge << ' ' << scr_tex_left_edge << std::endl;
         std::cout << settings::RENDER_W     << ' ' << settings::RENDER_H <<std::endl;
         std::cout << OPENGL_VIEWPORT_W << ' ' << OPENGL_VIEWPORT_H <<std::endl;
