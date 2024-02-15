@@ -61,11 +61,11 @@ void workspace_panel()
                 static int active_1 = 0;
                 if (RadioButton("View Color Buffer", &active_1, 0))
                 {
-                    scr_display_mode = COLOR;
+                    DISPLAY_BUFFER = COLOR;
                 }   SameLine();
                 if (RadioButton("View Depth BUffer", &active_1, 1))
                 {
-                    scr_display_mode = DEPTH;
+                    DISPLAY_BUFFER = DEPTH;
                 }   
             }
             Spacing();
@@ -110,36 +110,36 @@ void workspace_panel()
                 if (Combo("Minification", &minification_filter, "Linear\0Nearest\0\0"))
                 {
                     //FIXME please find a better way to do this, this is ugly as fuck 
-                    if(use_mipmaps)
+                    if(USE_MIPMAPS)
                     {
                         if(minification_filter == 0)
                         {
                             if(mipmap_filter == 0)
-                                scr_tex_min_filter = MIPMAP_LINEAR_LINEAR;
+                                SCR_TEX_MIN_FLTR = MIPMAP_LINEAR_LINEAR;
                             if (mipmap_filter == 1)
-                                scr_tex_min_filter = MIPMAP_NEAREST_LINEAR;
+                                SCR_TEX_MIN_FLTR = MIPMAP_NEAREST_LINEAR;
                         }
                         if(minification_filter == 1)
                         {
                             if(mipmap_filter == 0)
-                                scr_tex_min_filter = MIPMAP_LINEAR_NEAREST;
+                                SCR_TEX_MIN_FLTR = MIPMAP_LINEAR_NEAREST;
                             if (mipmap_filter == 1)
-                                scr_tex_min_filter = MIPMAP_NEAREST_NEAREST;
+                                SCR_TEX_MIN_FLTR = MIPMAP_NEAREST_NEAREST;
                         }
                     }
                     else
                     {
                         if(minification_filter == 0)
-                            scr_tex_min_filter = LINEAR;
+                            SCR_TEX_MIN_FLTR = LINEAR;
                         if(minification_filter == 1)
-                            scr_tex_min_filter = NEAREST;
+                            SCR_TEX_MIN_FLTR = NEAREST;
                     }
                     events::should_update_offscr_tex_param = true;
                 } 
                 SameLine();
                 
-                Checkbox("Use Mipmaps", &use_mipmaps);
-                if (use_mipmaps)
+                Checkbox("Use Mipmaps", &USE_MIPMAPS);
+                if (USE_MIPMAPS)
                 {   
                     SameLine();
                     Combo("", &mipmap_filter, "Linear\0Nearest\0\0");
@@ -148,9 +148,9 @@ void workspace_panel()
                 if (Combo("Magnification", &magnification_filter, "Linear\0Nearest\0\0"))
                 {
                     if (magnification_filter == 0)
-                        scr_tex_mag_filter = LINEAR;
+                        SCR_TEX_MAG_FLTR = LINEAR;
                     if (magnification_filter == 1)
-                        scr_tex_mag_filter = NEAREST;
+                        SCR_TEX_MAG_FLTR = NEAREST;
                     events::should_update_offscr_tex_param = true;
                 }
             }
@@ -188,9 +188,9 @@ void workspace_panel()
                     RENDER_AR = float(OPENGL_VIEWPORT_W)/OPENGL_VIEWPORT_H;
                 }
 
-                DragFloat("FOV", &fov, 0.65, 0.0, 180.0  ); 
+                DragFloat("FOV", &FOV, 0.65, 0.0, 180.0  ); 
                 SameLine();
-                DragFloatRange2("Projection Plane", &near_plane, &far_plane, 0.05, 0.001, 100.0, "%.3f", NULL, ImGuiSliderFlags_AlwaysClamp);
+                DragFloatRange2("Projection Plane", &NEAR_PLANE, &FAR_PLANE, 0.05, 0.001, 100.0, "%.3f", NULL, ImGuiSliderFlags_AlwaysClamp);
             }
             EndTabItem();
         }
@@ -205,7 +205,7 @@ void conditional_gui()
         window::file_dialog.Display();
         if (window::file_dialog.HasSelected())
         {
-            renderer::settings::path_to_object = window::file_dialog.GetSelected();
+            renderer::settings::PATH_TO_OBJ = window::file_dialog.GetSelected();
             events::should_update_import = true;
 
             window::file_dialog.ClearSelected();            
