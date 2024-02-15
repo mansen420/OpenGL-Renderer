@@ -4,7 +4,7 @@
 //TODO fix these
 #include "shader_utils.h"
 #include "object_interface.h"
-
+//TODO add error loggin for all opengl calls
 namespace renderer
 {   
     namespace settings
@@ -78,8 +78,10 @@ namespace renderer
     void send_uniforms()
     {
         using namespace glm;
-        view_transform = lookAt(vec3(0.f, 0.f, 3.f), vec3(0.f, 0.f, 0.f), vec3(0.f, 1.f, 0.f));
+        glm::vec3 cam_pos = glm::vec3(0.0, 0.0, 3.0);
+        view_transform = lookAt(cam_pos, vec3(0.f, 0.f, 0.f), vec3(0.f, 1.f, 0.f));
 
+        glUniform3f(glGetUniformLocation(*settings::ACTV_OBJ_SHDR_PRG_ID, "view_vector"), cam_pos.x, cam_pos.y, cam_pos.z);
         glUniformMatrix4fv(glGetUniformLocation(*settings::ACTV_OBJ_SHDR_PRG_ID, "projection_transform"), 1, GL_FALSE,
         glm::value_ptr(perspective_transform));
         glUniformMatrix4fv(glGetUniformLocation(*settings::ACTV_OBJ_SHDR_PRG_ID, "view_transform"), 1, GL_FALSE,
@@ -302,8 +304,8 @@ namespace renderer
             return false;
         update_screen_tex_coords();       
 
-        makeShaderProgram("src/shaders/default.vs",
-        "src/shaders/default.fs", default_object_shader_program_id);
+        makeShaderProgram("src/shaders/gooch.vs",
+        "src/shaders/gooch.fs", default_object_shader_program_id);
         settings::ACTV_OBJ_SHDR_PRG_ID = &default_object_shader_program_id;
         makeShaderProgram("src/shaders/screen_PP.vs",
         "src/shaders/screen_PP.fs", postprocess_shader_program_id);
