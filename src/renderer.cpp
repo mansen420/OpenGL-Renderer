@@ -96,8 +96,7 @@ namespace renderer
 
         glUseProgram(*settings::ACTV_OBJ_SHDR_PRG_ID);
 
-        model_transform = glm::rotate(glm::mat4(1.0f), (float)glfwGetTime(), 
-        glm::vec3(0.f, 1.f, 0.f));
+        model_transform = glm::rotate(glm::mat4(1.0f), (float)glfwGetTime(), glm::vec3(0.f, 1.f, 0.f));
         send_uniforms();
         obj_ptr->model_transform = model_transform;
 
@@ -220,8 +219,8 @@ namespace renderer
         glBindVertexArray(screen_quad_vao_ID);
         glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(float)*4, (void*)0);
         glEnableVertexAttribArray(0);
-        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(float)*4, (void*)(sizeof(float)*2));
-        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(float)*4, (void*)(sizeof(float)*2));
+        glEnableVertexAttribArray(2);
 
         //unbind your buffer ONLY after calling the attribute pointer, you risk severe consequences otherwise!
         glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -230,11 +229,6 @@ namespace renderer
     }
     void update_projection()
     {
-        //TODO
-        // setting the aspect to RENDER_W/RENDER_H causes the image to stop shearing at high width,
-        // setting it to OPENGL_W/OPENGL_H causes the image to "fit" to the viewport
-        // I decided to set it to a user-specified value intead, and completely separate it from
-        // window or render dimensions. This gives the best behaviour
         using namespace glm;
         perspective_transform = perspective(radians(settings::FOV), settings::RENDER_AR, settings::NEAR_PLANE, settings::FAR_PLANE);
     }
