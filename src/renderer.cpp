@@ -4,7 +4,7 @@
 //TODO fix these
 #include "shader_utils.h"
 #include "object_interface.h"
-//TODO add error loggin for all opengl calls
+//TODO add error logging for all opengl calls
 namespace renderer
 {   
     namespace settings
@@ -46,8 +46,8 @@ namespace renderer
     static glm::mat4        view_transform;
     static glm::mat4 perspective_transform;
 
-    object_3D::object*    obj_ptr          = new object_3D::object;
-    std::string settings::PATH_TO_OBJ   =     "assets/cube.obj"; //default
+    object_3D::object*    obj_ptr     = new object_3D::object;
+    std::string settings::PATH_TO_OBJ =     "assets/cube.obj"; //default
 
     //on-screen texture data
     static float scr_tex_top_edge   = 1.0, scr_tex_bottom_edge = 0.0;
@@ -224,7 +224,7 @@ namespace renderer
         glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(float)*4, (void*)(sizeof(float)*2));
         glEnableVertexAttribArray(2);
 
-        //unbind your buffer ONLY after calling the attribute pointer, you risk severe consequences otherwise!
+        //unbind your buffer ONLY after calling the attribute pointer. you risk severe consequences otherwise!
         glBindBuffer(GL_ARRAY_BUFFER, 0);
 
         glBindVertexArray(0);
@@ -290,7 +290,7 @@ namespace renderer
             RIGHT_EDGE,  TOP_EDGE   ,  scr_tex_right_edge,    scr_tex_top_edge, 
             RIGHT_EDGE,  BOTTOM_EDGE,  scr_tex_right_edge, scr_tex_bottom_edge
         };
-
+        
         update_projection();
         setup_offscreen_framebuffer(settings::RENDER_W, settings::RENDER_H);
         send_screen_coords();

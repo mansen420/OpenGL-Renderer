@@ -1,4 +1,5 @@
 #version 450 core
+
 out vec4 fragment_output;
 
 in vec3  frag_pos;
@@ -26,11 +27,11 @@ void main()
     {
     vec3  l = normalize(foo_light.pos.xyz - frag_pos);
     vec3  n = normalize(normal);
-          t = max(dot(l, n)/2.0 + 0.5, 0.0);
-    vec3  r = 2*dot(n, l)-l;
+          t = max(dot( l, n)/2.0 + 0.5, 0.0);
+    vec3  r = reflect(-l, n);
           s = clamp(pow(max(dot(normalize(r), normalize(view_vector)), 0.0), 32), 0.0, 1.0);
     }
     vec3 res = warm_color*t+(1-t)*cool_color;
     res = s * vec3(1.0) + (1-s) * (res);
-    fragment_output = vec4(TexCoords, 0.0, 1.0);
+    fragment_output = vec4(res, 1.0);
 }

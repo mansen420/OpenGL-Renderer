@@ -9,7 +9,8 @@
 #include "global_constants.h" 
 #include <string> 
 
-namespace renderer{
+namespace renderer
+{
 
     enum scr_display_mode_option
     {
