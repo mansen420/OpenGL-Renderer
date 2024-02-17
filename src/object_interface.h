@@ -289,7 +289,7 @@ bool read_obj(std::string path, object_3D::object &obj)
     //build object vertex array
     std::vector<object_3D::vertex> &vertices = obj.vertices;
     vertices = std::vector<object_3D::vertex>(vertex_attribs.vertices.size()/3);
-
+    
     for(size_t i = 0; i < shapes.size(); i++)
     {   
         std::vector<unsigned int> recorded_indices;
@@ -318,7 +318,7 @@ bool read_obj(std::string path, object_3D::object &obj)
                 temp_vert.pos_coords.z = vertex_attribs.vertices[3*vertex_index + 2];
                 
                 //index of -1 signifies non-available data
-                const unsigned int normal_index = raw_indices[j].normal_index;
+                const int normal_index = raw_indices[j].normal_index;
                 bool should_add_normals = normal_index >= 0 && vertex_attribs.normals.size() > 0;
 
                 if(should_add_normals)
@@ -326,9 +326,13 @@ bool read_obj(std::string path, object_3D::object &obj)
                     temp_vert.normal_coords.x = vertex_attribs.normals[3*normal_index + 0];
                     temp_vert.normal_coords.y = vertex_attribs.normals[3*normal_index + 1];
                     temp_vert.normal_coords.z = vertex_attribs.normals[3*normal_index + 2];
-                } 
+                }
+                else    //generate our own normals
+                {
+                    
+                }
 
-                const unsigned int tex_index = raw_indices[j].texcoord_index;
+                const int tex_index = raw_indices[j].texcoord_index;
                 bool should_add_texture_coords = tex_index >=0 && vertex_attribs.texcoords.size() > 0;
                 if (should_add_texture_coords)
                 {
@@ -338,6 +342,7 @@ bool read_obj(std::string path, object_3D::object &obj)
                 vertices[vertex_index] = temp_vert;
             }
         }
+
     }
     
     //get mesh indices
@@ -353,7 +358,49 @@ bool read_obj(std::string path, object_3D::object &obj)
             //note that tinyobject.h takes care of offsetting the obj indices by 1 so we don't have to do it.
             temp_mesh.indices[j] = indices[j].vertex_index;
         }
-        meshes[i] = temp_mesh;
+        meshes[i] = temp_mesh;      //FIXME expensive copy
+    }
+
+    //generate our own normals!
+    for(size_t i = 0; i < shapes.size(); i++)
+    {
+        int counter = 0;
+        for (size_t j = 0; j < shapes[i].mesh.num_face_vertices.size(); j++)
+        {
+            tinyobj::index_t first_face_index = shapes[i].mesh.indices[0 + counter];
+
+            //TODO YES IT WORKS!! now just implement weighted per-vertex normals.
+
+            //we multiply the first face index by 3  --or the number of vertices per face--
+            //in order to get the index of a single float in the vertex_attribs vector.
+            //i.e., vertex indices != vertex_attrib indices
+            glm::vec3 A = glm::vec3 
+            (vertex_attribs.vertices[3*first_face_index.vertex_index + 0], 
+             vertex_attribs.vertices[3*first_face_index.vertex_index + 1],
+             vertex_attribs.vertices[3*first_face_index.vertex_index + 2]);
+
+            tinyobj::index_t second_face_index = shapes[i].mesh.indices[1 + counter];
+            glm::vec3 B = glm::vec3 
+            (vertex_attribs.vertices[3*second_face_index.vertex_index + 0], 
+             vertex_attribs.vertices[3*second_face_index.vertex_index + 1], 
+             vertex_attribs.vertices[3*second_face_index.vertex_index + 2]);
+
+            tinyobj::index_t third_face_index = shapes[i].mesh.indices[2 + counter];
+            glm::vec3 C = glm::vec3 
+            (vertex_attribs.vertices[3*third_face_index.vertex_index + 0], 
+             vertex_attribs.vertices[3*third_face_index.vertex_index + 1],
+             vertex_attribs.vertices[3*third_face_index.vertex_index + 2]);
+            
+            glm::vec3 AB = B - A;
+            glm::vec3 AC = C - A;
+            glm::vec3 normal = glm::normalize(glm::cross(AB, AC));
+
+            vertices[first_face_index.vertex_index].normal_coords  = normal;
+            vertices[second_face_index.vertex_index].normal_coords = normal;
+            vertices[third_face_index.vertex_index].normal_coords  = normal;
+
+            counter += shapes[i].mesh.num_face_vertices[j];
+        }
     }
 
     //get textures 
@@ -380,7 +427,7 @@ bool read_obj(std::string path, object_3D::object &obj)
 
 //reads texture from file and assigns it to the GL_TEXTURE_2D target with tex_id.
 //be warned that this functions expects images with 3 or 4 color channels,
-//otherwise, undefined behaviour will occur.
+//otherwise, bad things will happen.
 bool gen_texture(const char* file_path, unsigned int &tex_id)
 {
     stbi_set_flip_vertically_on_load(false);
