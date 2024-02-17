@@ -73,37 +73,37 @@ void workspace_panel()
             Spacing();
             {
                 //TODO the depth texture and color texture both use the same settings, maybe worth it to separate them?
-
-                static int magnification_filter = 0;
-                static int minification_filter  = 0;
-                static int mipmap_filter        = 0;
+                constexpr unsigned int LINEAR = 0, NEAREST = 1;
+                static int magnification_filter = LINEAR;
+                static int minification_filter  = LINEAR;
+                static int mipmap_filter        = LINEAR;
 
                 if (Combo("Minification", &minification_filter, "Linear\0Nearest\0\0"))
                 {
                     //FIXME please find a better way to do this, this is ugly as fuck 
                     if(USE_MIPMAPS)
                     {
-                        if(minification_filter == 0)
+                        if(minification_filter == LINEAR)
                         {
-                            if(mipmap_filter == 0)
-                                SCR_TEX_MIN_FLTR = MIPMAP_LINEAR_LINEAR;
-                            if (mipmap_filter == 1)
-                                SCR_TEX_MIN_FLTR = MIPMAP_NEAREST_LINEAR;
+                            if(mipmap_filter == LINEAR)
+                                SCR_TEX_MIN_FLTR = texture_filtering::MIPMAP_LINEAR_LINEAR;
+                            if (mipmap_filter == NEAREST)
+                                SCR_TEX_MIN_FLTR = texture_filtering::MIPMAP_NEAREST_LINEAR;
                         }
-                        if(minification_filter == 1)
+                        if(minification_filter == NEAREST)
                         {
-                            if(mipmap_filter == 0)
-                                SCR_TEX_MIN_FLTR = MIPMAP_LINEAR_NEAREST;
-                            if (mipmap_filter == 1)
-                                SCR_TEX_MIN_FLTR = MIPMAP_NEAREST_NEAREST;
+                            if(mipmap_filter == LINEAR)
+                                SCR_TEX_MIN_FLTR = texture_filtering::MIPMAP_LINEAR_NEAREST;
+                            if (mipmap_filter == NEAREST)
+                                SCR_TEX_MIN_FLTR = texture_filtering::MIPMAP_NEAREST_NEAREST;
                         }
                     }
                     else
                     {
-                        if(minification_filter == 0)
-                            SCR_TEX_MIN_FLTR = LINEAR;
-                        if(minification_filter == 1)
-                            SCR_TEX_MIN_FLTR = NEAREST;
+                        if(minification_filter == LINEAR)
+                            SCR_TEX_MIN_FLTR = texture_filtering::LINEAR;
+                        if(minification_filter == NEAREST)
+                            SCR_TEX_MIN_FLTR = texture_filtering::NEAREST;
                     }
                     events::should_update_offscr_tex_param = true;
                 } 
@@ -111,17 +111,36 @@ void workspace_panel()
                 
                 Checkbox("Use Mipmaps", &USE_MIPMAPS);
                 if (USE_MIPMAPS)
-                {   
+                {  
                     SameLine();
-                    Combo("", &mipmap_filter, "Linear\0Nearest\0\0");
+                    //FIXME this combo doesn't open
+                    //TODO figure out why using mipmaps cuases the screen to go dark
+                    if (Combo("Mipmap", &mipmap_filter, "Linear\0Nearest\0\0"))
+                    {
+                        if (minification_filter == LINEAR)
+                        {
+                            if(mipmap_filter == LINEAR)
+                                settings::SCR_TEX_MIN_FLTR = texture_filtering::MIPMAP_LINEAR_LINEAR;
+                            if(mipmap_filter == NEAREST)
+                                settings::SCR_TEX_MIN_FLTR = texture_filtering::MIPMAP_NEAREST_LINEAR;
+                        } 
+                        else if (minification_filter == NEAREST)
+                        {
+                            if(mipmap_filter == LINEAR)
+                                settings::SCR_TEX_MIN_FLTR = texture_filtering::MIPMAP_LINEAR_NEAREST;
+                            if(mipmap_filter == NEAREST)
+                                settings::SCR_TEX_MIN_FLTR = texture_filtering::MIPMAP_NEAREST_NEAREST;
+                        }
+                        events::should_update_offscr_tex_param = true;
+                    }
                 }
                 
                 if (Combo("Magnification", &magnification_filter, "Linear\0Nearest\0\0"))
                 {
-                    if (magnification_filter == 0)
-                        SCR_TEX_MAG_FLTR = LINEAR;
-                    if (magnification_filter == 1)
-                        SCR_TEX_MAG_FLTR = NEAREST;
+                    if (magnification_filter == LINEAR)
+                        SCR_TEX_MAG_FLTR = texture_filtering::LINEAR;
+                    if (magnification_filter == NEAREST)
+                        SCR_TEX_MAG_FLTR = texture_filtering::NEAREST;
                     events::should_update_offscr_tex_param = true;
                 }
             }
