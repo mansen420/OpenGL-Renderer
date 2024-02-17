@@ -1,6 +1,6 @@
 #include "renderer.h"       //includes callback functions
 #include "engine_state.h"   //includes engine state 
-
+#include <algorithm>        //for std::clamp
 //TODO fix these
 #include "shader_utils.h"
 #include "object_interface.h"
@@ -253,8 +253,8 @@ namespace renderer
         scr_tex_left_edge  =  scr_tex_bottom_edge = settings::SCR_TEX_MIN_RATIO;
         if(settings::RENDER_TO_VIEW_MODE == CROP)
         {
-            ratio > 1.0 ? scr_tex_right_edge = std::min(std::max(1.0f/ratio, settings::SCR_TEX_MIN_RATIO), settings::SCR_TEX_MAX_RATIO) 
-            : scr_tex_top_edge   = std::max(std::min(   ratio,   settings::SCR_TEX_MAX_RATIO), settings::SCR_TEX_MIN_RATIO);
+            ratio > 1.0 ? scr_tex_right_edge = std::clamp(1/ratio, settings::SCR_TEX_MIN_RATIO, settings::SCR_TEX_MAX_RATIO)
+            :             scr_tex_top_edge   = std::clamp(ratio  , settings::SCR_TEX_MIN_RATIO, settings::SCR_TEX_MAX_RATIO);
 
             //TODO 2 modes for viewport positioning : decide center then claculate shift vector,
             //     or decide shift vector arbitrarily.
