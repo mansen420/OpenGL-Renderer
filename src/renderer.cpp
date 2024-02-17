@@ -263,14 +263,10 @@ namespace renderer
 
             glm::vec2 shift_vec = render_center - view_center;
 
-            scr_tex_right_edge   = shift_vec.x + scr_tex_right_edge    > settings::SCR_TEX_MAX_RATIO ? 
-            settings::SCR_TEX_MAX_RATIO : shift_vec.x +  scr_tex_right_edge;
-            scr_tex_left_edge    = shift_vec.x + scr_tex_left_edge     < settings::SCR_TEX_MIN_RATIO ? 
-            settings::SCR_TEX_MIN_RATIO : shift_vec.x +   scr_tex_left_edge;
-            scr_tex_top_edge     = shift_vec.y + scr_tex_top_edge      > settings::SCR_TEX_MAX_RATIO ? 
-            settings::SCR_TEX_MAX_RATIO : shift_vec.y +    scr_tex_top_edge;
-            scr_tex_bottom_edge  = shift_vec.y + scr_tex_bottom_edge   < settings::SCR_TEX_MIN_RATIO ? 
-            settings::SCR_TEX_MIN_RATIO : shift_vec.y + scr_tex_bottom_edge;
+            scr_tex_right_edge  = std::min(shift_vec.x +  scr_tex_right_edge, settings::SCR_TEX_MAX_RATIO);
+            scr_tex_left_edge   = std::max(shift_vec.x +   scr_tex_left_edge, settings::SCR_TEX_MIN_RATIO);
+            scr_tex_top_edge    = std::min(shift_vec.y +    scr_tex_top_edge, settings::SCR_TEX_MAX_RATIO);
+            scr_tex_bottom_edge = std::max(shift_vec.y + scr_tex_bottom_edge, settings::SCR_TEX_MIN_RATIO);
         }
         std::cout << scr_tex_top_edge       << ' ' << scr_tex_bottom_edge << '\t' << scr_tex_right_edge << ' ' << scr_tex_left_edge << std::endl;
         std::cout << settings::RENDER_W     << ' ' << settings::RENDER_H <<std::endl;
