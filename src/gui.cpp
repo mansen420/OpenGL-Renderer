@@ -115,6 +115,8 @@ void workspace_panel()
                     SameLine();
                     //FIXME this combo doesn't open
                     //TODO figure out why using mipmaps cuases the screen to go dark
+                    //update : it seems that the image is dark because no mipmaps are generated, i.e. it samples from non-existant mipmaps thus the darker image.
+                    //telling the GL to generate mipmaps every time we update the tex params causes an invlid operation error.
                     if (Combo("Mipmap", &mipmap_filter, "Linear\0Nearest\0\0"))
                     {
                         if (minification_filter == LINEAR)
