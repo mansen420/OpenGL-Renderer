@@ -7,6 +7,8 @@
 //TODO add error logging for all opengl calls
 namespace renderer
 {   
+    static std::ofstream eng_log; //engine file stream
+
     namespace settings
     {
         glm::vec4   CLR_COLOR(0.6, 0.3, 0.3, 1.0);
@@ -268,10 +270,10 @@ namespace renderer
             scr_tex_top_edge    = std::min(shift_vec.y +    scr_tex_top_edge, settings::SCR_TEX_MAX_RATIO);
             scr_tex_bottom_edge = std::max(shift_vec.y + scr_tex_bottom_edge, settings::SCR_TEX_MIN_RATIO);
         }
-        std::cout << scr_tex_top_edge       << ' ' << scr_tex_bottom_edge << '\t' << scr_tex_right_edge << ' ' << scr_tex_left_edge << std::endl;
-        std::cout << settings::RENDER_W     << ' ' << settings::RENDER_H <<std::endl;
-        std::cout << OPENGL_VIEWPORT_W << ' ' << OPENGL_VIEWPORT_H <<std::endl;
-        std::cout << "*\t*" <<std::endl; 
+        eng_log << scr_tex_top_edge       << ' ' << scr_tex_bottom_edge << '\t' << scr_tex_right_edge << ' ' << scr_tex_left_edge << '\n';
+        eng_log << settings::RENDER_W     << ' ' << settings::RENDER_H <<'\n';
+        eng_log  << OPENGL_VIEWPORT_W << ' ' << OPENGL_VIEWPORT_H << '\n';
+        eng_log  << "*\t*" <<std::endl; 
 
         //free old memory, alloc new memory. Maybe better to simply modify the old memory?
         delete[] scr_quad; 
@@ -293,6 +295,7 @@ namespace renderer
     }
     int init()
     {
+        eng_log.open("engine_log.txt", std::ofstream::out | std::ofstream::trunc);
         read_obj(settings::PATH_TO_OBJ, *obj_ptr);
         obj_ptr->send_data();
 
@@ -319,6 +322,8 @@ namespace renderer
     }
     void terminate()
     {
+
+        eng_log.close();        
         delete obj_ptr;
         delete[] scr_quad;
     }
