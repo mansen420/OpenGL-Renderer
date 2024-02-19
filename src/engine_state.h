@@ -11,7 +11,18 @@
 
 namespace renderer
 {
-
+    enum shader_prg_options
+    {
+        POST_PROCESS,
+        OFF_SCREEN
+    };
+    //FIXME this enum conflits with the one declared at shader_utils.h.
+    //This is a tragedy waiting to happen. fix it. 
+    enum shader_options
+    {
+        VERTEX,
+        FRAGMENT
+    };
     enum scr_display_mode_option
     {
         COLOR,
@@ -41,7 +52,7 @@ namespace renderer
         extern bool DEPTH_TEST_ENBLD, STENCIL_TEST_ENBLD;
         extern glm::vec4 CLR_COLOR;
         extern glm::vec3 DEPTH_VIEW_COLOR;
-        extern const unsigned int *ACTV_OBJ_SHDR_PRG_ID, *ACTV_PP_SHDR_PRG_ID;
+        extern const unsigned int *actv_obj_shdr_prg_ID, *actv_pp_shdr_prg_ID;
         extern scr_display_mode_option DISPLAY_BUFFER;
         extern renderport_behaviour RENDER_TO_VIEW_MODE;
         extern texture_filtering SCR_TEX_MAG_FLTR, SCR_TEX_MIN_FLTR;
