@@ -8,8 +8,8 @@ void workspace_panel()
 {
     //FIXME probably a bad idea
     using namespace ImGui;
+    ImGuiViewport* whole_window = GetMainViewport();
     {
-        ImGuiViewport* whole_window = GetMainViewport();
 
         ImVec2 pos(whole_window->Pos.x + OPENGL_VIEWPORT_W, whole_window->Pos.y);
         SetNextWindowPos(ImVec2(pos));
@@ -223,6 +223,20 @@ void workspace_panel()
                 DragFloat("FOV", &FOV, 0.65, 0.0, 180.0  ); 
                 SameLine();
                 DragFloatRange2("Projection Plane", &NEAR_PLANE, &FAR_PLANE, 0.05, 0.001, 100.0, "%.3f", NULL, ImGuiSliderFlags_AlwaysClamp);
+            }
+            EndTabItem();
+        }
+        if(BeginTabItem("Shaders"))
+        {
+            //TODO make this a dynamic size
+            static char shader_code_buffer[1024*16];
+            //FIXME this should NOT be handled here. I get a segfault on quitting.
+            strcpy(shader_code_buffer, renderer::get_source(renderer::OFF_SCREEN, renderer::FRAGMENT));
+            ImGui::InputTextMultiline("##source", shader_code_buffer, sizeof(shader_code_buffer), whole_window->Size);
+
+            if(Button("Compile"))
+            {
+                renderer::update_shader(shader_code_buffer, renderer::FRAGMENT, renderer::OFF_SCREEN);   
             }
             EndTabItem();
         }

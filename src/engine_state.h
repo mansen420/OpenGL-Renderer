@@ -43,8 +43,6 @@ namespace renderer
         MIPMAP_LINEAR_NEAREST  =  GL_LINEAR_MIPMAP_NEAREST,
         MIPMAP_NEAREST_LINEAR  =  GL_NEAREST_MIPMAP_LINEAR
     };
-
-
     namespace settings 
     {
         extern std::string PATH_TO_OBJ;
@@ -65,4 +63,9 @@ namespace renderer
         extern float     SCR_TEX_MAX_RATIO;
         extern float     SCR_TEX_MIN_RATIO;
     }
+    //FIXME this should go into its own interface header
+    //we also need to ensure the code will NOT be modified (i.e. should be const)
+    char* get_source(shader_prg_options prg_type, shader_options shader_type);
+    //FIXME! temporary function
+    bool update_shader(char* source, shader_options shader_type, shader_prg_options prg_type);
 }

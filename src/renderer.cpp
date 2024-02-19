@@ -374,7 +374,7 @@ namespace renderer
 
         return true;
     }
-    const char* get_source(shader_prg_options prg_type, shader_options shader_type)
+    char* get_source(shader_prg_options prg_type, shader_options shader_type)
     {
         switch (prg_type)
         {
@@ -408,6 +408,34 @@ namespace renderer
             break;
         }
         return nullptr;
+    }
+    bool update_shader(char* source, shader_options shader_type, shader_prg_options prg_type)
+    {   //FIXME this function is so fucked
+        char backup[1024*16];
+
+        shader_prg_t &shader_prg = prg_type == POST_PROCESS ? active_PP_shader : active_object_shader;
+        shader_t &shader = shader_type == FRAGMENT ? shader_prg.fragment_shader : shader_prg.vertex_shader;
+
+        strcpy(backup, shader.source_code);
+        
+        bool success_status = 1;
+
+        shader_t new_shader;
+        new_shader.source_code = source;
+        shader_type_option type = shader_type == FRAGMENT? FRAGMENT_SHADER : VERTEX_SHADER; //see: todo at engine_state.h
+        new_shader.type = type;
+        success_status &= compileShader(type, new_shader.ID, source);
+
+        if (!success_status)
+        {
+            new_shader.source_code = backup;
+        }
+
+        //shader = new_shader;
+
+        success_status &= linkShaders(shader_prg.ID, shader_prg.vertex_shader.ID, shader_prg.fragment_shader.ID);
+        
+        return success_status;
     }
     void update_import()
     {
