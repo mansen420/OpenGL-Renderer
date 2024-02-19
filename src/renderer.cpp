@@ -7,7 +7,43 @@
 //TODO add error logging for all opengl calls
 namespace renderer
 {   
-    static std::ofstream eng_log; //engine file stream
+    static std::ofstream eng_log;
+
+    struct shader_t
+    {  
+        shader_type_option type;
+        unsigned int ID;
+        char* source_code = nullptr;
+        std::string path;
+        ~shader_t()
+        {
+            delete[] source_code;
+            if(glIsShader(ID) == GL_TRUE)
+            {
+                glDeleteShader(ID);
+            }
+        }
+    };
+    struct shader_prg_t
+    {
+        shader_prg_t()
+        {
+            fragment_shader.type = FRAGMENT_SHADER;
+            vertex_shader.type   =   VERTEX_SHADER;
+        }
+        unsigned int      ID = 0;   //0 for sensible GL behavior
+        shader_t   vertex_shader;
+        shader_t fragment_shader;
+        ~shader_prg_t()
+        {
+            if (glIsProgram(ID))
+            {
+                glDeleteProgram(ID);
+            }
+        }
+    };
+    static shader_prg_t active_object_shader;
+    static shader_prg_t active_PP_shader;
 
     namespace settings
     {
@@ -16,8 +52,6 @@ namespace renderer
 
         bool DEPTH_CLR_ENBLD  = 1, COLOR_CLR_ENBLD    = 1, STENCIL_CLR_ENBLD = 1;
         bool DEPTH_TEST_ENBLD = 1, STENCIL_TEST_ENBLD = 1;
-
-        const unsigned int *ACTV_OBJ_SHDR_PRG_ID, *ACTV_PP_SHDR_PRG_ID;
 
         scr_display_mode_option DISPLAY_BUFFER   = COLOR;
         renderport_behaviour RENDER_TO_VIEW_MODE =  CROP;
@@ -32,9 +66,6 @@ namespace renderer
         bool USE_MIPMAPS = false;
         texture_filtering SCR_TEX_MAG_FLTR = LINEAR, SCR_TEX_MIN_FLTR = LINEAR;
     }
-
-    static unsigned int       postprocess_shader_program_id;
-    static unsigned int    default_object_shader_program_id;
 
     static    unsigned int     offscr_tex_IDs[2];
     constexpr unsigned int     COLOR_TEX_IDX = 0, DEPTH_STENCIL_TEX_IDX = 1;
@@ -74,7 +105,7 @@ namespace renderer
         RIGHT_EDGE,  TOP_EDGE   ,  scr_tex_right_edge,    scr_tex_top_edge, 
         RIGHT_EDGE,  BOTTOM_EDGE,  scr_tex_right_edge, scr_tex_bottom_edge
     };
-    
+
     void update_projection();
 
     void send_uniforms()
@@ -83,10 +114,10 @@ namespace renderer
         glm::vec3 cam_pos = glm::vec3(0.0, 0.0, 3.0);
         view_transform = lookAt(cam_pos, vec3(0.f, 0.f, 0.f), vec3(0.f, 1.f, 0.f));
 
-        glUniform3f(glGetUniformLocation(*settings::ACTV_OBJ_SHDR_PRG_ID, "view_vector"), cam_pos.x, cam_pos.y, cam_pos.z);
-        glUniformMatrix4fv(glGetUniformLocation(*settings::ACTV_OBJ_SHDR_PRG_ID, "projection_transform"), 1, GL_FALSE,
+        glUniform3f(glGetUniformLocation(active_object_shader.ID, "view_vector"), cam_pos.x, cam_pos.y, cam_pos.z);
+        glUniformMatrix4fv(glGetUniformLocation(active_object_shader.ID, "projection_transform"), 1, GL_FALSE,
         glm::value_ptr(perspective_transform));
-        glUniformMatrix4fv(glGetUniformLocation(*settings::ACTV_OBJ_SHDR_PRG_ID, "view_transform"), 1, GL_FALSE,
+        glUniformMatrix4fv(glGetUniformLocation(active_object_shader.ID, "view_transform"), 1, GL_FALSE,
         glm::value_ptr(view_transform));
     }
     void offscreen_pass()
@@ -98,13 +129,13 @@ namespace renderer
         settings::DEPTH_TEST_ENBLD ? glEnable(GL_DEPTH_TEST) : glDisable(GL_DEPTH_TEST);
         glClear(GL_COLOR_BUFFER_BIT*settings::COLOR_CLR_ENBLD | GL_DEPTH_BUFFER_BIT*settings::DEPTH_CLR_ENBLD | GL_STENCIL_BUFFER_BIT*settings::STENCIL_CLR_ENBLD);
 
-        glUseProgram(*settings::ACTV_OBJ_SHDR_PRG_ID);
+        glUseProgram(active_object_shader.ID);
 
         model_transform = glm::rotate(glm::mat4(1.0f), (float)glfwGetTime(), glm::vec3(0.f, 1.f, 0.f));
         send_uniforms();
         obj_ptr->model_transform = model_transform;
 
-        obj_ptr->draw(*settings::ACTV_OBJ_SHDR_PRG_ID);
+        obj_ptr->draw(active_object_shader.ID);
     }
     void postprocess_pass()
     {
@@ -113,7 +144,7 @@ namespace renderer
         glClear(GL_COLOR_BUFFER_BIT);
         //if we do not disable the depth test here, the screen will draw over itself
         glDisable(GL_DEPTH_TEST);   
-        glUseProgram(postprocess_shader_program_id);
+        glUseProgram(active_PP_shader.ID);
 
         glBindVertexArray(screen_quad_vao_ID);
 
@@ -122,17 +153,17 @@ namespace renderer
         if(settings::DISPLAY_BUFFER == DEPTH)
         {
             glBindTexture(GL_TEXTURE_2D, offscr_tex_IDs[DEPTH_STENCIL_TEX_IDX]);
-            glUniform1i(glGetUniformLocation(*settings::ACTV_PP_SHDR_PRG_ID, "rendering_depth"), GL_TRUE);
-            glUniform3f(glGetUniformLocation(*settings::ACTV_PP_SHDR_PRG_ID, "depth_view_color"), 
+            glUniform1i(glGetUniformLocation(active_PP_shader.ID, "rendering_depth"), GL_TRUE);
+            glUniform3f(glGetUniformLocation(active_PP_shader.ID, "depth_view_color"), 
             settings::DEPTH_VIEW_COLOR.r, settings::DEPTH_VIEW_COLOR.g, settings::DEPTH_VIEW_COLOR.b);
         }
         else
         {
             glBindTexture(GL_TEXTURE_2D, offscr_tex_IDs[COLOR_TEX_IDX]);
-            glUniform1i(glGetUniformLocation(*settings::ACTV_PP_SHDR_PRG_ID, "rendering_depth"), GL_FALSE);
+            glUniform1i(glGetUniformLocation(active_PP_shader.ID, "rendering_depth"), GL_FALSE);
         }
 
-        glUniform1i(glGetUniformLocation(postprocess_shader_program_id, "screen_texture"), 0);
+        glUniform1i(glGetUniformLocation(active_PP_shader.ID, "screen_texture"), 0);
         
         glDrawArrays(GL_TRIANGLES, 0, 6);
     }
@@ -270,10 +301,10 @@ namespace renderer
             scr_tex_top_edge    = std::min(shift_vec.y +    scr_tex_top_edge, settings::SCR_TEX_MAX_RATIO);
             scr_tex_bottom_edge = std::max(shift_vec.y + scr_tex_bottom_edge, settings::SCR_TEX_MIN_RATIO);
         }
-        eng_log << scr_tex_top_edge       << ' ' << scr_tex_bottom_edge << '\t' << scr_tex_right_edge << ' ' << scr_tex_left_edge << '\n';
-        eng_log << settings::RENDER_W     << ' ' << settings::RENDER_H <<'\n';
-        eng_log  << OPENGL_VIEWPORT_W << ' ' << OPENGL_VIEWPORT_H << '\n';
-        eng_log  << "*\t*" <<std::endl; 
+        eng_log << scr_tex_top_edge   << ' ' << scr_tex_bottom_edge << '\t' << scr_tex_right_edge << ' ' << scr_tex_left_edge << '\n';
+        eng_log << settings::RENDER_W << ' ' << settings::RENDER_H  <<'\n';
+        eng_log << OPENGL_VIEWPORT_W  << ' ' << OPENGL_VIEWPORT_H   << '\n';
+        eng_log << "*\t*" <<std::endl; 
 
         //free old memory, alloc new memory. Maybe better to simply modify the old memory?
         delete[] scr_quad; 
@@ -293,9 +324,29 @@ namespace renderer
         setup_offscreen_framebuffer(settings::RENDER_W, settings::RENDER_H);
         send_screen_coords();
     }
+    bool init_shader_prg(shader_prg_t& shader)
+    {
+        bool success_status = 1;
+        //HACK maybe a bad idea to do &= 
+        success_status &= readShaderFile(shader.fragment_shader.path.c_str(), 
+        shader.fragment_shader.source_code);
+        success_status &= readShaderFile(shader.vertex_shader.path.c_str(), 
+        shader.vertex_shader.source_code);
+
+        success_status &= compileShader(FRAGMENT_SHADER, shader.fragment_shader.ID,
+        shader.fragment_shader.source_code);
+        success_status &= compileShader(VERTEX_SHADER, shader.vertex_shader.ID,
+        shader.vertex_shader.source_code);
+
+        success_status &= linkShaders(shader.ID, shader.vertex_shader.ID,
+        shader.fragment_shader.ID);
+
+        return success_status;
+    }
     int init()
     {
         eng_log.open("engine_log.txt", std::ofstream::out | std::ofstream::trunc);
+
         read_obj(settings::PATH_TO_OBJ, *obj_ptr);
         obj_ptr->send_data();
 
@@ -303,14 +354,60 @@ namespace renderer
             return false;
         update_screen_tex_coords();       
 
-        makeShaderProgram("src/shaders/gooch.vs",
-        "src/shaders/gooch.fs", default_object_shader_program_id);
-        settings::ACTV_OBJ_SHDR_PRG_ID = &default_object_shader_program_id;
-        makeShaderProgram("src/shaders/screen_PP.vs",
-        "src/shaders/screen_PP.fs", postprocess_shader_program_id);
-        settings::ACTV_PP_SHDR_PRG_ID = &postprocess_shader_program_id;
+        //TODO stop hardcoding shader paths
+        //TODO make shader initialization a mamber function?
+        active_object_shader.vertex_shader.path   = "src/shaders/gooch.vs";
+        active_object_shader.fragment_shader.path = "src/shaders/gooch.fs";
+        if (!init_shader_prg(active_object_shader))
+        {
+            std::cout << "SHADER PROGRAM ERROR\n";
+            return false;
+        }
+
+        active_PP_shader.vertex_shader.path   = "src/shaders/screen_PP.vs";
+        active_PP_shader.fragment_shader.path = "src/shaders/screen_PP.fs";
+        if (!init_shader_prg(active_PP_shader))
+        {
+            std::cout << "SHADER PROGRAM ERROR\n";
+            return false;
+        }
 
         return true;
+    }
+    const char* get_source(shader_prg_options prg_type, shader_options shader_type)
+    {
+        switch (prg_type)
+        {
+        case POST_PROCESS:
+            switch (shader_type)
+            {
+            case FRAGMENT:
+                return active_PP_shader.fragment_shader.source_code;
+                break;
+            case VERTEX:
+                return active_PP_shader.vertex_shader.source_code;
+                break;
+            default:
+                break;
+            }
+            break;
+        case OFF_SCREEN:
+           switch (shader_type)
+            {
+            case FRAGMENT:
+                return active_object_shader.fragment_shader.source_code;
+                break;
+            case VERTEX:
+                return active_object_shader.vertex_shader.source_code;
+                break;
+            default:
+                break;
+            }
+            break;
+        default:
+            break;
+        }
+        return nullptr;
     }
     void update_import()
     {
@@ -322,7 +419,6 @@ namespace renderer
     }
     void terminate()
     {
-
         eng_log.close();        
         delete obj_ptr;
         delete[] scr_quad;
