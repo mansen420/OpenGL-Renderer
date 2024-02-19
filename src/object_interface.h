@@ -329,7 +329,7 @@ bool read_obj(std::string path, object_3D::object &obj)
                 }
                 else    //generate our own normals
                 {
-                    
+                    //TODO add notifier 
                 }
 
                 const int tex_index = raw_indices[j].texcoord_index;
