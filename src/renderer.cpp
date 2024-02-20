@@ -117,7 +117,10 @@ namespace renderer
     }
     void postprocess_pass()
     {
-        glViewport(OPENGL_VIEWPORT_X, OPENGL_VIEWPORT_Y, OPENGL_VIEWPORT_W, OPENGL_VIEWPORT_H);
+        if (internal_state.SHOW_REAL_RENDER_SIZE)
+            glViewport(OPENGL_VIEWPORT_X, OPENGL_VIEWPORT_Y, internal_state.RENDER_W, internal_state.RENDER_H);
+        else
+            glViewport(OPENGL_VIEWPORT_X, OPENGL_VIEWPORT_Y, OPENGL_VIEWPORT_W, OPENGL_VIEWPORT_H);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glClear(GL_COLOR_BUFFER_BIT);
         //if we do not disable the depth test here, the screen will draw over itself
@@ -256,7 +259,7 @@ namespace renderer
             std::cout << "BAD TEX RATIOS"<<std::endl;
             return;
         } 
-        
+     
         float render_aspect_ratio   = float(internal_state.RENDER_W)/internal_state.RENDER_H;
         float viewport_aspect_ratio =   float(OPENGL_VIEWPORT_W)/OPENGL_VIEWPORT_H;
         float ratio                 =    render_aspect_ratio/viewport_aspect_ratio;
@@ -324,14 +327,13 @@ namespace renderer
     }
     void update_state()
     {
-        bool should_update_import, should_update_scr_tex_coords, should_update_offscr_tex_params;
+        bool should_update_import, should_update_scr_tex_coords, should_update_offscr_tex_params, should_update_projection;
 
         should_update_import = internal_state.PATH_TO_OBJ != ENGINE_SETTINGS.PATH_TO_OBJ;
         
         should_update_scr_tex_coords =  //yeah, that's a lot!
             internal_state.RENDER_H            != ENGINE_SETTINGS.RENDER_H          || 
             internal_state.RENDER_W            != ENGINE_SETTINGS.RENDER_W          ||
-            internal_state.RENDER_AR           != ENGINE_SETTINGS.RENDER_AR         || 
             internal_state.RENDER_VIEW_POS     != ENGINE_SETTINGS.RENDER_VIEW_POS   || 
             internal_state.SCR_TEX_MAX_RATIO   != ENGINE_SETTINGS.SCR_TEX_MAX_RATIO ||
             internal_state.SCR_TEX_MIN_RATIO   != ENGINE_SETTINGS.SCR_TEX_MIN_RATIO ||
@@ -341,20 +343,19 @@ namespace renderer
             internal_state.SCR_TEX_MAG_FLTR != ENGINE_SETTINGS.SCR_TEX_MAG_FLTR ||
             internal_state.SCR_TEX_MIN_FLTR != ENGINE_SETTINGS.SCR_TEX_MIN_FLTR;
 
+        should_update_projection = 
+            internal_state.RENDER_AR != ENGINE_SETTINGS.RENDER_AR;
+
         internal_state = ENGINE_SETTINGS;
 
         if(should_update_import)
-        {
             update_import();
-        }
         if (should_update_offscr_tex_params)
-        {
             update_offscreen_tex_params();
-        }
         if (should_update_scr_tex_coords)
-        {
             update_screen_tex_coords();
-        }
+        if (should_update_projection)
+            update_projection();
     }
     int init()
     {

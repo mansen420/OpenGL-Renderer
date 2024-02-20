@@ -169,11 +169,14 @@ void workspace_panel()
             Spacing();
             {
                 static int current_item = 1;
-                Combo("Render View Mode", &current_item, "Fit To Viewport\0Keep Aspect Ratio");
+                Combo("Render View Mode", &current_item, 
+                "Fit To Viewport\0Keep Aspect Ratio\0\0");
                 if(current_item == 0)
                     ENGINE_SETTINGS.RENDER_TO_VIEW_MODE = FIT_TO_VIEW;
                 if(current_item == 1)
                     ENGINE_SETTINGS.RENDER_TO_VIEW_MODE = CROP;
+                SameLine();
+                Checkbox("Show Actual Size", &ENGINE_SETTINGS.SHOW_REAL_RENDER_SIZE);
             }
             Spacing();
             SeparatorText("Render Projection Matrix Settings");

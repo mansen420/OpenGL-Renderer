@@ -67,8 +67,10 @@ namespace renderer
         float NEAR_PLANE, FAR_PLANE, FOV;
 
         glm::vec2   RENDER_VIEW_POS;
+        bool  SHOW_REAL_RENDER_SIZE;
         float     SCR_TEX_MAX_RATIO;
         float     SCR_TEX_MIN_RATIO;
+
         engine_state_t()
         { 
             PATH_TO_OBJ = "assets/cube.obj"; 
@@ -95,6 +97,8 @@ namespace renderer
             RENDER_VIEW_POS   = glm::vec2(0.5f, 0.5f);
             SCR_TEX_MAX_RATIO =     1.0;
             SCR_TEX_MIN_RATIO =     0.0; 
+
+            SHOW_REAL_RENDER_SIZE = false;
         }
     };
     extern engine_state_t ENGINE_SETTINGS;
@@ -105,8 +109,8 @@ namespace renderer
     //FIXME! temporary function
     bool update_shader(char* source, shader_options shader_type, shader_prg_options prg_type);
 
-    int init();
-    void terminate();
+    int          init();
+    void    terminate();
     void render_scene();
     void update_state();
 }
