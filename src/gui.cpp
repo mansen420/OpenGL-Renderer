@@ -1,5 +1,4 @@
-#include "engine_state.h"       //*for setting global variables
-#include "event_handling.h"     //*for calling engine state update functions  
+#include "engine_interface.h"
 #include "gui.h"
 //TODO separate the logic into the event handler module...
 //update : right now, gui.cpp only directly handles global varaiables declared in engine_state.h
@@ -30,9 +29,8 @@ void workspace_panel()
     if (BeginTabBar("Workspace")) 
     {
         if(BeginTabItem("Engine Settings"))
-        {
+        {   //FIXME
             using namespace renderer;
-            using namespace settings;
 
             Spacing();
             SeparatorText("Render Target Framebuffer Settings");
@@ -41,31 +39,31 @@ void workspace_panel()
                 PushItemWidth(GetWindowWidth()*0.15);
 
                 //TODO separate the evend handling logic and the gui stuff
-                Checkbox ("Clear Depth Buffer"  , &DEPTH_CLR_ENBLD  ); SameLine();
-                Checkbox ("Clear Color Buffer"  , &COLOR_CLR_ENBLD  ); SameLine();
-                Checkbox ("Clear Stencil Buffer", &STENCIL_CLR_ENBLD);
+                Checkbox ("Clear Depth Buffer"  , &ENGINE_SETTINGS.DEPTH_CLR_ENBLD); SameLine();
+                Checkbox ("Clear Color Buffer"  , &ENGINE_SETTINGS.COLOR_CLR_ENBLD); SameLine();
+                Checkbox ("Clear Stencil Buffer", &ENGINE_SETTINGS.STENCIL_CLR_ENBLD);
                 
                 Spacing();
                 
-                Checkbox("Enable Depth Testing"  , &DEPTH_TEST_ENBLD  ); SameLine();
-                Checkbox("Enable Stencil Testing", &STENCIL_TEST_ENBLD); SameLine();
+                Checkbox("Enable Depth Testing"  , &ENGINE_SETTINGS.DEPTH_TEST_ENBLD  ); SameLine();
+                Checkbox("Enable Stencil Testing", &ENGINE_SETTINGS.STENCIL_TEST_ENBLD); SameLine();
 
                 Spacing();
 
-                ColorEdit4("Framebuffer Clear Color",        &CLR_COLOR.r, ImGuiColorEditFlags_NoInputs); 
+                ColorEdit4("Framebuffer Clear Color",        &ENGINE_SETTINGS.CLR_COLOR.r, ImGuiColorEditFlags_NoInputs); 
                 SameLine();
-                ColorEdit3("Depth Viewing Color"    , &DEPTH_VIEW_COLOR.r, ImGuiColorEditFlags_NoInputs);
+                ColorEdit3("Depth Viewing Color"    , &ENGINE_SETTINGS.DEPTH_VIEW_COLOR.r, ImGuiColorEditFlags_NoInputs);
 
                 Spacing();
 
                 static int active_1 = 0;
                 if (RadioButton("View Color Buffer", &active_1, 0))
                 {
-                    DISPLAY_BUFFER = COLOR;
+                    ENGINE_SETTINGS.DISPLAY_BUFFER = COLOR;
                 }   SameLine();
                 if (RadioButton("View Depth BUffer", &active_1, 1))
                 {
-                    DISPLAY_BUFFER = DEPTH;
+                    ENGINE_SETTINGS.DISPLAY_BUFFER = DEPTH;
                 }   
             }
             Spacing();
@@ -81,36 +79,35 @@ void workspace_panel()
                 if (Combo("Minification", &minification_filter, "Linear\0Nearest\0\0"))
                 {
                     //FIXME please find a better way to do this, this is ugly as fuck 
-                    if(USE_MIPMAPS)
+                    if(ENGINE_SETTINGS.USE_MIPMAPS)
                     {
                         if(minification_filter == LINEAR)
                         {
                             if(mipmap_filter == LINEAR)
-                                SCR_TEX_MIN_FLTR = texture_filtering::MIPMAP_LINEAR_LINEAR;
+                                ENGINE_SETTINGS.SCR_TEX_MIN_FLTR = texture_filtering::MIPMAP_LINEAR_LINEAR;
                             if (mipmap_filter == NEAREST)
-                                SCR_TEX_MIN_FLTR = texture_filtering::MIPMAP_NEAREST_LINEAR;
+                                ENGINE_SETTINGS.SCR_TEX_MIN_FLTR = texture_filtering::MIPMAP_NEAREST_LINEAR;
                         }
                         if(minification_filter == NEAREST)
                         {
                             if(mipmap_filter == LINEAR)
-                                SCR_TEX_MIN_FLTR = texture_filtering::MIPMAP_LINEAR_NEAREST;
+                                ENGINE_SETTINGS.SCR_TEX_MIN_FLTR = texture_filtering::MIPMAP_LINEAR_NEAREST;
                             if (mipmap_filter == NEAREST)
-                                SCR_TEX_MIN_FLTR = texture_filtering::MIPMAP_NEAREST_NEAREST;
+                                ENGINE_SETTINGS.SCR_TEX_MIN_FLTR = texture_filtering::MIPMAP_NEAREST_NEAREST;
                         }
                     }
                     else
                     {
                         if(minification_filter == LINEAR)
-                            SCR_TEX_MIN_FLTR = texture_filtering::LINEAR;
+                            ENGINE_SETTINGS.SCR_TEX_MIN_FLTR = texture_filtering::LINEAR;
                         if(minification_filter == NEAREST)
-                            SCR_TEX_MIN_FLTR = texture_filtering::NEAREST;
+                            ENGINE_SETTINGS.SCR_TEX_MIN_FLTR = texture_filtering::NEAREST;
                     }
-                    events::should_update_offscr_tex_param = true;
                 } 
                 SameLine();
                 
-                Checkbox("Use Mipmaps", &USE_MIPMAPS);
-                if (USE_MIPMAPS)
+                Checkbox("Use Mipmaps", &ENGINE_SETTINGS.USE_MIPMAPS);
+                if (ENGINE_SETTINGS.USE_MIPMAPS)
                 {  
                     SameLine();
                     //FIXME this combo doesn't open
@@ -122,28 +119,26 @@ void workspace_panel()
                         if (minification_filter == LINEAR)
                         {
                             if(mipmap_filter == LINEAR)
-                                settings::SCR_TEX_MIN_FLTR = texture_filtering::MIPMAP_LINEAR_LINEAR;
+                                ENGINE_SETTINGS.SCR_TEX_MIN_FLTR = texture_filtering::MIPMAP_LINEAR_LINEAR;
                             if(mipmap_filter == NEAREST)
-                                settings::SCR_TEX_MIN_FLTR = texture_filtering::MIPMAP_NEAREST_LINEAR;
+                                ENGINE_SETTINGS.SCR_TEX_MIN_FLTR = texture_filtering::MIPMAP_NEAREST_LINEAR;
                         } 
                         else if (minification_filter == NEAREST)
                         {
                             if(mipmap_filter == LINEAR)
-                                settings::SCR_TEX_MIN_FLTR = texture_filtering::MIPMAP_LINEAR_NEAREST;
+                                ENGINE_SETTINGS.SCR_TEX_MIN_FLTR = texture_filtering::MIPMAP_LINEAR_NEAREST;
                             if(mipmap_filter == NEAREST)
-                                settings::SCR_TEX_MIN_FLTR = texture_filtering::MIPMAP_NEAREST_NEAREST;
+                                ENGINE_SETTINGS.SCR_TEX_MIN_FLTR = texture_filtering::MIPMAP_NEAREST_NEAREST;
                         }
-                        events::should_update_offscr_tex_param = true;
                     }
                 }
                 
                 if (Combo("Magnification", &magnification_filter, "Linear\0Nearest\0\0"))
                 {
                     if (magnification_filter == LINEAR)
-                        SCR_TEX_MAG_FLTR = texture_filtering::LINEAR;
+                        ENGINE_SETTINGS.SCR_TEX_MAG_FLTR = texture_filtering::LINEAR;
                     if (magnification_filter == NEAREST)
-                        SCR_TEX_MAG_FLTR = texture_filtering::NEAREST;
-                    events::should_update_offscr_tex_param = true;
+                        ENGINE_SETTINGS.SCR_TEX_MAG_FLTR = texture_filtering::NEAREST;
                 }
             }
             Spacing();
@@ -153,15 +148,13 @@ void workspace_panel()
                 PopItemWidth();
                 PushItemWidth(GetWindowWidth()*0.25);
 
-                int render_w_candidate = int(RENDER_W), render_h_candidate = int(RENDER_H);
+                int render_w_candidate = int(ENGINE_SETTINGS.RENDER_W), render_h_candidate = int(ENGINE_SETTINGS.RENDER_H);
 
                 if (InputInt("Width", &render_w_candidate, 50.0, 500.0, ImGuiInputTextFlags_None))
                 {
                     if(render_w_candidate >= 0 && render_w_candidate <= MAX_RENDER_W)
                     {
-                        RENDER_W = size_t(render_w_candidate);
-
-                        events::should_update_scr_tex_coords = true;
+                        ENGINE_SETTINGS.RENDER_W = size_t(render_w_candidate);
                     }
                 } 
                 SameLine();
@@ -169,35 +162,31 @@ void workspace_panel()
                 {
                     if(render_h_candidate >= 0 && render_h_candidate <= MAX_RENDER_H)
                     {
-                        RENDER_H = size_t(render_h_candidate);
-
-                        events::should_update_scr_tex_coords = true;
+                        ENGINE_SETTINGS.RENDER_H = size_t(render_h_candidate);
                     }
                 }
             }
             Spacing();
             {
                 static int current_item = 1;
-                if (Combo("Render View Mode", &current_item, "Fit To Viewport\0Keep Aspect Ratio"))
-                    events::should_update_scr_tex_coords = true;
+                Combo("Render View Mode", &current_item, "Fit To Viewport\0Keep Aspect Ratio");
                 if(current_item == 0)
-                    settings::RENDER_TO_VIEW_MODE = FIT_TO_VIEW;
+                    ENGINE_SETTINGS.RENDER_TO_VIEW_MODE = FIT_TO_VIEW;
                 if(current_item == 1)
-                    settings::RENDER_TO_VIEW_MODE = CROP;
+                    ENGINE_SETTINGS.RENDER_TO_VIEW_MODE = CROP;
             }
             Spacing();
             SeparatorText("Render Projection Matrix Settings");
             Spacing();
             {
-                float RENDER_AR_candidate = RENDER_AR;
+                float RENDER_AR_candidate = ENGINE_SETTINGS.RENDER_AR;
 
                 static ImGuiInputTextFlags flags = ImGuiInputTextFlags_None;
                 if (InputFloat("Aspect Ratio", &RENDER_AR_candidate, 0.1, 1.0, "%.3f", flags))
                 {
                     if (RENDER_AR_candidate >= 0)
                     {
-                        RENDER_AR = RENDER_AR_candidate;
-                        events::should_update_projection = true;
+                        ENGINE_SETTINGS.RENDER_AR = RENDER_AR_candidate;
                     }
                 }
                 SameLine();
@@ -210,19 +199,19 @@ void workspace_panel()
                 if (current_item == 1)
                 {
                     flags = flags|ImGuiInputTextFlags_ReadOnly;
-                    RENDER_AR = float(RENDER_W)/RENDER_H;
+                    ENGINE_SETTINGS.RENDER_AR = float(ENGINE_SETTINGS.RENDER_W)/ENGINE_SETTINGS.RENDER_H;
                 }
                 if (current_item == 2)
                 {
                     flags = flags|ImGuiInputTextFlags_ReadOnly;
-                    RENDER_AR = float(OPENGL_VIEWPORT_W)/OPENGL_VIEWPORT_H;
+                    ENGINE_SETTINGS.RENDER_AR = float(OPENGL_VIEWPORT_W)/OPENGL_VIEWPORT_H;
                 }
 
                 Spacing();
 
-                DragFloat("FOV", &FOV, 0.65, 0.0, 180.0  ); 
+                DragFloat("FOV", &ENGINE_SETTINGS.FOV, 0.65, 0.0, 180.0  ); 
                 SameLine();
-                DragFloatRange2("Projection Plane", &NEAR_PLANE, &FAR_PLANE, 0.05, 0.001, 100.0, "%.3f", NULL, ImGuiSliderFlags_AlwaysClamp);
+                DragFloatRange2("Projection Plane", &ENGINE_SETTINGS.NEAR_PLANE, &ENGINE_SETTINGS.FAR_PLANE, 0.05, 0.001, 100.0, "%.3f", NULL, ImGuiSliderFlags_AlwaysClamp);
             }
             EndTabItem();
         }
@@ -251,8 +240,7 @@ void conditional_gui()
         window::file_dialog.Display();
         if (window::file_dialog.HasSelected())
         {
-            renderer::settings::PATH_TO_OBJ = window::file_dialog.GetSelected();
-            events::should_update_import = true;
+            renderer::ENGINE_SETTINGS.PATH_TO_OBJ = window::file_dialog.GetSelected();
 
             window::file_dialog.ClearSelected();            
             should_show_filedialog = false;
@@ -293,7 +281,10 @@ void main_bar()
             EndMenu();
         }
         ImGui::Separator();
-        MenuItem("Quit", "esc", &events::should_quit);
+        if (MenuItem("Quit", "esc"))
+        {
+            glfwSetWindowShouldClose(myWindow, true);
+        }
         EndMenuBar();
     }
     End();

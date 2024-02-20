@@ -1,5 +1,4 @@
-#include "renderer.h"       //includes callback functions
-#include "engine_state.h"   //includes engine state 
+#include "engine_interface.h"
 #include <algorithm>        //for std::clamp
 //TODO fix these
 #include "shader_utils.h"
@@ -8,9 +7,12 @@
 namespace renderer
 {   
     static std::ofstream eng_log;
+    
+           engine_state_t ENGINE_SETTINGS;    //public state 
+    static engine_state_t  internal_state;   //actual state of the engine
 
     struct shader_t
-    {  
+    {
         shader_type_option type;
         unsigned int ID;
         char* source_code = nullptr;
@@ -45,27 +47,6 @@ namespace renderer
     static shader_prg_t active_object_shader;
     static shader_prg_t active_PP_shader;
 
-    namespace settings
-    {
-        glm::vec4   CLR_COLOR(0.6, 0.3, 0.3, 1.0);
-        glm::vec3 DEPTH_VIEW_COLOR(1.0, 1.0, 1.0);
-
-        bool DEPTH_CLR_ENBLD  = 1, COLOR_CLR_ENBLD    = 1, STENCIL_CLR_ENBLD = 1;
-        bool DEPTH_TEST_ENBLD = 1, STENCIL_TEST_ENBLD = 1;
-
-        scr_display_mode_option DISPLAY_BUFFER   = COLOR;
-        renderport_behaviour RENDER_TO_VIEW_MODE =  CROP;
-
-        bool PP_ENBLD    = 1;
-
-        size_t RENDER_W  = 1920, RENDER_H = 1080;
-        float RENDER_AR  = 16.0/9.0;
-        float NEAR_PLANE = 0.1f, FAR_PLANE = 100.0f;
-        float FOV        = 45.0;
-
-        bool USE_MIPMAPS = false;
-        texture_filtering SCR_TEX_MAG_FLTR = LINEAR, SCR_TEX_MIN_FLTR = LINEAR;
-    }
 
     static    unsigned int     offscr_tex_IDs[2];
     constexpr unsigned int     COLOR_TEX_IDX = 0, DEPTH_STENCIL_TEX_IDX = 1;
@@ -80,15 +61,11 @@ namespace renderer
     static glm::mat4 perspective_transform;
 
     object_3D::object*    obj_ptr     = new object_3D::object;
-    std::string settings::PATH_TO_OBJ =     "assets/cube.obj"; //default
 
     //on-screen texture data
     static float scr_tex_top_edge   = 1.0, scr_tex_bottom_edge = 0.0;
     static float scr_tex_right_edge = 1.0, scr_tex_left_edge   = 0.0;
     //parameters
-    glm::vec2 settings::RENDER_VIEW_POS(0.5f, 0.5f);
-        float settings::SCR_TEX_MAX_RATIO =     1.0;
-        float settings::SCR_TEX_MIN_RATIO =     0.0;
     constexpr float LEFT_EDGE   = -1.0;
     constexpr float RIGHT_EDGE  =  1.0;
     constexpr float BOTTOM_EDGE = -1.0;
@@ -107,6 +84,7 @@ namespace renderer
     };
 
     void update_projection();
+    void update_import();
 
     void send_uniforms()
     {
@@ -122,12 +100,12 @@ namespace renderer
     }
     void offscreen_pass()
     {
-        glViewport(OPENGL_VIEWPORT_X, OPENGL_VIEWPORT_Y, settings::RENDER_W, settings::RENDER_H);
+        glViewport(OPENGL_VIEWPORT_X, OPENGL_VIEWPORT_Y, internal_state.RENDER_W, internal_state.RENDER_H);
 
         glBindFramebuffer(GL_FRAMEBUFFER, offscreen_framebuffer_ID);
 
-        settings::DEPTH_TEST_ENBLD ? glEnable(GL_DEPTH_TEST) : glDisable(GL_DEPTH_TEST);
-        glClear(GL_COLOR_BUFFER_BIT*settings::COLOR_CLR_ENBLD | GL_DEPTH_BUFFER_BIT*settings::DEPTH_CLR_ENBLD | GL_STENCIL_BUFFER_BIT*settings::STENCIL_CLR_ENBLD);
+        internal_state.DEPTH_TEST_ENBLD ? glEnable(GL_DEPTH_TEST) : glDisable(GL_DEPTH_TEST);
+        glClear(GL_COLOR_BUFFER_BIT*internal_state.COLOR_CLR_ENBLD | GL_DEPTH_BUFFER_BIT*internal_state.DEPTH_CLR_ENBLD | GL_STENCIL_BUFFER_BIT*internal_state.STENCIL_CLR_ENBLD);
 
         glUseProgram(active_object_shader.ID);
 
@@ -150,12 +128,12 @@ namespace renderer
 
         //TODO implement viewing depth and stencil textures (1/2)
         glActiveTexture(GL_TEXTURE0); 
-        if(settings::DISPLAY_BUFFER == DEPTH)
+        if(internal_state.DISPLAY_BUFFER == DEPTH)
         {
             glBindTexture(GL_TEXTURE_2D, offscr_tex_IDs[DEPTH_STENCIL_TEX_IDX]);
             glUniform1i(glGetUniformLocation(active_PP_shader.ID, "rendering_depth"), GL_TRUE);
             glUniform3f(glGetUniformLocation(active_PP_shader.ID, "depth_view_color"), 
-            settings::DEPTH_VIEW_COLOR.r, settings::DEPTH_VIEW_COLOR.g, settings::DEPTH_VIEW_COLOR.b);
+            internal_state.DEPTH_VIEW_COLOR.r, internal_state.DEPTH_VIEW_COLOR.g, internal_state.DEPTH_VIEW_COLOR.b);
         }
         else
         {
@@ -169,21 +147,22 @@ namespace renderer
     }
     void render_scene()
     {
-        glClearColor(settings::CLR_COLOR.r, settings::CLR_COLOR.g, settings::CLR_COLOR.b, settings::CLR_COLOR.a);
+        glClearColor(internal_state.CLR_COLOR.r, internal_state.CLR_COLOR.g, internal_state.CLR_COLOR.b, internal_state.CLR_COLOR.a);
         offscreen_pass();
         postprocess_pass();
         update_projection(); //TODO maybe handle this elsewhere
     }
+    
     void update_offscreen_tex_params()
     {
         glBindTexture(GL_TEXTURE_2D, offscr_tex_IDs[COLOR_TEX_IDX]);
         //TODO check that the magnification filter is not set to use mipmaps
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, settings::SCR_TEX_MIN_FLTR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, settings::SCR_TEX_MAG_FLTR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, internal_state.SCR_TEX_MIN_FLTR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, internal_state.SCR_TEX_MAG_FLTR);
 
         glBindTexture(GL_TEXTURE_2D, offscr_tex_IDs[DEPTH_STENCIL_TEX_IDX]);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, settings::SCR_TEX_MIN_FLTR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, settings::SCR_TEX_MAG_FLTR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, internal_state.SCR_TEX_MIN_FLTR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, internal_state.SCR_TEX_MAG_FLTR);
 
         glBindTexture(GL_TEXTURE_2D, 0);
     }
@@ -208,16 +187,16 @@ namespace renderer
         glGenerateMipmap(GL_TEXTURE_2D);
 
         //TODO check that the magnification filter is not set to use mipmaps
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, settings::SCR_TEX_MIN_FLTR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, settings::SCR_TEX_MAG_FLTR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, internal_state.SCR_TEX_MIN_FLTR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, internal_state.SCR_TEX_MAG_FLTR);
 
         //depth+stencil for maximum portability. glTexStorage2D is necessary to view the depth buffer
         glBindTexture(GL_TEXTURE_2D, offscr_tex_IDs[DEPTH_STENCIL_TEX_IDX]);
         glTexStorage2D(GL_TEXTURE_2D, 1, GL_DEPTH24_STENCIL8, rendering_width, rendering_height); 
         glGenerateMipmap(GL_TEXTURE_2D);
 
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, settings::SCR_TEX_MIN_FLTR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, settings::SCR_TEX_MAG_FLTR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, internal_state.SCR_TEX_MIN_FLTR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, internal_state.SCR_TEX_MAG_FLTR);
 
         //attaching a texture that is bound might cause undefined behaviour
         glBindTexture(GL_TEXTURE_2D, 0);
@@ -265,44 +244,44 @@ namespace renderer
     void update_projection()
     {
         using namespace glm;
-        perspective_transform = perspective(radians(settings::FOV), settings::RENDER_AR, settings::NEAR_PLANE, settings::FAR_PLANE);
+        perspective_transform = perspective(radians(internal_state.FOV), internal_state.RENDER_AR, internal_state.NEAR_PLANE, internal_state.FAR_PLANE);
     }
     //chef's kiss. works perfectly! love this function!
     //DO NOT touch this function. ever.
     void update_screen_tex_coords()
     {   
-        if (settings::SCR_TEX_MAX_RATIO > 1.0 || settings::SCR_TEX_MAX_RATIO < settings::SCR_TEX_MIN_RATIO || settings::SCR_TEX_MIN_RATIO < 0)
+        if (internal_state.SCR_TEX_MAX_RATIO > 1.0 || internal_state.SCR_TEX_MAX_RATIO < internal_state.SCR_TEX_MIN_RATIO || internal_state.SCR_TEX_MIN_RATIO < 0)
         {
             //TODO throw error
             std::cout << "BAD TEX RATIOS"<<std::endl;
             return;
         } 
         
-        float render_aspect_ratio   = float(settings::RENDER_W)/settings::RENDER_H;
+        float render_aspect_ratio   = float(internal_state.RENDER_W)/internal_state.RENDER_H;
         float viewport_aspect_ratio =   float(OPENGL_VIEWPORT_W)/OPENGL_VIEWPORT_H;
         float ratio                 =    render_aspect_ratio/viewport_aspect_ratio;
 
-        scr_tex_top_edge   =  scr_tex_right_edge  = settings::SCR_TEX_MAX_RATIO;
-        scr_tex_left_edge  =  scr_tex_bottom_edge = settings::SCR_TEX_MIN_RATIO;
-        if(settings::RENDER_TO_VIEW_MODE == CROP)
+        scr_tex_top_edge   =  scr_tex_right_edge  = internal_state.SCR_TEX_MAX_RATIO;
+        scr_tex_left_edge  =  scr_tex_bottom_edge = internal_state.SCR_TEX_MIN_RATIO;
+        if(internal_state.RENDER_TO_VIEW_MODE == CROP)
         {
-            ratio > 1.0 ? scr_tex_right_edge = std::clamp(1/ratio, settings::SCR_TEX_MIN_RATIO, settings::SCR_TEX_MAX_RATIO)
-            :             scr_tex_top_edge   = std::clamp(ratio  , settings::SCR_TEX_MIN_RATIO, settings::SCR_TEX_MAX_RATIO);
+            ratio > 1.0 ? scr_tex_right_edge = std::clamp(1/ratio, internal_state.SCR_TEX_MIN_RATIO, internal_state.SCR_TEX_MAX_RATIO)
+            :             scr_tex_top_edge   = std::clamp(ratio  , internal_state.SCR_TEX_MIN_RATIO, internal_state.SCR_TEX_MAX_RATIO);
 
             //TODO 2 modes for viewport positioning : decide center then claculate shift vector,
             //     or decide shift vector arbitrarily.
             glm::vec2 view_center ((scr_tex_right_edge-scr_tex_left_edge)/2.0, (scr_tex_top_edge-scr_tex_bottom_edge)/2.0);
-            const glm::vec2& render_center = settings::RENDER_VIEW_POS;  
+            const glm::vec2& render_center = internal_state.RENDER_VIEW_POS;  
 
             glm::vec2 shift_vec = render_center - view_center;
 
-            scr_tex_right_edge  = std::min(shift_vec.x +  scr_tex_right_edge, settings::SCR_TEX_MAX_RATIO);
-            scr_tex_left_edge   = std::max(shift_vec.x +   scr_tex_left_edge, settings::SCR_TEX_MIN_RATIO);
-            scr_tex_top_edge    = std::min(shift_vec.y +    scr_tex_top_edge, settings::SCR_TEX_MAX_RATIO);
-            scr_tex_bottom_edge = std::max(shift_vec.y + scr_tex_bottom_edge, settings::SCR_TEX_MIN_RATIO);
+            scr_tex_right_edge  = std::min(shift_vec.x +  scr_tex_right_edge, internal_state.SCR_TEX_MAX_RATIO);
+            scr_tex_left_edge   = std::max(shift_vec.x +   scr_tex_left_edge, internal_state.SCR_TEX_MIN_RATIO);
+            scr_tex_top_edge    = std::min(shift_vec.y +    scr_tex_top_edge, internal_state.SCR_TEX_MAX_RATIO);
+            scr_tex_bottom_edge = std::max(shift_vec.y + scr_tex_bottom_edge, internal_state.SCR_TEX_MIN_RATIO);
         }
         eng_log << scr_tex_top_edge   << ' ' << scr_tex_bottom_edge << '\t' << scr_tex_right_edge << ' ' << scr_tex_left_edge << '\n';
-        eng_log << settings::RENDER_W << ' ' << settings::RENDER_H  <<'\n';
+        eng_log << internal_state.RENDER_W << ' ' << internal_state.RENDER_H  <<'\n';
         eng_log << OPENGL_VIEWPORT_W  << ' ' << OPENGL_VIEWPORT_H   << '\n';
         eng_log << "*\t*" <<std::endl; 
 
@@ -321,7 +300,7 @@ namespace renderer
         };
         
         update_projection();
-        setup_offscreen_framebuffer(settings::RENDER_W, settings::RENDER_H);
+        setup_offscreen_framebuffer(internal_state.RENDER_W, internal_state.RENDER_H);
         send_screen_coords();
     }
     bool init_shader_prg(shader_prg_t& shader)
@@ -343,14 +322,48 @@ namespace renderer
 
         return success_status;
     }
+    void update_state()
+    {
+        bool should_update_import, should_update_scr_tex_coords, should_update_offscr_tex_params;
+
+        should_update_import = internal_state.PATH_TO_OBJ != ENGINE_SETTINGS.PATH_TO_OBJ;
+        
+        should_update_scr_tex_coords =  //yeah, that's a lot!
+            internal_state.RENDER_H            != ENGINE_SETTINGS.RENDER_H          || 
+            internal_state.RENDER_W            != ENGINE_SETTINGS.RENDER_W          ||
+            internal_state.RENDER_AR           != ENGINE_SETTINGS.RENDER_AR         || 
+            internal_state.RENDER_VIEW_POS     != ENGINE_SETTINGS.RENDER_VIEW_POS   || 
+            internal_state.SCR_TEX_MAX_RATIO   != ENGINE_SETTINGS.SCR_TEX_MAX_RATIO ||
+            internal_state.SCR_TEX_MIN_RATIO   != ENGINE_SETTINGS.SCR_TEX_MIN_RATIO ||
+            internal_state.RENDER_TO_VIEW_MODE != ENGINE_SETTINGS.RENDER_TO_VIEW_MODE;
+
+        should_update_offscr_tex_params = 
+            internal_state.SCR_TEX_MAG_FLTR != ENGINE_SETTINGS.SCR_TEX_MAG_FLTR ||
+            internal_state.SCR_TEX_MIN_FLTR != ENGINE_SETTINGS.SCR_TEX_MIN_FLTR;
+
+        internal_state = ENGINE_SETTINGS;
+
+        if(should_update_import)
+        {
+            update_import();
+        }
+        if (should_update_offscr_tex_params)
+        {
+            update_offscreen_tex_params();
+        }
+        if (should_update_scr_tex_coords)
+        {
+            update_screen_tex_coords();
+        }
+    }
     int init()
     {
         eng_log.open("engine_log.txt", std::ofstream::out | std::ofstream::trunc);
 
-        read_obj(settings::PATH_TO_OBJ, *obj_ptr);
+        read_obj(internal_state.PATH_TO_OBJ, *obj_ptr);
         obj_ptr->send_data();
 
-        if (!setup_offscreen_framebuffer(settings::RENDER_W, settings::RENDER_H))
+        if (!setup_offscreen_framebuffer(internal_state.RENDER_W, internal_state.RENDER_H))
             return false;
         update_screen_tex_coords();       
 
@@ -442,7 +455,7 @@ namespace renderer
         //TODO write virutal destructor 
         delete obj_ptr;
         obj_ptr = new object_3D::object;
-        read_obj(settings::PATH_TO_OBJ, *obj_ptr);
+        read_obj(internal_state.PATH_TO_OBJ, *obj_ptr);
         obj_ptr->send_data(); 
     }
     void terminate()
