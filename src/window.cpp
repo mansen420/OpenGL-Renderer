@@ -10,7 +10,6 @@
 
 #include "global_constants.h"
 #include "callbacks.h"
-#include "event_handling.h"
 #include "gui.h"
 //TODO the current situation with the file dialog is not the final solution but a proof of concept.
 ImGui::FileBrowser window::file_dialog;
@@ -48,6 +47,7 @@ int window::init()
     file_dialog.SetTitle("Import");
     file_dialog.SetTypeFilters({".obj"});
     file_dialog.Open();
+
     return true;
 }
 
@@ -66,7 +66,6 @@ void window::render_gui()
 }
 void window::poll_events()
 {
-    events::react();
     glfwPollEvents();
 }
 void window::swap_buffers()
