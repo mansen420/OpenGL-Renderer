@@ -153,7 +153,6 @@ namespace renderer
         glClearColor(internal_state.CLR_COLOR.r, internal_state.CLR_COLOR.g, internal_state.CLR_COLOR.b, internal_state.CLR_COLOR.a);
         offscreen_pass();
         postprocess_pass();
-        update_projection(); //TODO maybe handle this elsewhere
     }
     
     void update_offscreen_tex_params()
@@ -260,14 +259,14 @@ namespace renderer
             return;
         } 
      
-        float render_aspect_ratio   = float(internal_state.RENDER_W)/internal_state.RENDER_H;
-        float viewport_aspect_ratio =   float(OPENGL_VIEWPORT_W)/OPENGL_VIEWPORT_H;
-        float ratio                 =    render_aspect_ratio/viewport_aspect_ratio;
-
         scr_tex_top_edge   =  scr_tex_right_edge  = internal_state.SCR_TEX_MAX_RATIO;
         scr_tex_left_edge  =  scr_tex_bottom_edge = internal_state.SCR_TEX_MIN_RATIO;
         if(internal_state.RENDER_TO_VIEW_MODE == CROP)
         {
+            float render_aspect_ratio   = float(internal_state.RENDER_W)/internal_state.RENDER_H;
+            float viewport_aspect_ratio =   float(OPENGL_VIEWPORT_W)/OPENGL_VIEWPORT_H;
+            float ratio                 =    render_aspect_ratio/viewport_aspect_ratio;
+
             ratio > 1.0 ? scr_tex_right_edge = std::clamp(1/ratio, internal_state.SCR_TEX_MIN_RATIO, internal_state.SCR_TEX_MAX_RATIO)
             :             scr_tex_top_edge   = std::clamp(ratio  , internal_state.SCR_TEX_MIN_RATIO, internal_state.SCR_TEX_MAX_RATIO);
 
@@ -283,11 +282,7 @@ namespace renderer
             scr_tex_top_edge    = std::min(shift_vec.y +    scr_tex_top_edge, internal_state.SCR_TEX_MAX_RATIO);
             scr_tex_bottom_edge = std::max(shift_vec.y + scr_tex_bottom_edge, internal_state.SCR_TEX_MIN_RATIO);
         }
-        eng_log << scr_tex_top_edge   << ' ' << scr_tex_bottom_edge << '\t' << scr_tex_right_edge << ' ' << scr_tex_left_edge << '\n';
-        eng_log << internal_state.RENDER_W << ' ' << internal_state.RENDER_H  <<'\n';
-        eng_log << OPENGL_VIEWPORT_W  << ' ' << OPENGL_VIEWPORT_H   << '\n';
-        eng_log << "*\t*" <<std::endl; 
-
+        
         //free old memory, alloc new memory. Maybe better to simply modify the old memory?
         delete[] scr_quad; 
         scr_quad = new float[24] 
@@ -302,7 +297,7 @@ namespace renderer
             RIGHT_EDGE,  BOTTOM_EDGE,  scr_tex_right_edge, scr_tex_bottom_edge
         };
         
-        update_projection();
+        //update_projection();
         setup_offscreen_framebuffer(internal_state.RENDER_W, internal_state.RENDER_H);
         send_screen_coords();
     }
@@ -344,7 +339,10 @@ namespace renderer
             internal_state.SCR_TEX_MIN_FLTR != ENGINE_SETTINGS.SCR_TEX_MIN_FLTR;
 
         should_update_projection = 
-            internal_state.RENDER_AR != ENGINE_SETTINGS.RENDER_AR;
+            internal_state.RENDER_AR  != ENGINE_SETTINGS.RENDER_AR  ||
+            internal_state.FOV        != ENGINE_SETTINGS.FOV        ||
+            internal_state.NEAR_PLANE != ENGINE_SETTINGS.NEAR_PLANE ||
+            internal_state.FAR_PLANE  != ENGINE_SETTINGS.FAR_PLANE;
 
         internal_state = ENGINE_SETTINGS;
 
@@ -385,7 +383,7 @@ namespace renderer
             std::cout << "SHADER PROGRAM ERROR\n";
             return false;
         }
-
+        update_projection();
         return true;
     }
     char* get_source(shader_prg_options prg_type, shader_options shader_type)
