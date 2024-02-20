@@ -1,6 +1,5 @@
 #include "window.h"
-#include "renderer.h"
-#include "global_constants.h"
+#include "engine_interface.h"
 //planned features :
 //1. input handling (x)
 //2. GUI elements (x)
@@ -26,6 +25,7 @@ int main()
     {
         window::poll_events();
 
+        renderer::update_state();
         renderer::render_scene();
 
         window::render_gui();
