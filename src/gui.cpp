@@ -222,13 +222,10 @@ void workspace_panel()
         {
             //TODO make this a dynamic size
             static char shader_code_buffer[1024*16];
-            //FIXME this should NOT be handled here. I get a segfault on quitting.
-            strcpy(shader_code_buffer, renderer::get_source(renderer::OFF_SCREEN, renderer::FRAGMENT));
             ImGui::InputTextMultiline("##source", shader_code_buffer, sizeof(shader_code_buffer), whole_window->Size);
 
             if(Button("Compile"))
             {
-                renderer::update_shader(shader_code_buffer, renderer::FRAGMENT, renderer::OFF_SCREEN);   
             }
             EndTabItem();
         }

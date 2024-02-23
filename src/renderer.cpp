@@ -1,52 +1,24 @@
 #include "engine_interface.h"
 #include <algorithm>        //for std::clamp
+#include <map>
 //TODO fix these
 #include "shader_utils.h"
 #include "object_interface.h"
+#include <fstream>
 //TODO add error logging for all opengl calls
 namespace renderer
-{   
+{
+     
     static std::ofstream eng_log;
-    
+
            engine_state_t ENGINE_SETTINGS;    //public state 
     static engine_state_t  internal_state;   //actual state of the engine
 
-    struct shader_t
-    {
-        shader_type_option type;
-        unsigned int ID;
-        char* source_code = nullptr;
-        std::string path;
-        ~shader_t()
-        {
-            delete[] source_code;
-            if(glIsShader(ID) == GL_TRUE)
-            {
-                glDeleteShader(ID);
-            }
-        }
-    };
-    struct shader_prg_t
-    {
-        shader_prg_t()
-        {
-            fragment_shader.type = FRAGMENT_SHADER;
-            vertex_shader.type   =   VERTEX_SHADER;
-        }
-        unsigned int      ID = 0;   //0 for sensible GL behavior
-        shader_t   vertex_shader;
-        shader_t fragment_shader;
-        ~shader_prg_t()
-        {
-            if (glIsProgram(ID))
-            {
-                glDeleteProgram(ID);
-            }
-        }
-    };
-    static shader_prg_t active_object_shader;
-    static shader_prg_t active_PP_shader;
+    //DO NOT initialize global non-POD variables in the global namespace. YOU HAVE BEEN WARNED!!  
+    static shader_manager::shader_prg_t* postprocess_shader_program_ptr;
+    static shader_manager::shader_prg_t*      object_shader_program_ptr;
 
+    static std::map<unsigned int, shader_manager::shader_t*> shader_map;
 
     static    unsigned int     offscr_tex_IDs[2];
     constexpr unsigned int     COLOR_TEX_IDX = 0, DEPTH_STENCIL_TEX_IDX = 1;
@@ -92,10 +64,10 @@ namespace renderer
         glm::vec3 cam_pos = glm::vec3(0.0, 0.0, 3.0);
         view_transform = lookAt(cam_pos, vec3(0.f, 0.f, 0.f), vec3(0.f, 1.f, 0.f));
 
-        glUniform3f(glGetUniformLocation(active_object_shader.ID, "view_vector"), cam_pos.x, cam_pos.y, cam_pos.z);
-        glUniformMatrix4fv(glGetUniformLocation(active_object_shader.ID, "projection_transform"), 1, GL_FALSE,
+        glUniform3f(glGetUniformLocation(object_shader_program_ptr->get_ID(), "view_vector"), cam_pos.x, cam_pos.y, cam_pos.z);
+        glUniformMatrix4fv(glGetUniformLocation(object_shader_program_ptr->get_ID(), "projection_transform"), 1, GL_FALSE,
         glm::value_ptr(perspective_transform));
-        glUniformMatrix4fv(glGetUniformLocation(active_object_shader.ID, "view_transform"), 1, GL_FALSE,
+        glUniformMatrix4fv(glGetUniformLocation(object_shader_program_ptr->get_ID(), "view_transform"), 1, GL_FALSE,
         glm::value_ptr(view_transform));
     }
     void offscreen_pass()
@@ -107,13 +79,13 @@ namespace renderer
         internal_state.DEPTH_TEST_ENBLD ? glEnable(GL_DEPTH_TEST) : glDisable(GL_DEPTH_TEST);
         glClear(GL_COLOR_BUFFER_BIT*internal_state.COLOR_CLR_ENBLD | GL_DEPTH_BUFFER_BIT*internal_state.DEPTH_CLR_ENBLD | GL_STENCIL_BUFFER_BIT*internal_state.STENCIL_CLR_ENBLD);
 
-        glUseProgram(active_object_shader.ID);
+        glUseProgram(object_shader_program_ptr->get_ID());
 
         model_transform = glm::rotate(glm::mat4(1.0f), (float)glfwGetTime(), glm::vec3(0.f, 1.f, 0.f));
         send_uniforms();
         obj_ptr->model_transform = model_transform;
 
-        obj_ptr->draw(active_object_shader.ID);
+        obj_ptr->draw(object_shader_program_ptr->get_ID());
     }
     void postprocess_pass()
     {
@@ -125,7 +97,7 @@ namespace renderer
         glClear(GL_COLOR_BUFFER_BIT);
         //if we do not disable the depth test here, the screen will draw over itself
         glDisable(GL_DEPTH_TEST);   
-        glUseProgram(active_PP_shader.ID);
+        glUseProgram(postprocess_shader_program_ptr->get_ID());
 
         glBindVertexArray(screen_quad_vao_ID);
 
@@ -134,17 +106,17 @@ namespace renderer
         if(internal_state.DISPLAY_BUFFER == DEPTH)
         {
             glBindTexture(GL_TEXTURE_2D, offscr_tex_IDs[DEPTH_STENCIL_TEX_IDX]);
-            glUniform1i(glGetUniformLocation(active_PP_shader.ID, "rendering_depth"), GL_TRUE);
-            glUniform3f(glGetUniformLocation(active_PP_shader.ID, "depth_view_color"), 
+            glUniform1i(glGetUniformLocation(postprocess_shader_program_ptr->get_ID(), "rendering_depth"), GL_TRUE);
+            glUniform3f(glGetUniformLocation(postprocess_shader_program_ptr->get_ID(), "depth_view_color"), 
             internal_state.DEPTH_VIEW_COLOR.r, internal_state.DEPTH_VIEW_COLOR.g, internal_state.DEPTH_VIEW_COLOR.b);
         }
         else
         {
             glBindTexture(GL_TEXTURE_2D, offscr_tex_IDs[COLOR_TEX_IDX]);
-            glUniform1i(glGetUniformLocation(active_PP_shader.ID, "rendering_depth"), GL_FALSE);
+            glUniform1i(glGetUniformLocation(postprocess_shader_program_ptr->get_ID(), "rendering_depth"), GL_FALSE);
         }
 
-        glUniform1i(glGetUniformLocation(active_PP_shader.ID, "screen_texture"), 0);
+        glUniform1i(glGetUniformLocation(postprocess_shader_program_ptr->get_ID(), "screen_texture"), 0);
         
         glDrawArrays(GL_TRIANGLES, 0, 6);
     }
@@ -301,25 +273,6 @@ namespace renderer
         setup_offscreen_framebuffer(internal_state.RENDER_W, internal_state.RENDER_H);
         send_screen_coords();
     }
-    bool init_shader_prg(shader_prg_t& shader)
-    {
-        bool success_status = 1;
-        //HACK maybe a bad idea to do &= 
-        success_status &= readShaderFile(shader.fragment_shader.path.c_str(), 
-        shader.fragment_shader.source_code);
-        success_status &= readShaderFile(shader.vertex_shader.path.c_str(), 
-        shader.vertex_shader.source_code);
-
-        success_status &= compileShader(FRAGMENT_SHADER, shader.fragment_shader.ID,
-        shader.fragment_shader.source_code);
-        success_status &= compileShader(VERTEX_SHADER, shader.vertex_shader.ID,
-        shader.vertex_shader.source_code);
-
-        success_status &= linkShaders(shader.ID, shader.vertex_shader.ID,
-        shader.fragment_shader.ID);
-
-        return success_status;
-    }
     void update_state()
     {
         bool should_update_import, should_update_scr_tex_coords, should_update_offscr_tex_params, should_update_projection;
@@ -355,8 +308,52 @@ namespace renderer
         if (should_update_projection)
             update_projection();
     }
+        
     int init()
     {
+        bool shader_success = true;
+        //TODO stop hardcoding shader paths
+
+        static shader_manager::shader_t obj_vert_shader(VERTEX_SHADER);
+        shader_success &= obj_vert_shader.load_source_from_path("src/shaders/gooch.vs");
+        static shader_manager::shader_t obj_frag_shader(FRAGMENT_SHADER);
+        shader_success &= obj_frag_shader.load_source_from_path("src/shaders/gooch.fs");
+
+        shader_success &= obj_frag_shader.compile() && obj_vert_shader.compile();
+
+        static shader_manager::shader_prg_t object_shader_program;
+        object_shader_program.attach_shader(obj_frag_shader);
+        object_shader_program.attach_shader(obj_vert_shader);
+        shader_success &= object_shader_program.link();
+
+        object_shader_program_ptr = &object_shader_program;
+
+        static shader_manager::shader_t pp_vert_shader(VERTEX_SHADER);
+        shader_success &= pp_vert_shader.load_source_from_path("src/shaders/screen_PP.vs");
+        static shader_manager::shader_t pp_frag_shader(FRAGMENT_SHADER);
+        shader_success &= pp_frag_shader.load_source_from_path("src/shaders/screen_PP.fs");
+
+        shader_success &= pp_frag_shader.compile() && pp_vert_shader.compile();
+
+        static shader_manager::shader_prg_t posprocess_shader_program;
+        posprocess_shader_program.attach_shader(pp_frag_shader);
+        posprocess_shader_program.attach_shader(pp_vert_shader);
+        shader_success &= posprocess_shader_program.link();
+        
+        postprocess_shader_program_ptr = &posprocess_shader_program;
+
+        shader_map.insert(std::pair<unsigned int, shader_manager::shader_t*>(obj_vert_shader.get_ID(), &obj_vert_shader));
+        shader_map.insert(std::pair<unsigned int, shader_manager::shader_t*>(obj_frag_shader.get_ID(), &obj_frag_shader));
+
+        shader_map.insert(std::pair<unsigned int, shader_manager::shader_t*>(pp_vert_shader.get_ID(), &pp_vert_shader));
+        shader_map.insert(std::pair<unsigned int, shader_manager::shader_t*>(pp_frag_shader.get_ID(), &pp_frag_shader));
+
+        if(!shader_success)
+        {
+            std::cout << "FAILED TO INITIALIZE SHADER PROGRAMS. TERMINATING." << std::endl;
+            return false;
+        }
+
         eng_log.open("engine_log.txt", std::ofstream::out | std::ofstream::trunc);
 
         read_obj(internal_state.PATH_TO_OBJ, *obj_ptr);
@@ -366,88 +363,8 @@ namespace renderer
             return false;
         update_screen_tex_coords();       
 
-        //TODO stop hardcoding shader paths
-        //TODO make shader initialization a mamber function?
-        active_object_shader.vertex_shader.path   = "src/shaders/gooch.vs";
-        active_object_shader.fragment_shader.path = "src/shaders/gooch.fs";
-        if (!init_shader_prg(active_object_shader))
-        {
-            std::cout << "SHADER PROGRAM ERROR\n";
-            return false;
-        }
-
-        active_PP_shader.vertex_shader.path   = "src/shaders/screen_PP.vs";
-        active_PP_shader.fragment_shader.path = "src/shaders/screen_PP.fs";
-        if (!init_shader_prg(active_PP_shader))
-        {
-            std::cout << "SHADER PROGRAM ERROR\n";
-            return false;
-        }
         update_projection();
         return true;
-    }
-    char* get_source(shader_prg_options prg_type, shader_options shader_type)
-    {
-        switch (prg_type)
-        {
-        case POST_PROCESS:
-            switch (shader_type)
-            {
-            case FRAGMENT:
-                return active_PP_shader.fragment_shader.source_code;
-                break;
-            case VERTEX:
-                return active_PP_shader.vertex_shader.source_code;
-                break;
-            default:
-                break;
-            }
-            break;
-        case OFF_SCREEN:
-           switch (shader_type)
-            {
-            case FRAGMENT:
-                return active_object_shader.fragment_shader.source_code;
-                break;
-            case VERTEX:
-                return active_object_shader.vertex_shader.source_code;
-                break;
-            default:
-                break;
-            }
-            break;
-        default:
-            break;
-        }
-        return nullptr;
-    }
-    bool update_shader(char* source, shader_options shader_type, shader_prg_options prg_type)
-    {   //FIXME this function is so fucked
-        char backup[1024*16];
-
-        shader_prg_t &shader_prg = prg_type == POST_PROCESS ? active_PP_shader : active_object_shader;
-        shader_t &shader = shader_type == FRAGMENT ? shader_prg.fragment_shader : shader_prg.vertex_shader;
-
-        strcpy(backup, shader.source_code);
-        
-        bool success_status = 1;
-
-        shader_t new_shader;
-        new_shader.source_code = source;
-        shader_type_option type = shader_type == FRAGMENT? FRAGMENT_SHADER : VERTEX_SHADER; //see: todo at engine_state.h
-        new_shader.type = type;
-        success_status &= compileShader(type, new_shader.ID, source);
-
-        if (!success_status)
-        {
-            new_shader.source_code = backup;
-        }
-
-        //shader = new_shader;
-
-        success_status &= linkShaders(shader_prg.ID, shader_prg.vertex_shader.ID, shader_prg.fragment_shader.ID);
-        
-        return success_status;
     }
     void update_import()
     {

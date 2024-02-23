@@ -11,17 +11,16 @@
 
 namespace renderer
 {
-    enum shader_prg_options
+    enum shader_prg_option
     {
         POST_PROCESS,
         OFF_SCREEN
     };
-    //FIXME this enum conflits with the one declared at shader_utils.h.
-    //This is a tragedy waiting to happen. fix it. 
-    enum shader_options
+    enum shader_type_option
     {
-        VERTEX,
-        FRAGMENT
+        VERTEX_SHADER   = GL_VERTEX_SHADER  ,
+        FRAGMENT_SHADER = GL_FRAGMENT_SHADER,
+        GEOMETRY_SHADER = GL_GEOMETRY_SHADER
     };
     enum scr_display_mode_option
     {
@@ -70,7 +69,7 @@ namespace renderer
         bool  SHOW_REAL_RENDER_SIZE;
         float     SCR_TEX_MAX_RATIO;
         float     SCR_TEX_MIN_RATIO;
-
+        
         engine_state_t()
         { 
             PATH_TO_OBJ = "assets/cube.obj"; 
@@ -81,17 +80,17 @@ namespace renderer
             DEPTH_CLR_ENBLD  = 1, COLOR_CLR_ENBLD    = 1, STENCIL_CLR_ENBLD = 1;
             DEPTH_TEST_ENBLD = 1, STENCIL_TEST_ENBLD = 1;
 
-            DISPLAY_BUFFER   = COLOR;
+            DISPLAY_BUFFER      = COLOR;
             RENDER_TO_VIEW_MODE =  CROP;
 
-            PP_ENBLD    = 1;
+            PP_ENBLD = 1;
 
             RENDER_W   = 1920, RENDER_H = 1080;
             RENDER_AR  = 16.0/9.0;
             NEAR_PLANE = 0.1f, FAR_PLANE = 100.0f;
             FOV        = 45.0;
 
-            USE_MIPMAPS = false;
+            USE_MIPMAPS      = false;
             SCR_TEX_MAG_FLTR = LINEAR, SCR_TEX_MIN_FLTR = LINEAR;
 
             RENDER_VIEW_POS   = glm::vec2(0.5f, 0.5f);
@@ -103,14 +102,11 @@ namespace renderer
     };
     extern engine_state_t ENGINE_SETTINGS;
 
-    //FIXME this should go into its own interface header
-    //we also need to ensure the code will NOT be modified (i.e. should be const)
-    char* get_source(shader_prg_options prg_type, shader_options shader_type);
-    //FIXME! temporary function
-    bool update_shader(char* source, shader_options shader_type, shader_prg_options prg_type);
+    //TODO define the public interface of engine shaders
 
     int          init();
     void    terminate();
     void render_scene();
+    //Any changes to renderer::ENGINE_SETTINGS will not be reflected until this function is called.
     void update_state();
 }
