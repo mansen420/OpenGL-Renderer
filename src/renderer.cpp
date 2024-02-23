@@ -54,6 +54,72 @@ namespace renderer
         RIGHT_EDGE,  BOTTOM_EDGE,  scr_tex_right_edge, scr_tex_bottom_edge
     };
 
+    //TODO implement a system of identifiying programs and shaders for dynamic stuff
+
+    shader_manager::shader_t* find_shader(shader_prg_option program_type, shader_type_option shader_type)
+    {
+        //search shader map for shaders attached to program of type shader.
+        const shader_manager::shader_prg_t* prg_ptr = nullptr;
+        if (program_type == POSTPROCESS_SHADER)
+            prg_ptr = postprocess_shader_program_ptr;
+        if (program_type == OBJECT_SHADER)
+            prg_ptr = object_shader_program_ptr;
+        
+        const unsigned int* shader_IDs = prg_ptr->get_attached_shader_IDs();
+        const size_t IDs_size          =    prg_ptr->num_attached_shaders();
+
+        shader_manager::shader_t* shader = nullptr;
+        for (size_t i = 0; i < IDs_size; ++i)
+        {
+            shader_manager::shader_t* shader_candidate = shader_map.at(shader_IDs[i]);
+            if (shader_candidate->get_type() == shader_type)
+            {
+                shader = shader_candidate;
+                break;
+            }
+        }
+        return shader;
+    }
+    const char* get_shader_source_reflection(shader_prg_option program_type, shader_type_option shader_type)
+    {
+        const shader_manager::shader_t* shader = find_shader(program_type, shader_type);
+        return shader->source_code.c_str();
+    }
+    std::string get_shader_source_copy(shader_prg_option program_type, shader_type_option shader_type)
+    {
+        const shader_manager::shader_t* shader = find_shader(program_type, shader_type);
+        return shader->source_code;
+    }
+    std::string* get_shader_source_reference(shader_prg_option program_type, shader_type_option shader_type)
+    {
+        shader_manager::shader_t* shader = find_shader(program_type, shader_type);
+        return &shader->source_code;
+    }
+    bool update_shader(shader_prg_option program_type, shader_type_option shader_type, const char* source)
+    {
+        shader_manager::shader_t* shader = find_shader(program_type, shader_type);
+        const std::string& backup = shader->source_code;
+        shader->source_code = std::string(source);
+        if(shader->compile())
+            return true;
+        else
+        {
+            shader->source_code = backup;
+            shader->compile();
+            return false;
+        }
+    }
+    //TODO it would be better to relink the program upon any attempt to compile any of its attached shaders.
+    bool link_program(shader_prg_option program_type)
+    {
+        shader_manager::shader_prg_t* program;
+        if(program_type == OBJECT_SHADER)
+            program = object_shader_program_ptr;
+        if(program_type == POSTPROCESS_SHADER)
+            program = postprocess_shader_program_ptr;
+        return program->link();
+    }
+
     void update_projection();
     void update_import();
 

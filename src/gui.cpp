@@ -222,10 +222,26 @@ void workspace_panel()
         {
             //TODO make this a dynamic size
             static char shader_code_buffer[1024*16];
-            ImGui::InputTextMultiline("##source", shader_code_buffer, sizeof(shader_code_buffer), whole_window->Size);
+            static bool first_time = true;
+            if (first_time)
+                strcpy(shader_code_buffer, renderer::get_shader_source_reflection(renderer::OBJECT_SHADER, renderer::FRAGMENT_SHADER));
+            first_time = false;
 
+            GetFont()->Scale =1.5f;
+            PushFont(GetFont());
+            ImGui::InputTextMultiline("##source", shader_code_buffer, sizeof(shader_code_buffer), whole_window->Size);
+            GetFont()->Scale =1.0f;
+            PopFont();
+
+            Spacing();
             if(Button("Compile"))
             {
+                renderer::update_shader(renderer::OBJECT_SHADER, renderer::FRAGMENT_SHADER, shader_code_buffer);
+            }
+            SameLine();
+            if(Button("Link"))
+            {
+                renderer::link_program(renderer::OBJECT_SHADER);
             }
             EndTabItem();
         }

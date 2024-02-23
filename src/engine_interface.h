@@ -13,9 +13,10 @@ namespace renderer
 {
     enum shader_prg_option
     {
-        POST_PROCESS,
-        OFF_SCREEN
+        POSTPROCESS_SHADER,
+        OBJECT_SHADER
     };
+    //TODO maybe this should be an intrnal enum?
     enum shader_type_option
     {
         VERTEX_SHADER   = GL_VERTEX_SHADER  ,
@@ -103,6 +104,19 @@ namespace renderer
     extern engine_state_t ENGINE_SETTINGS;
 
     //TODO define the public interface of engine shaders
+
+    //returns const internal data of specified shader.
+    const char* get_shader_source_reflection(shader_prg_option program_type, shader_type_option shader_type);
+    //returns modifieble copy of specified shader.
+    std::string get_shader_source_copy(shader_prg_option program_type, shader_type_option shader_type);
+    //returns pointer to shader source for direct manipulation. Handling compilation is the responsibility of the caller.
+    std::string* get_shader_source_reference(shader_prg_option program_type, shader_type_option shader_type);
+    //Attempts to compile specified shader with source. Returns false and reverts to old source upon unsuccessful compilation.
+    bool update_shader(shader_prg_option program_type, shader_type_option shader_type, const char* source);
+    //Attempts to compile specified shader. Returns false upon unsuccessful compilation.
+    bool compile_shader(shader_prg_option program_type, shader_type_option shader_type);
+    //Attempts to link program. Returns false upon unsuccessful linkage.
+    bool link_program(shader_prg_option program_type);
 
     int          init();
     void    terminate();
