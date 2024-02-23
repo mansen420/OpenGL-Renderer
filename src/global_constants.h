@@ -1,5 +1,4 @@
 #pragma once
-//TODO solve problem where some headers include glad after glfw 
 #include "GLFW/glfw3.h"
 
 constexpr unsigned int MAX_RENDER_W = GL_MAX_FRAMEBUFFER_WIDTH;

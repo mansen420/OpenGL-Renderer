@@ -1,7 +1,6 @@
 #include "engine_interface.h"
 #include <algorithm>        //for std::clamp
 #include <map>
-//TODO fix these
 #include "shader_utils.h"
 #include "object_interface.h"
 #include <fstream>
@@ -312,8 +311,7 @@ namespace renderer
     int init()
     {
         bool shader_success = true;
-        //TODO stop hardcoding shader paths
-
+        
         static shader_manager::shader_t obj_vert_shader(VERTEX_SHADER);
         shader_success &= obj_vert_shader.load_source_from_path("src/shaders/gooch.vs");
         static shader_manager::shader_t obj_frag_shader(FRAGMENT_SHADER);
