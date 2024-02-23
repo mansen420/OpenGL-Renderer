@@ -1,8 +1,9 @@
 # C++ OpenGL Engine
+![ezgif-2-1c7f1130fe](https://github.com/mansen420/OpenGL-Renderer/assets/50342436/338168e9-ac71-4665-8966-429b445af6e3)
 
 ## State of the Project
   **Heavily W.I.P**\
-  Visit later
+  Check the [dev diary](https://github.com/mansen420/OpenGL-Renderer/blob/dev/dev_diary.md) for updates on progress!
 ## Dependencies
   This project uses cmake as its build system, so you should have it installed.\
   Additionally, you should have all the [dependencies required for GLFW](https://www.glfw.org/docs/3.3/compile.html#compile_deps).\
