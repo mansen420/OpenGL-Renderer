@@ -3,7 +3,7 @@
 
 ## State of the Project
   **Heavily W.I.P**\
-  Check the [dev diary](https://github.com/mansen420/OpenGL-Renderer/blob/dev/dev_diary.md) for updates on progress! \
+  Check the [dev diary](https://github.com/mansen420/OpenGL-Renderer/blob/dev/dev_diary.md) for updates on progress!
   
   #### Features 
   - [x]  Runtime shader loading
