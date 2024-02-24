@@ -10,6 +10,8 @@
   - [x]  Viewing depth buffer
   - [x]  Variable rendering dimension with selectable behaviour
   - [x]  Basic GUI
+  - [x]  Basic Camera
+  - [x]  Simple Object Operations (scaling, displacement)
   - [ ]  Shadow mapping
   - [ ]  A lot more
 ## Dependencies
