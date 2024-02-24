@@ -77,6 +77,9 @@ namespace renderer
         float THETA;
         //Distance from origin
         float DIST;
+        
+        glm::vec3 object_displacement;
+        float     object_scale_factor;
         engine_state_t()
         { 
             PATH_TO_OBJ = "assets/cube.obj"; 
@@ -108,13 +111,18 @@ namespace renderer
 
             PHI  = THETA = 0.f;
             DIST = 3.0f;
+
+            object_displacement = glm::vec3(0.0);
+            object_scale_factor = 1.0f;
         }
     };
     extern engine_state_t ENGINE_SETTINGS;
 
+    void calculate_object_dimensions();
+    void center_object();
+    void rescale_object();
 
-    //TODO define the public interface of engine shaders
-
+    //TODO improve shader public interface
     //returns const internal data of specified shader.
     const char* get_shader_source_reflection(shader_prg_option program_type, shader_type_option shader_type);
     //returns modifieble copy of specified shader.

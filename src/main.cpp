@@ -6,7 +6,7 @@
 //3. Import feature (1/2)
 //4. Screen space processing (x)
 //5. shader pre-processor (probably not) 
-//6. shader post-processor ()
+//6. shader post-processor (x)
 //7. center and rescale objects on load ()
 //8. have default objects (cube or sphere) for experimenting with shaders (x)
 //9. allow editing of object physical attributes on gui () 

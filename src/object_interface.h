@@ -44,6 +44,8 @@ namespace object_3D
             set_samplers(program_id);
         }
     public:
+        vec3 dimensions;
+        vec3     center;
         //generates VAO(s) and/or sends buffer data.
         virtual void send_data() = 0;
 
@@ -92,8 +94,7 @@ namespace object_3D
         vector<unsigned int> indices;
 
         mesh(){}
-
-        virtual void send_data()
+        virtual void send_data() override
         {   //glVertexAttribPointer will only have effect on the data sent by the last call to glBufferData
             //VAOs only store the last call to glVertexAttribPointer
             glGenVertexArrays(1, &VAO_id);
@@ -174,6 +175,35 @@ namespace object_3D
         vector<material> materials;
         mat4 model_transform;
 
+        void calculate_dimensions()
+        {
+            if (vertices.size() == 0)
+            {
+                dimensions = vec3(0.0);
+                center     = vec3(0.0);
+                return;
+            }
+            vec3 largest_coords = vertices[0].pos_coords;
+            vec3 smallest_coords = vertices[0].pos_coords;
+            for (size_t i = 1; i < vertices.size(); ++i)
+            {
+                if (vertices[i].pos_coords.x < smallest_coords.x)
+                    smallest_coords.x = vertices[i].pos_coords.x;
+                if (vertices[i].pos_coords.y < smallest_coords.y)
+                    smallest_coords.y = vertices[i].pos_coords.y;
+                if (vertices[i].pos_coords.z < smallest_coords.z)
+                    smallest_coords.z = vertices[i].pos_coords.z;
+
+                if (vertices[i].pos_coords.x > largest_coords.x)
+                    largest_coords.x = abs(vertices[i].pos_coords.x);
+                if (vertices[i].pos_coords.y > largest_coords.y)
+                    largest_coords.y = abs(vertices[i].pos_coords.y);
+                if (vertices[i].pos_coords.z > largest_coords.z)
+                    largest_coords.z = abs(vertices[i].pos_coords.z);
+            }  
+            dimensions =  largest_coords - smallest_coords;
+            center     = (largest_coords + smallest_coords)/dimensions;
+        }
         virtual void send_data() override
         {
             send_vertex_data();

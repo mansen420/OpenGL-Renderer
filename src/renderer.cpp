@@ -344,11 +344,20 @@ namespace renderer
         setup_offscreen_framebuffer(internal_state.RENDER_W, internal_state.RENDER_H);
         send_screen_coords();
     }
+    void update_object_model_transform()
+    {
+        if (obj_ptr == nullptr)
+            return;
+        obj_ptr->model_transform = glm::translate(glm::mat4(1.0), internal_state.object_displacement) 
+        * glm::scale(glm::mat4(1.0), glm::vec3(internal_state.object_scale_factor));
+    }
     void update_state()
     {
-        bool should_update_import, should_update_scr_tex_coords, should_update_offscr_tex_params, should_update_projection;
+        bool should_update_import, should_update_scr_tex_coords, should_update_offscr_tex_params,
+        should_update_projection, should_update_obj_mdl_trnsfrm;
 
-        should_update_import = internal_state.PATH_TO_OBJ != ENGINE_SETTINGS.PATH_TO_OBJ;
+        should_update_import = 
+            internal_state.PATH_TO_OBJ != ENGINE_SETTINGS.PATH_TO_OBJ;
         
         should_update_scr_tex_coords =  //yeah, that's a lot!
             internal_state.RENDER_H            != ENGINE_SETTINGS.RENDER_H          || 
@@ -368,6 +377,10 @@ namespace renderer
             internal_state.NEAR_PLANE != ENGINE_SETTINGS.NEAR_PLANE ||
             internal_state.FAR_PLANE  != ENGINE_SETTINGS.FAR_PLANE;
 
+        should_update_obj_mdl_trnsfrm = 
+            internal_state.object_scale_factor != ENGINE_SETTINGS.object_scale_factor||
+            internal_state.object_displacement != ENGINE_SETTINGS.object_displacement;
+        
         internal_state = ENGINE_SETTINGS;
 
         if(should_update_import)
@@ -378,57 +391,61 @@ namespace renderer
             update_screen_tex_coords();
         if (should_update_projection)
             update_projection();
+        if(should_update_obj_mdl_trnsfrm)
+            update_object_model_transform();
     }
-        
+
     int init()
     {
-        bool shader_success = true;
-        
-        static shader_manager::shader_t obj_vert_shader(VERTEX_SHADER);
-        shader_success &= obj_vert_shader.load_source_from_path("src/shaders/gooch.vs");
-        static shader_manager::shader_t obj_frag_shader(FRAGMENT_SHADER);
-        shader_success &= obj_frag_shader.load_source_from_path("src/shaders/gooch.fs");
-
-        shader_success &= obj_frag_shader.compile() && obj_vert_shader.compile();
-
-        static shader_manager::shader_prg_t object_shader_program;
-        object_shader_program.attach_shader(obj_frag_shader);
-        object_shader_program.attach_shader(obj_vert_shader);
-        shader_success &= object_shader_program.link();
-
-        object_shader_program_ptr = &object_shader_program;
-
-        static shader_manager::shader_t pp_vert_shader(VERTEX_SHADER);
-        shader_success &= pp_vert_shader.load_source_from_path("src/shaders/screen_PP.vs");
-        static shader_manager::shader_t pp_frag_shader(FRAGMENT_SHADER);
-        shader_success &= pp_frag_shader.load_source_from_path("src/shaders/screen_PP.fs");
-
-        shader_success &= pp_frag_shader.compile() && pp_vert_shader.compile();
-
-        static shader_manager::shader_prg_t posprocess_shader_program;
-        posprocess_shader_program.attach_shader(pp_frag_shader);
-        posprocess_shader_program.attach_shader(pp_vert_shader);
-        shader_success &= posprocess_shader_program.link();
-        
-        postprocess_shader_program_ptr = &posprocess_shader_program;
-
-        shader_map.insert(std::pair<unsigned int, shader_manager::shader_t*>(obj_vert_shader.get_ID(), &obj_vert_shader));
-        shader_map.insert(std::pair<unsigned int, shader_manager::shader_t*>(obj_frag_shader.get_ID(), &obj_frag_shader));
-
-        shader_map.insert(std::pair<unsigned int, shader_manager::shader_t*>(pp_vert_shader.get_ID(), &pp_vert_shader));
-        shader_map.insert(std::pair<unsigned int, shader_manager::shader_t*>(pp_frag_shader.get_ID(), &pp_frag_shader));
-
-        if(!shader_success)
         {
-            std::cout << "FAILED TO INITIALIZE SHADER PROGRAMS. TERMINATING." << std::endl;
-            return false;
-        }
+            bool shader_success = true;
+            
+            static shader_manager::shader_t obj_vert_shader(VERTEX_SHADER);
+            shader_success &= obj_vert_shader.load_source_from_path("src/shaders/gooch.vs");
+            static shader_manager::shader_t obj_frag_shader(FRAGMENT_SHADER);
+            shader_success &= obj_frag_shader.load_source_from_path("src/shaders/gooch.fs");
 
+            shader_success &= obj_frag_shader.compile() && obj_vert_shader.compile();
+
+            static shader_manager::shader_prg_t object_shader_program;
+            object_shader_program.attach_shader(obj_frag_shader);
+            object_shader_program.attach_shader(obj_vert_shader);
+            shader_success &= object_shader_program.link();
+
+            object_shader_program_ptr = &object_shader_program;
+
+            static shader_manager::shader_t pp_vert_shader(VERTEX_SHADER);
+            shader_success &= pp_vert_shader.load_source_from_path("src/shaders/screen_PP.vs");
+            static shader_manager::shader_t pp_frag_shader(FRAGMENT_SHADER);
+            shader_success &= pp_frag_shader.load_source_from_path("src/shaders/screen_PP.fs");
+
+            shader_success &= pp_frag_shader.compile() && pp_vert_shader.compile();
+
+            static shader_manager::shader_prg_t posprocess_shader_program;
+            posprocess_shader_program.attach_shader(pp_frag_shader);
+            posprocess_shader_program.attach_shader(pp_vert_shader);
+            shader_success &= posprocess_shader_program.link();
+            
+            postprocess_shader_program_ptr = &posprocess_shader_program;
+
+            shader_map.insert(std::pair<unsigned int, shader_manager::shader_t*>(obj_vert_shader.get_ID(), &obj_vert_shader));
+            shader_map.insert(std::pair<unsigned int, shader_manager::shader_t*>(obj_frag_shader.get_ID(), &obj_frag_shader));
+
+            shader_map.insert(std::pair<unsigned int, shader_manager::shader_t*>(pp_vert_shader.get_ID(), &pp_vert_shader));
+            shader_map.insert(std::pair<unsigned int, shader_manager::shader_t*>(pp_frag_shader.get_ID(), &pp_frag_shader));
+
+            if(!shader_success)
+            {
+                std::cout << "FAILED TO INITIALIZE SHADER PROGRAMS. TERMINATING." << std::endl;
+                return false;
+            }
+        }
+        
         eng_log.open("engine_log.txt", std::ofstream::out | std::ofstream::trunc);
 
         read_obj(internal_state.PATH_TO_OBJ, *obj_ptr);
         obj_ptr->send_data();
-
+         
         if (!setup_offscreen_framebuffer(internal_state.RENDER_W, internal_state.RENDER_H))
             return false;
         update_screen_tex_coords();       
@@ -442,7 +459,7 @@ namespace renderer
         delete obj_ptr;
         obj_ptr = new object_3D::object;
         read_obj(internal_state.PATH_TO_OBJ, *obj_ptr);
-        obj_ptr->send_data(); 
+        obj_ptr->send_data();
     }
     void terminate()
     {

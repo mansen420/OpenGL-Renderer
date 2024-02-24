@@ -28,12 +28,12 @@ void workspace_panel()
     }
     if (BeginTabBar("Workspace")) 
     {
-        if(BeginTabItem("Engine Settings"))
+        if(BeginTabItem("Engine Parameters"))
         {   //FIXME
             using namespace renderer;
 
             Spacing();
-            SeparatorText("Render Target Framebuffer Settings");
+            SeparatorText("Render Target Framebuffer Parameters");
             Spacing();
             {
                 PushItemWidth(GetWindowWidth()*0.15);
@@ -179,7 +179,7 @@ void workspace_panel()
                 Checkbox("Show Actual Size", &ENGINE_SETTINGS.SHOW_REAL_RENDER_SIZE);
             }
             Spacing();
-            SeparatorText("Render Projection Matrix Settings");
+            SeparatorText("Render Projection Matrix Pameters");
             Spacing();
             {
                 float RENDER_AR_candidate = ENGINE_SETTINGS.RENDER_AR;
@@ -217,13 +217,22 @@ void workspace_panel()
                 DragFloatRange2("Projection Plane", &ENGINE_SETTINGS.NEAR_PLANE, &ENGINE_SETTINGS.FAR_PLANE, 0.05, 0.001, 100.0, "%.3f", NULL, ImGuiSliderFlags_AlwaysClamp);
             }
             Spacing();
-            SeparatorText("Camera Settings");
+            SeparatorText("Camera Parameters");
+            Spacing();
             {
-                DragFloat("PHI", &ENGINE_SETTINGS.PHI, 1.0, 10.0);
+                DragFloat("PHI", &ENGINE_SETTINGS.PHI, 1.0);
                 SameLine();
-                DragFloat("THETA", &ENGINE_SETTINGS.THETA, 1.0, 10.0);
+                DragFloat("THETA", &ENGINE_SETTINGS.THETA, 1.0);
                 
-                DragFloat("Distance to Origin", &ENGINE_SETTINGS.DIST, 0.1, 1.0);
+                DragFloat("Distance to Origin", &ENGINE_SETTINGS.DIST, 0.1);
+            }
+            Spacing();
+            SeparatorText("Object Parameters");
+            {
+                DragFloat("Scale Factor", &ENGINE_SETTINGS.object_scale_factor, 0.05);
+                SameLine();
+                DragFloat3("Displacement", glm::value_ptr(ENGINE_SETTINGS.object_displacement), 0.01);
+
             }
             Spacing();
             EndTabItem();
