@@ -17,3 +17,8 @@ I implemented a surface normal generator and here is a cool bug :
 Correct result : 
 
 ![Screencast from 17-02-24 17 24 50](https://github.com/mansen420/OpenGL-Renderer/assets/50342436/17e3354c-a452-44a3-b4f9-d627923518c8)
+
+### Runtime Shader Editing
+Finally!
+
+![shader_editing](https://github.com/mansen420/OpenGL-Renderer/assets/50342436/945dc70f-1918-438c-8d40-bdc0430934aa)
