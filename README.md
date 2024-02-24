@@ -1,5 +1,6 @@
 # C++ OpenGL Engine
-![banner](https://private-user-images.githubusercontent.com/50342436/307546816-aa99a9af-2613-4a7a-b8f1-c1901056d486.gif?jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3MDg4MDUzNzEsIm5iZiI6MTcwODgwNTA3MSwicGF0aCI6Ii81MDM0MjQzNi8zMDc1NDY4MTYtYWE5OWE5YWYtMjYxMy00YTdhLWI4ZjEtYzE5MDEwNTZkNDg2LmdpZj9YLUFtei1BbGdvcml0aG09QVdTNC1ITUFDLVNIQTI1NiZYLUFtei1DcmVkZW50aWFsPUFLSUFWQ09EWUxTQTUzUFFLNFpBJTJGMjAyNDAyMjQlMkZ1cy1lYXN0LTElMkZzMyUyRmF3czRfcmVxdWVzdCZYLUFtei1EYXRlPTIwMjQwMjI0VDIwMDQzMVomWC1BbXotRXhwaXJlcz0zMDAmWC1BbXotU2lnbmF0dXJlPTZmZmUwZWVlZjU4ZjgwOThhM2RjYjAwOTZlY2NjYmNhNzQ3YTY2MzI1NDVhNjIwNmMwMDFhZGFjNWY4MjljZWEmWC1BbXotU2lnbmVkSGVhZGVycz1ob3N0JmFjdG9yX2lkPTAma2V5X2lkPTAmcmVwb19pZD0wIn0.YOk9cXg__JybG2b6bdegm5N53WqidiXMJVcJvuTV2q0)
+![teapot_pos](https://github.com/mansen420/OpenGL-Renderer/assets/50342436/1d478a18-69c5-446e-893c-1f05ba8e128f)
+
 ## State of the Project
   **Heavily W.I.P**\
   Check the [dev diary](https://github.com/mansen420/OpenGL-Renderer/blob/dev/dev_diary.md) for updates on progress!
