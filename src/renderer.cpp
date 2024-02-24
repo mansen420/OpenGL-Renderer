@@ -123,10 +123,10 @@ namespace renderer
     void update_projection();
     void update_import();
 
+    static glm::vec3 cam_pos = glm::vec3(0.0, 0.0, 3.0);
     void send_uniforms()
     {
         using namespace glm;
-        glm::vec3 cam_pos = glm::vec3(0.0, 0.0, 3.0);
         view_transform = lookAt(cam_pos, vec3(0.f, 0.f, 0.f), vec3(0.f, 1.f, 0.f));
 
         glUniform3f(glGetUniformLocation(object_shader_program_ptr->get_ID(), "view_vector"), cam_pos.x, cam_pos.y, cam_pos.z);
@@ -146,9 +146,15 @@ namespace renderer
 
         glUseProgram(object_shader_program_ptr->get_ID());
 
-        model_transform = glm::rotate(glm::mat4(1.0f), (float)glfwGetTime(), glm::vec3(0.f, 1.f, 0.f));
+        ENGINE_SETTINGS.PHI = ENGINE_SETTINGS.PHI >  89.9 ?  89.9 : ENGINE_SETTINGS.PHI;
+        ENGINE_SETTINGS.PHI = ENGINE_SETTINGS.PHI < -89.9 ? -89.9 : ENGINE_SETTINGS.PHI;
+
+        //TODO for some reason the order of matrix multiplication is significant here. Why?
+        cam_pos = (
+        glm::rotate(glm::mat4(1.0), glm::radians(ENGINE_SETTINGS.THETA), glm::vec3(0.f, 1.f, 0.f)) 
+        * glm::rotate(glm::mat4(1.0), glm::radians(ENGINE_SETTINGS.PHI), glm::vec3(1.f, 0.f, 0.f)) 
+        * glm::vec4(0.f, 0.f, ENGINE_SETTINGS.DIST, 1.f));
         send_uniforms();
-        obj_ptr->model_transform = model_transform;
 
         obj_ptr->draw(object_shader_program_ptr->get_ID());
     }

@@ -216,6 +216,16 @@ void workspace_panel()
                 SameLine();
                 DragFloatRange2("Projection Plane", &ENGINE_SETTINGS.NEAR_PLANE, &ENGINE_SETTINGS.FAR_PLANE, 0.05, 0.001, 100.0, "%.3f", NULL, ImGuiSliderFlags_AlwaysClamp);
             }
+            Spacing();
+            SeparatorText("Camera Settings");
+            {
+                DragFloat("PHI", &ENGINE_SETTINGS.PHI, 1.0, 10.0);
+                SameLine();
+                DragFloat("THETA", &ENGINE_SETTINGS.THETA, 1.0, 10.0);
+                
+                DragFloat("Distance to Origin", &ENGINE_SETTINGS.DIST, 0.1, 1.0);
+            }
+            Spacing();
             EndTabItem();
         }
         if(BeginTabItem("Shaders"))

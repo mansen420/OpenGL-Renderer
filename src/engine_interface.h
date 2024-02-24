@@ -71,6 +71,12 @@ namespace renderer
         float     SCR_TEX_MAX_RATIO;
         float     SCR_TEX_MIN_RATIO;
         
+        //rotation in degrees around x-axis
+        float   PHI;
+        //rotation in degrees around y-axis
+        float THETA;
+        //Distance from origin
+        float DIST;
         engine_state_t()
         { 
             PATH_TO_OBJ = "assets/cube.obj"; 
@@ -99,9 +105,13 @@ namespace renderer
             SCR_TEX_MIN_RATIO =     0.0; 
 
             SHOW_REAL_RENDER_SIZE = false;
+
+            PHI  = THETA = 0.f;
+            DIST = 3.0f;
         }
     };
     extern engine_state_t ENGINE_SETTINGS;
+
 
     //TODO define the public interface of engine shaders
 
