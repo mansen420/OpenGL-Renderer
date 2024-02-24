@@ -22,3 +22,8 @@ Correct result :
 Finally!
 
 ![shader_editing](https://github.com/mansen420/OpenGL-Renderer/assets/50342436/945dc70f-1918-438c-8d40-bdc0430934aa)
+
+### Camera and Object Operations
+It's all coming together 
+![ezgif-2-c1abe71fce](https://github.com/mansen420/OpenGL-Renderer/assets/50342436/aa99a9af-2613-4a7a-b8f1-c1901056d486)
+
