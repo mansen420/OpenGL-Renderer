@@ -7,7 +7,10 @@
 //TODO add error logging for all opengl calls
 namespace renderer
 {
-     
+    /*------------------------------------------------------------------------------*/
+    /*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-* Global Variables *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*/
+    /*------------------------------------------------------------------------------*/
+
     static std::ofstream eng_log;
 
            engine_state_t ENGINE_SETTINGS;    //public state 
@@ -53,6 +56,12 @@ namespace renderer
         RIGHT_EDGE,  TOP_EDGE   ,  scr_tex_right_edge,    scr_tex_top_edge, 
         RIGHT_EDGE,  BOTTOM_EDGE,  scr_tex_right_edge, scr_tex_bottom_edge
     };
+
+    static glm::vec3 cam_pos = glm::vec3(0.0, 0.0, 3.0);
+
+    /*------------------------------------------------------------------------*/
+    /*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-* Public API *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*/
+    /*------------------------------------------------------------------------*/
 
     //TODO implement a system of identifiying programs and shaders for dynamic stuff
 
@@ -119,11 +128,12 @@ namespace renderer
             program = postprocess_shader_program_ptr;
         return program->link();
     }
-
+    /*---------------------------------------------------------------------------------*/
+    /*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-* internal procedures *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*/
+    /*---------------------------------------------------------------------------------*/
     void update_projection();
     void update_import();
 
-    static glm::vec3 cam_pos = glm::vec3(0.0, 0.0, 3.0);
     void send_uniforms()
     {
         using namespace glm;
@@ -291,8 +301,7 @@ namespace renderer
         using namespace glm;
         perspective_transform = perspective(radians(internal_state.FOV), internal_state.RENDER_AR, internal_state.NEAR_PLANE, internal_state.FAR_PLANE);
     }
-    //chef's kiss. works perfectly! love this function!
-    //DO NOT touch this function. ever.
+ 
     void update_screen_tex_coords()
     {   
         if (internal_state.SCR_TEX_MAX_RATIO > 1.0 || internal_state.SCR_TEX_MAX_RATIO < internal_state.SCR_TEX_MIN_RATIO || internal_state.SCR_TEX_MIN_RATIO < 0)
@@ -455,11 +464,19 @@ namespace renderer
     }
     void update_import()
     {
-        //TODO write virutal destructor 
-        delete obj_ptr;
+        //TODO write virutal destructor
+        object_3D::object* backup = obj_ptr; 
         obj_ptr = new object_3D::object;
-        read_obj(internal_state.PATH_TO_OBJ, *obj_ptr);
-        obj_ptr->send_data();
+        if(read_obj(internal_state.PATH_TO_OBJ, *obj_ptr))
+        {
+            obj_ptr->send_data();
+            delete backup;
+        }
+        else
+        {
+            delete obj_ptr;
+            obj_ptr = backup;
+        }
     }
     void terminate()
     {
