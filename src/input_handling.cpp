@@ -5,11 +5,11 @@
 void window::process_input()
 {   
     static float acceleration = 0.1f;
-    static float friction_factor = 0.05f;
+    static float friction_factor = 0.01f;
+    float max_speed = 2.0f;
 
     static glm::vec2     velocity(0.0f);
 
-    float max_speed = 1.0f;;
 
     velocity = glm::length(velocity) > max_speed ? max_speed * glm::normalize(velocity) 
     : velocity;
