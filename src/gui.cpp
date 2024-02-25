@@ -229,7 +229,7 @@ void workspace_panel()
             Spacing();
             SeparatorText("Object Parameters");
             {
-                DragFloat("Scale Factor", &ENGINE_SETTINGS.object_scale_factor, 0.05);
+                DragFloat("Scale Factor", &ENGINE_SETTINGS.object_scale_factor, 0.005);
                 SameLine();
                 DragFloat3("Displacement", glm::value_ptr(ENGINE_SETTINGS.object_displacement), 0.01);
 

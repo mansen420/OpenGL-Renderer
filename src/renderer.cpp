@@ -4,6 +4,7 @@
 #include "shader_utils.h"
 #include "object_interface.h"
 #include <fstream>
+
 //TODO add error logging for all opengl calls
 namespace renderer
 {

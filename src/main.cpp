@@ -28,6 +28,7 @@ int main()
         renderer::update_state();
         renderer::render_scene();
 
+        window::process_input();
         window::render_gui();
 
         window::swap_buffers();
