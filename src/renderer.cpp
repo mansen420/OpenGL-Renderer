@@ -3,6 +3,7 @@
 #include <map>
 #include "shader_utils.h"
 #include "object_interface.h"
+#include "camera_module.h"
 #include <fstream>
 
 //TODO add error logging for all opengl calls
@@ -57,8 +58,6 @@ namespace renderer
         RIGHT_EDGE,  TOP_EDGE   ,  scr_tex_right_edge,    scr_tex_top_edge, 
         RIGHT_EDGE,  BOTTOM_EDGE,  scr_tex_right_edge, scr_tex_bottom_edge
     };
-
-    static glm::vec3 cam_pos = glm::vec3(0.0, 0.0, 3.0);
 
     /*------------------------------------------------------------------------*/
     /*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-* Public API *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*/
@@ -138,9 +137,9 @@ namespace renderer
     void send_uniforms()
     {
         using namespace glm;
-        view_transform = lookAt(cam_pos, vec3(0.f, 0.f, 0.f), vec3(0.f, 1.f, 0.f));
+        view_transform = lookAt(camera::POS, camera::LOOK_AT, camera::UP);
 
-        glUniform3f(glGetUniformLocation(object_shader_program_ptr->get_ID(), "view_vector"), cam_pos.x, cam_pos.y, cam_pos.z);
+        glUniform3f(glGetUniformLocation(object_shader_program_ptr->get_ID(), "view_vector"), camera::POS.x, camera::POS.y, camera::POS.z);
         glUniformMatrix4fv(glGetUniformLocation(object_shader_program_ptr->get_ID(), "projection_transform"), 1, GL_FALSE,
         glm::value_ptr(perspective_transform));
         glUniformMatrix4fv(glGetUniformLocation(object_shader_program_ptr->get_ID(), "view_transform"), 1, GL_FALSE,
@@ -156,15 +155,7 @@ namespace renderer
         glClear(GL_COLOR_BUFFER_BIT*internal_state.COLOR_CLR_ENBLD | GL_DEPTH_BUFFER_BIT*internal_state.DEPTH_CLR_ENBLD | GL_STENCIL_BUFFER_BIT*internal_state.STENCIL_CLR_ENBLD);
 
         glUseProgram(object_shader_program_ptr->get_ID());
-
-        ENGINE_SETTINGS.PHI = ENGINE_SETTINGS.PHI >  89.9 ?  89.9 : ENGINE_SETTINGS.PHI;
-        ENGINE_SETTINGS.PHI = ENGINE_SETTINGS.PHI < -89.9 ? -89.9 : ENGINE_SETTINGS.PHI;
-
-        //TODO for some reason the order of matrix multiplication is significant here. Why?
-        cam_pos = (
-        glm::rotate(glm::mat4(1.0), glm::radians(ENGINE_SETTINGS.THETA), glm::vec3(0.f, 1.f, 0.f)) 
-        * glm::rotate(glm::mat4(1.0), glm::radians(ENGINE_SETTINGS.PHI), glm::vec3(1.f, 0.f, 0.f)) 
-        * glm::vec4(0.f, 0.f, ENGINE_SETTINGS.DIST, 1.f));
+ 
         send_uniforms();
 
         obj_ptr->draw(object_shader_program_ptr->get_ID());
@@ -363,6 +354,8 @@ namespace renderer
     }
     void update_state()
     {
+        camera::update_camera();
+        
         bool should_update_import, should_update_scr_tex_coords, should_update_offscr_tex_params,
         should_update_projection, should_update_obj_mdl_trnsfrm;
 
@@ -407,6 +400,7 @@ namespace renderer
 
     int init()
     {
+        camera::init();
         {
             bool shader_success = true;
             

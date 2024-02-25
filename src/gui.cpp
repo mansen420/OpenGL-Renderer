@@ -185,6 +185,7 @@ void workspace_panel()
                 float RENDER_AR_candidate = ENGINE_SETTINGS.RENDER_AR;
 
                 static ImGuiInputTextFlags flags = ImGuiInputTextFlags_None;
+                PushItemWidth(GetWindowWidth()*0.15);
                 if (InputFloat("Aspect Ratio", &RENDER_AR_candidate, 0.1, 1.0, "%.3f", flags))
                 {
                     if (RENDER_AR_candidate >= 0)
@@ -192,6 +193,7 @@ void workspace_panel()
                         ENGINE_SETTINGS.RENDER_AR = RENDER_AR_candidate;
                     }
                 }
+                PopItemWidth();
                 SameLine();
                 static int current_item = 1;
                 Combo("Aspect Ratio Behavior", &current_item, "Independent\0Follows Render Dimensions\0Follows View Dimensions\0\0");
@@ -209,10 +211,11 @@ void workspace_panel()
                     flags = flags|ImGuiInputTextFlags_ReadOnly;
                     ENGINE_SETTINGS.RENDER_AR = float(OPENGL_VIEWPORT_W)/OPENGL_VIEWPORT_H;
                 }
-
+                
                 Spacing();
-
+                PushItemWidth(GetWindowWidth()*0.15);
                 DragFloat("FOV", &ENGINE_SETTINGS.FOV, 0.65, 0.0, 180.0  ); 
+                PopItemWidth();
                 SameLine();
                 DragFloatRange2("Projection Plane", &ENGINE_SETTINGS.NEAR_PLANE, &ENGINE_SETTINGS.FAR_PLANE, 0.05, 0.001, 100.0, "%.3f", NULL, ImGuiSliderFlags_AlwaysClamp);
             }
@@ -220,11 +223,18 @@ void workspace_panel()
             SeparatorText("Camera Parameters");
             Spacing();
             {
-                DragFloat("PHI", &ENGINE_SETTINGS.PHI, 1.0);
+                PushItemWidth(GetWindowWidth()*0.15);
+
+                DragFloat("PHI", &camera::CAMERA_PARAMS.PHI, 1.0);
                 SameLine();
-                DragFloat("THETA", &ENGINE_SETTINGS.THETA, 1.0);
-                
-                DragFloat("Distance to Origin", &ENGINE_SETTINGS.DIST, 0.1);
+                DragFloat("THETA", &camera::CAMERA_PARAMS.THETA, 1.0);
+                SameLine();
+                DragFloat("Distance to Origin", &camera::CAMERA_PARAMS.DIST, 0.1);
+
+                DragFloat("Resistance", &camera::CAMERA_PARAMS.RESISTANCE_FACTOR, 0.0001f);
+                SameLine();
+                DragFloat("Max Speed", &camera::CAMERA_PARAMS.MAX_SPEED, 0.005);
+                PopItemWidth();
             }
             Spacing();
             SeparatorText("Object Parameters");
@@ -298,7 +308,7 @@ void main_bar()
         End();
         return;
     }
-    PushItemWidth(GetFontSize());
+    //PushItemWidth(GetFontSize());
     if(BeginMenuBar())  //main menu bar
     {
         if(BeginMenu("File"))

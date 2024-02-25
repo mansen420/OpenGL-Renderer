@@ -70,18 +70,11 @@ namespace renderer
         bool  SHOW_REAL_RENDER_SIZE;
         float     SCR_TEX_MAX_RATIO;
         float     SCR_TEX_MIN_RATIO;
-        
-        //rotation in degrees around x-axis
-        float   PHI;
-        //rotation in degrees around y-axis
-        float THETA;
-        //Distance from origin
-        float DIST;
-        
+                
         glm::vec3 object_displacement;
         float     object_scale_factor;
         engine_state_t()
-        { 
+        {
             PATH_TO_OBJ = "assets/cube.obj"; 
 
             CLR_COLOR        = glm::vec4(0.6, 0.3, 0.3, 1.0);
@@ -109,25 +102,75 @@ namespace renderer
 
             SHOW_REAL_RENDER_SIZE = false;
 
-            PHI  = THETA = 0.f;
-            DIST = 3.0f;
-
             object_displacement = glm::vec3(0.0);
             object_scale_factor = 1.0f;
         }
     };
     extern engine_state_t ENGINE_SETTINGS;
 
+    //TODO should state be manipulated by variables? or functions?
+    //if state is manipulated by varaibles, that is more straightforward,
+    //and we do not need to provide read-only access to state.
+    //if state is manipulated by functions, we do not have to sync internal and external data...
+    
+    namespace camera
+    {
+        struct camera_parameter_t
+        {   
+            //If this is set to true, camera acceleration will be cleared to DEFAULT_ACC_* every frame.
+            bool CLEAR_ACC        =  true;
+            //If this is set to true, camera velocity will be cleared to DEFAULT_VELOCITY_* every frame.
+            bool CLEAR_VELOCITY   = false;
+            //If this is set to true, camera velocity and acceleration will be cleared to DEFAULT_VELOCITY_* 
+            //and DEFAULT_ACC_* when THETA or PHI is directly manipulated.
+            bool CLEAR_ON_OVERRIDE =  true;
+
+            //If CLEAR_ACC is set to true, this value will be written to ACC_THETA every frame.
+            float DEFAULT_ACC_THETA = 0.f;
+            //If CLEAR_ACC is set to true, this value will be written to ACC_PHI every frame.
+            float DEFAULT_ACC_PHI   = 0.f;
+            
+
+            //If CLEAR_VELOCITY is set to true, this value will be written to VELOCITY_THETA every frame.
+            float DEFAULT_VELOCITY_THETA = 0.f;
+            //If CLEAR_VELOCITY is set to true, this value will be written to VELOCITY_PHI every frame.
+            float DEFAULT_VELOCITY_PHI   = 0.f;
+
+            //Current angular acceleration with relation to the y-axis. If CLEAR_ACC is true,
+            //this acceleration is set to DEFAULT_ACC_THETA every frame.
+            float ACC_THETA = 0.f;
+            //Current angular acceleration with relation to the x-axis. If CLEAR_ACC is true,
+            //this acceleration is set to DEFAULT_ACC_PHI every frame.
+            float ACC_PHI   = 0.f;
+
+            //Magnitude of resistance. The resistance is always in the direction opposite to the current velocity 
+            //of the camera. This controls the magnitude of the resistance vector.
+            float RESISTANCE_FACTOR = 0.01f;
+            //Maximum magnitude of camera velocity.
+            float MAX_SPEED         = 2.0f ;
+
+            //Angular position, in degrees, with respect to the x-axis. 
+            float   PHI = 0.f;
+            //Angular position, in degrees, with respect to the y-axis.
+            float THETA = 0.f;
+            //Radial distance from the origin.
+            float  DIST = 3.f;
+        };
+        extern camera_parameter_t CAMERA_PARAMS;
+    }
+
+    
     void calculate_object_dimensions();
     void center_object();
     void rescale_object();
 
     //TODO improve shader public interface
-    //returns const internal data of specified shader.
+
+    //Returns const internal source data of specified shader.
     const char* get_shader_source_reflection(shader_prg_option program_type, shader_type_option shader_type);
-    //returns modifieble copy of specified shader.
+    //Returns modifieble copy of specified shader.
     std::string get_shader_source_copy(shader_prg_option program_type, shader_type_option shader_type);
-    //returns pointer to shader source for direct manipulation. Handling compilation is the responsibility of the caller.
+    //Returns pointer to shader source for direct manipulation. Handling compilation is the responsibility of the caller.
     std::string* get_shader_source_reference(shader_prg_option program_type, shader_type_option shader_type);
     //Attempts to compile specified shader with source. Returns false and reverts to old source upon unsuccessful compilation.
     bool update_shader(shader_prg_option program_type, shader_type_option shader_type, const char* source);
@@ -136,9 +179,12 @@ namespace renderer
     //Attempts to link program. Returns false upon unsuccessful linkage.
     bool link_program(shader_prg_option program_type);
 
+    //Initializes internal engine state. Call this only once, and only after you call window::init.
     int          init();
+    //Frees resources. Call this only once, and only after renderer::init.
     void    terminate();
+    //Invokes OpenGL pipeline.
     void render_scene();
-    //Any changes to renderer::ENGINE_SETTINGS will not be reflected until this function is called.
+    //Updates internal engine state. Call this once per frame, or whenever engine parameters change.
     void update_state();
 }
