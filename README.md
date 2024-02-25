@@ -1,5 +1,5 @@
 # C++ OpenGL Engine
-![ezgif-2-1c7f1130fe](https://github.com/mansen420/OpenGL-Renderer/assets/50342436/338168e9-ac71-4665-8966-429b445af6e3)
+![teapot_pos](https://github.com/mansen420/OpenGL-Renderer/assets/50342436/1d478a18-69c5-446e-893c-1f05ba8e128f)
 
 ## State of the Project
   **Heavily W.I.P**\
@@ -11,6 +11,8 @@
   - [x]  Viewing depth buffer
   - [x]  Variable rendering dimension with selectable behaviour
   - [x]  Basic GUI
+  - [x]  Basic Camera
+  - [x]  Simple Object Operations (scaling, displacement)
   - [ ]  Shadow mapping
   - [ ]  A lot more
 ## Dependencies
