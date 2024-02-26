@@ -1,5 +1,6 @@
 #include "engine_interface.h"
 #include "gui.h"
+#include "input_handling.h"
 //TODO separate the logic into the event handler module...
 //update : right now, gui.cpp only directly handles global varaiables declared in engine_state.h
 static bool should_show_filedialog = false;
@@ -231,9 +232,11 @@ void workspace_panel()
                 SameLine();
                 DragFloat("Distance to Origin", &camera::CAMERA_PARAMS.DIST, 0.1);
 
-                DragFloat("Resistance", &camera::CAMERA_PARAMS.RESISTANCE_FACTOR, 0.0001f);
+                DragFloat("Resistance (deg/s)", &camera::CAMERA_PARAMS.RESISTANCE_FACTOR, 1.f);
                 SameLine();
-                DragFloat("Max Speed", &camera::CAMERA_PARAMS.MAX_SPEED, 0.005);
+                DragFloat("Max Speed (deg/s)", &camera::CAMERA_PARAMS.MAX_SPEED, 1);
+                
+                DragFloat("Speed Increment (deg/s)", &window::input_camera_acceleration, 0.5);
                 PopItemWidth();
             }
             Spacing();

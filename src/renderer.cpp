@@ -355,7 +355,7 @@ namespace renderer
     void update_state()
     {
         camera::update_camera();
-        
+
         bool should_update_import, should_update_scr_tex_coords, should_update_offscr_tex_params,
         should_update_projection, should_update_obj_mdl_trnsfrm;
 
@@ -396,6 +396,8 @@ namespace renderer
             update_projection();
         if(should_update_obj_mdl_trnsfrm)
             update_object_model_transform();
+        
+        ENGINE_SETTINGS = internal_state;
     }
 
     int init()

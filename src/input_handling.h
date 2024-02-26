@@ -3,4 +3,5 @@
 namespace window
 {
     void process_input();
+    extern float input_camera_acceleration;
 }
