@@ -11,9 +11,8 @@
   - [x]  Viewing depth buffer
   - [x]  Variable rendering dimension with selectable behaviour
   - [x]  Basic GUI
-  - [x]  Basic Camera with input handling
+  - [x]  Basic Camera with input handling and synchronization
   - [x]  Simple Object Operations (scaling, displacement)
-  - [ ]  Synchronize Camera
   - [ ]  Shadow mapping
   - [ ]  A lot more
 ## Dependencies
