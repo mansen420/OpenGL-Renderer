@@ -129,25 +129,24 @@ namespace renderer
             float DEFAULT_ACC_THETA = 0.f;
             //If CLEAR_ACC is set to true, this value will be written to ACC_PHI every frame.
             float DEFAULT_ACC_PHI   = 0.f;
-            
 
             //If CLEAR_VELOCITY is set to true, this value will be written to VELOCITY_THETA every frame.
             float DEFAULT_VELOCITY_THETA = 0.f;
             //If CLEAR_VELOCITY is set to true, this value will be written to VELOCITY_PHI every frame.
             float DEFAULT_VELOCITY_PHI   = 0.f;
 
-            //Current angular acceleration with relation to the y-axis. If CLEAR_ACC is true,
-            //this acceleration is set to DEFAULT_ACC_THETA every frame.
+            //Angular acceleration with relation to the y-axis. This value is added to the camera's velocity on the next call to update_camera.
+            //If CLEAR_ACC is true, this parameter is set to DEFAULT_ACC_THETA every frame.
             float ACC_THETA = 0.f;
-            //Current angular acceleration with relation to the x-axis. If CLEAR_ACC is true,
-            //this acceleration is set to DEFAULT_ACC_PHI every frame.
+            //Angular acceleration with relation to the x-axis. This value is added to the camera's velocity on the next call to update_camera.
+            //If CLEAR_ACC is true, this parameter is set to DEFAULT_ACC_PHI every frame.
             float ACC_PHI   = 0.f;
 
-            //Magnitude of resistance. The resistance is always in the direction opposite to the current velocity 
+            //Deg/s of resistance. The resistance is always in the direction opposite to the current velocity 
             //of the camera. This controls the magnitude of the resistance vector.
-            float RESISTANCE_FACTOR = 0.01f;
-            //Maximum magnitude of camera velocity.
-            float MAX_SPEED         = 2.0f ;
+            float RESISTANCE_FACTOR = 700.f;
+            //Maximum magnitude of camera velocity in deg/s.
+            float MAX_SPEED         = 200.0f ;
 
             //Angular position, in degrees, with respect to the x-axis. 
             float   PHI = 0.f;
