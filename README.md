@@ -13,6 +13,7 @@
   - [x]  Basic GUI
   - [x]  Basic Camera with input handling and synchronization
   - [x]  Simple Object Operations (scaling, displacement)
+  - [x]  .obj file loading
   - [ ]  Shadow mapping
   - [ ]  A lot more
 ## Dependencies
