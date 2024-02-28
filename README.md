@@ -12,14 +12,14 @@
   Check the [dev diary](https://github.com/mansen420/OpenGL-Renderer/blob/dev/dev_diary.md) for updates on progress!
   
   #### Features 
-  - [x]  Runtime shader loading
+  - [x]  Runtime shader editing
   - [x]  Offscreen rendering
-  - [x]  Viewing depth buffer
-  - [x]  Variable rendering dimension with selectable behaviour
-  - [x]  Basic GUI
-  - [x]  Basic Camera with input handling and synchronization
-  - [x]  Simple Object Operations (scaling, displacement)
+  - [x]  Depth buffer viewing
+  - [x]  Resizable rendering dimension, with configurable render to view port transform
+  - [x]  Basic camera with input handling and time synchronization
+  - [x]  Simple object operations (scaling, displacement)
   - [x]  .obj file loading
+  - [x]  GUI that exposes the entire engine state (ongoing)
   - [ ]  Shadow mapping
   - [ ]  A lot more
 ## Dependencies
