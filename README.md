@@ -1,6 +1,3 @@
-<<<<<<< HEAD
-**NOT stable !!**
-=======
 # C++ OpenGL Engine
 
 ![ezgif-3-95df610dc4](https://github.com/mansen420/OpenGL-Renderer/assets/50342436/74d5e17e-4f5a-4fe6-af56-eda08ebe13b4)
