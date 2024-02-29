@@ -4,3 +4,6 @@
 *.jpg
 *.png
 *.pdf 
+build
+*.ini
+*.txt

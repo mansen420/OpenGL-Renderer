@@ -1,12 +1,9 @@
-#ifndef OBJECT_INTERFACE
-#define OBJECT_INTERFACE
+#pragma once
 
 #define VS_TRNSFRM_MDL_NAME "model_transform"
 
-#define TINYOBJLOADER_IMPLEMENTATION ;
 #include "tiny_obj_loader.h"
 
-#define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
 #include "glad/glad.h"
@@ -17,9 +14,6 @@
 
 #include <iostream>
 #include <string>
-
-bool gen_texture(const char* file_path, unsigned int &tex_id);
-
 namespace object_3D
 {
     using namespace glm;
@@ -50,6 +44,8 @@ namespace object_3D
             set_samplers(program_id);
         }
     public:
+        vec3 dimensions;
+        vec3     center;
         //generates VAO(s) and/or sends buffer data.
         virtual void send_data() = 0;
 
@@ -98,8 +94,7 @@ namespace object_3D
         vector<unsigned int> indices;
 
         mesh(){}
-
-        virtual void send_data()
+        virtual void send_data() override
         {   //glVertexAttribPointer will only have effect on the data sent by the last call to glBufferData
             //VAOs only store the last call to glVertexAttribPointer
             glGenVertexArrays(1, &VAO_id);
@@ -122,7 +117,7 @@ namespace object_3D
     };
     //holds an array of drawable meshes. Initialize with read_obj()
     class object : public drawable
-    {
+    {   //TODO ensure objects are properly terminated 
         virtual void bind_VAO() const override {}
         virtual void send_model_transform(const unsigned int &program_id) const override
         {
@@ -180,6 +175,35 @@ namespace object_3D
         vector<material> materials;
         mat4 model_transform;
 
+        void calculate_dimensions()
+        {
+            if (vertices.size() == 0)
+            {
+                dimensions = vec3(0.0);
+                center     = vec3(0.0);
+                return;
+            }
+            vec3 largest_coords = vertices[0].pos_coords;
+            vec3 smallest_coords = vertices[0].pos_coords;
+            for (size_t i = 1; i < vertices.size(); ++i)
+            {
+                if (vertices[i].pos_coords.x < smallest_coords.x)
+                    smallest_coords.x = vertices[i].pos_coords.x;
+                if (vertices[i].pos_coords.y < smallest_coords.y)
+                    smallest_coords.y = vertices[i].pos_coords.y;
+                if (vertices[i].pos_coords.z < smallest_coords.z)
+                    smallest_coords.z = vertices[i].pos_coords.z;
+
+                if (vertices[i].pos_coords.x > largest_coords.x)
+                    largest_coords.x = abs(vertices[i].pos_coords.x);
+                if (vertices[i].pos_coords.y > largest_coords.y)
+                    largest_coords.y = abs(vertices[i].pos_coords.y);
+                if (vertices[i].pos_coords.z > largest_coords.z)
+                    largest_coords.z = abs(vertices[i].pos_coords.z);
+            }  
+            dimensions =  largest_coords - smallest_coords;
+            center     = (largest_coords + smallest_coords)/dimensions;
+        }
         virtual void send_data() override
         {
             send_vertex_data();
@@ -269,156 +293,10 @@ namespace object_3D
     };
 }
 
-tinyobj::ObjReader obj_parser;
-bool read_obj(std::string path, object_3D::object &obj)
-{
-    if (!obj_parser.ParseFromFile(path, tinyobj::ObjReaderConfig()))
-    {
-        std::cerr << "loading object failed :\n";
-        if (!obj_parser.Error().empty())
-        {
-            std::cerr << obj_parser.Error() << std::endl;
-        }
-        return false;
-    }
-    if (!obj_parser.Warning().empty())
-        std::cout << obj_parser.Warning() << std::endl;
-    
-    tinyobj::attrib_t vertex_attribs = obj_parser.GetAttrib();
-    std::vector<tinyobj::shape_t> shapes = obj_parser.GetShapes();
-    std::vector<tinyobj::material_t> materials = obj_parser.GetMaterials();
-
-    //build object vertex array
-    std::vector<object_3D::vertex> &vertices = obj.vertices;
-    vertices = std::vector<object_3D::vertex>(vertex_attribs.vertices.size()/3);
-    for(size_t i = 0; i < shapes.size(); i++)
-    {   
-        std::vector<unsigned int> recorded_indices;
-        const std::vector<tinyobj::index_t> &raw_indices = shapes[i].mesh.indices;
-        for (size_t j = 0; j < raw_indices.size(); j++)
-        {
-            const unsigned int vertex_index = raw_indices[j].vertex_index;
-            bool new_vertex = true;
-            for (size_t k = 0; k < recorded_indices.size(); k++) //is this vertex index recorded?
-            {
-                if(recorded_indices[k] == vertex_index) //vertex index is recorded
-                {
-                    new_vertex = false;
-                    break;
-                }
-            }
-            if (new_vertex)  //construct and record the vertex
-            {
-                recorded_indices.push_back(vertex_index);
-                object_3D::vertex temp_vert;
-
-                temp_vert.pos_coords.x = vertex_attribs.vertices[3*vertex_index + 0];
-                temp_vert.pos_coords.y = vertex_attribs.vertices[3*vertex_index + 1];
-                temp_vert.pos_coords.z = vertex_attribs.vertices[3*vertex_index + 2];
-
-                const unsigned int normal_index = raw_indices[j].normal_index;
-                if(normal_index >= 0)   //-1 signifies non-available data
-                {
-                    temp_vert.normal_coords.x = vertex_attribs.normals[3*normal_index + 0];
-                    temp_vert.normal_coords.y = vertex_attribs.normals[3*normal_index + 1];
-                    temp_vert.normal_coords.z = vertex_attribs.normals[3*normal_index + 2];
-                }
-
-                const unsigned int tex_index = raw_indices[j].texcoord_index;
-                if (tex_index >= 0)
-                {
-                    temp_vert.tex_coords.x = vertex_attribs.texcoords[2*tex_index + 0];
-                    temp_vert.tex_coords.y = vertex_attribs.texcoords[2*tex_index + 1];
-                }
-                vertices[vertex_index] = temp_vert;
-            }
-        }
-    }
-    
-    //get mesh indices
-    std::vector<object_3D::mesh> &meshes = obj.meshes;
-    meshes = std::vector<object_3D::mesh>(shapes.size());
-    for (size_t i = 0; i < shapes.size(); i++)
-    {
-        const std::vector<tinyobj::index_t> &indices = shapes[i].mesh.indices;
-        object_3D::mesh temp_mesh;
-        temp_mesh.indices = std::vector<unsigned int>(indices.size());
-        for (size_t j = 0; j < indices.size(); j++)
-        {
-            //note that tinyobject.h takes care of offsetting the obj indices by 1 so we don't have to do it.
-            temp_mesh.indices[j] = indices[j].vertex_index;
-        }
-        meshes[i] = temp_mesh;
-    }
-
-    //get textures 
-    std::vector<object_3D::material> &obj_materials = obj.materials;
-    obj_materials = std::vector<object_3D::material>(materials.size());
-    for (size_t i = 0; i < materials.size(); i++)
-    {
-        //within this directory, we will search for the texture names
-        const std::string directory = path.substr(0, path.find_last_of("/\\")+1);
-
-        std::string file_name = materials[i].diffuse_texname;
-        gen_texture((directory+file_name).c_str(), obj_materials[i].diffuse_map.id);
-        
-        file_name = materials[i].specular_texname;
-        gen_texture((directory+file_name).c_str(), obj_materials[i].spec_map.id);
-    }
-    return true;
-}
+bool read_obj(std::string path, object_3D::object &obj);
 
 //reads texture from file and assigns it to the GL_TEXTURE_2D target with tex_id.
 //be warned that this functions expects images with 3 or 4 color channels,
-//otherwise, undefined behaviour will occur.
-bool gen_texture(const char* file_path, unsigned int &tex_id)
-{
-    stbi_set_flip_vertically_on_load(false);
-    int img_width, img_height, img_nrChannels;
-    unsigned char* data = stbi_load(file_path, &img_width, &img_height, &img_nrChannels, 0);
-    if (!data)
-    {
-        std::cout << "reading texture file failed : " << file_path << std::endl;
-        return false;
-    }
-
-    glGenTextures(1, &tex_id);
-    glBindTexture(GL_TEXTURE_2D, tex_id);
-
-    glTexImage2D(GL_TEXTURE_2D, 0, img_nrChannels == 3 ? GL_SRGB : GL_SRGB_ALPHA, img_width, img_height, 0, img_nrChannels == 3 ? GL_RGB : GL_RGBA, GL_UNSIGNED_BYTE, data);
-    glGenerateMipmap(GL_TEXTURE_2D);
-
-    glBindTexture(GL_TEXTURE_2D, 0);
-
-    stbi_image_free(data);
-    
-    std::cout << "Loaded texture : " << file_path <<std::endl;
-    return true;
-}
-bool gen_cubemap(const std::vector<std::string> &file_paths, unsigned int &cubemap_tex_id)
-{
-    stbi_set_flip_vertically_on_load(false);
-    glGenTextures(0, &cubemap_tex_id);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, cubemap_tex_id);
-    for (size_t i = 0; i < file_paths.size(); i++)
-    {
-        int img_width, img_height, img_nrChannels;
-        unsigned char* data = stbi_load(file_paths[i].c_str(), &img_width, &img_height,
-        &img_nrChannels,0);
-        if(!data)
-        {
-            std::cerr << "reading texture file failed : " << file_paths[i] << std::endl;
-            stbi_image_free(data);
-            return false;
-        }
-        std::cout << "Loaded texture : " << file_paths[i] <<std::endl;
-        GLenum format = img_nrChannels == 3 ? GL_RGB : GL_RGBA;
-        GLenum internal_format = img_nrChannels == 3 ? GL_SRGB : GL_SRGB_ALPHA;
-        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X+i, 0, internal_format, img_width, img_height, 0, format,
-        GL_UNSIGNED_BYTE, data);
-        glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
-        stbi_image_free(data);
-    }
-    return true;
-}
-#endif
+//otherwise, bad things will happen.
+bool gen_texture(const char* file_path, unsigned int &tex_id);
+bool gen_cubemap(const std::vector<std::string> &file_paths, unsigned int &cubemap_tex_id);
