@@ -66,8 +66,8 @@ void renderer::camera::update_camera()
         internal_state.THETA += time_interval * (velocity.x + previous_velocity.x)/2.f;
         internal_state.PHI   += time_interval * (velocity.y + previous_velocity.y)/2.f;
 
-       // internal_state.PHI = internal_state.PHI >  89.9 ?  89.9 : internal_state.PHI;
-       // internal_state.PHI = internal_state.PHI < -89.9 ? -89.9 : internal_state.PHI;
+        internal_state.PHI = internal_state.PHI >  89.9 ?  89.9 : internal_state.PHI;
+        internal_state.PHI = internal_state.PHI < -89.9 ? -89.9 : internal_state.PHI;
 
         //TODO for some reason the order of matrix multiplication is significant here. Why?
         renderer::camera::POS = (
