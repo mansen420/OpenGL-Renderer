@@ -63,4 +63,3 @@ Whether or not it will compile for macOS, I do not know.
 
 
 In any case, this project is still in very early development, and we will consider extending support for more systems once the project reaches a mature state. 
->>>>>>> 3423fb6cd92f877500c95aab31426f281586f3f7
