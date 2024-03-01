@@ -1,5 +1,6 @@
 # C++ OpenGL Engine
 
+
 ![ezgif-3-95df610dc4](https://github.com/mansen420/OpenGL-Renderer/assets/50342436/74d5e17e-4f5a-4fe6-af56-eda08ebe13b4)
 
 [Sleeping Hermaphroditus](https://threedscans.com/uncategorized/sleeping-hermaphroditus/)
@@ -22,6 +23,8 @@
   - [x]  GUI that exposes the entire engine state (ongoing)
   - [ ]  Shadow mapping
   - [ ]  A lot more
+
+![screenshot-from-2024-03-01-00-](https://github.com/mansen420/OpenGL-Renderer/assets/50342436/fde54939-884a-49d8-a7fb-b1fbf205be6b)
 ## Dependencies
   This project uses cmake as its build system, so you should have it installed.\
   Additionally, you should have all the [dependencies required for GLFW](https://www.glfw.org/docs/3.3/compile.html#compile_deps).\
