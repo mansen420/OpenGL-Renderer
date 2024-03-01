@@ -64,7 +64,7 @@ namespace renderer
     /*------------------------------------------------------------------------*/
 
     //TODO implement a system of identifiying programs and shaders for dynamic stuff
-
+    //TODO might be better to stop using std::strings for shader code, not every user may want to include the string header
     shader_manager::shader_t* find_shader(shader_prg_option program_type, shader_type_option shader_type)
     {
         //search shader map for shaders attached to program of type shader.
@@ -73,7 +73,7 @@ namespace renderer
             prg_ptr = postprocess_shader_program_ptr;
         if (program_type == OBJECT_SHADER)
             prg_ptr = object_shader_program_ptr;
-        
+        //TODO provide else statement
         const unsigned int* shader_IDs = prg_ptr->get_attached_shader_IDs();
         const size_t IDs_size          =    prg_ptr->num_attached_shaders();
 
@@ -90,7 +90,7 @@ namespace renderer
         return shader;
     }
     const char* get_shader_source_reflection(shader_prg_option program_type, shader_type_option shader_type)
-    {
+    {  //TODO shader could be nullptr
         const shader_manager::shader_t* shader = find_shader(program_type, shader_type);
         return shader->source_code.c_str();
     }
