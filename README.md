@@ -1,6 +1,3 @@
-<<<<<<< HEAD
-**NOT stable !!**
-=======
 # C++ OpenGL Engine
 
 ![ezgif-3-95df610dc4](https://github.com/mansen420/OpenGL-Renderer/assets/50342436/74d5e17e-4f5a-4fe6-af56-eda08ebe13b4)
@@ -66,4 +63,3 @@ Whether or not it will compile for macOS, I do not know.
 
 
 In any case, this project is still in very early development, and we will consider extending support for more systems once the project reaches a mature state. 
->>>>>>> 3423fb6cd92f877500c95aab31426f281586f3f7
