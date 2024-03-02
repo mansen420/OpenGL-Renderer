@@ -302,9 +302,3 @@ namespace object_3D
 }
 
 bool read_obj(std::string path, object_3D::object &obj);
-
-//reads texture from file and assigns it to the GL_TEXTURE_2D target with tex_id.
-//be warned that this functions expects images with 3 or 4 color channels,
-//otherwise, bad things will happen.
-bool gen_texture(const char* file_path, unsigned int &tex_id);
-bool gen_cubemap(const std::vector<std::string> &file_paths, unsigned int &cubemap_tex_id);
