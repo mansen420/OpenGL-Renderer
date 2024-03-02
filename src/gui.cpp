@@ -1,8 +1,6 @@
 #include "engine_interface.h"
 #include "gui.h"
 #include "input_handling.h"
-//TODO separate the logic into the event handler module...
-//update : right now, gui.cpp only directly handles global varaiables declared in engine_state.h
 static bool should_show_filedialog = false;
 void workspace_panel()
 {
@@ -106,33 +104,6 @@ void workspace_panel()
                     }
                 } 
                 SameLine();
-                
-                Checkbox("Use Mipmaps", &ENGINE_SETTINGS.USE_MIPMAPS);
-                if (ENGINE_SETTINGS.USE_MIPMAPS)
-                {  
-                    SameLine();
-                    //FIXME this combo doesn't open
-                    //TODO figure out why using mipmaps cuases the screen to go dark
-                    //update : it seems that the image is dark because no mipmaps are generated, i.e. it samples from non-existant mipmaps thus the darker image.
-                    //telling the GL to generate mipmaps every time we update the tex params causes an invlid operation error.
-                    if (Combo("Mipmap", &mipmap_filter, "Linear\0Nearest\0\0"))
-                    {
-                        if (minification_filter == LINEAR)
-                        {
-                            if(mipmap_filter == LINEAR)
-                                ENGINE_SETTINGS.SCR_TEX_MIN_FLTR = texture_filtering::MIPMAP_LINEAR_LINEAR;
-                            if(mipmap_filter == NEAREST)
-                                ENGINE_SETTINGS.SCR_TEX_MIN_FLTR = texture_filtering::MIPMAP_NEAREST_LINEAR;
-                        } 
-                        else if (minification_filter == NEAREST)
-                        {
-                            if(mipmap_filter == LINEAR)
-                                ENGINE_SETTINGS.SCR_TEX_MIN_FLTR = texture_filtering::MIPMAP_LINEAR_NEAREST;
-                            if(mipmap_filter == NEAREST)
-                                ENGINE_SETTINGS.SCR_TEX_MIN_FLTR = texture_filtering::MIPMAP_NEAREST_NEAREST;
-                        }
-                    }
-                }
                 
                 if (Combo("Magnification", &magnification_filter, "Linear\0Nearest\0\0"))
                 {
