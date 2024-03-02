@@ -70,6 +70,7 @@ namespace object_3D
         unsigned int id = 0;   //id of 0 implies non-existence
         texture_type_option type;
     };
+    
     struct material
     {
         texture diffuse_map;
@@ -82,7 +83,14 @@ namespace object_3D
     {
         unsigned int VAO_id;
         virtual void bind_VAO() const override { glBindVertexArray(VAO_id);}
-        virtual void set_samplers(const unsigned int &program_id) const override{} //a mesh has no texture IDs
+        virtual void set_samplers(const unsigned int &program_id) const override
+        {
+            //FIXME we assume each face uses the same material index!
+            if (material_idx[0] != -1)
+            {
+                glUniform1i(glGetUniformLocation(program_id, string("material_index").c_str()), material_idx[0]);
+            }
+        }
         virtual void send_model_transform(const unsigned int &program_id) const override
         {
         }
@@ -92,7 +100,7 @@ namespace object_3D
         }
     public :
         vector<unsigned int> indices;
-
+        vector<int> material_idx;        
         mesh(){}
         virtual void send_data() override
         {   //glVertexAttribPointer will only have effect on the data sent by the last call to glBufferData
@@ -135,7 +143,7 @@ namespace object_3D
                     break;
                 }
                 if (materials[i].diffuse_map.id > 0)
-                {
+                {   //TODO parameterize these uniform names
                     string type = "diffuse_maps";
                     string index = "["+std::to_string(nr_diffuse)+"]";
                     glActiveTexture(GL_TEXTURE0 + nr_diffuse + nr_spec);
@@ -150,7 +158,7 @@ namespace object_3D
                     glActiveTexture(GL_TEXTURE0 + nr_diffuse + nr_spec);
                     glBindTexture(GL_TEXTURE_2D, materials[i].spec_map.id);
                     glUniform1i(glGetUniformLocation(program_id, (type+index).c_str()), nr_diffuse + nr_spec);
-                    glUniform1i(glGetUniformLocation(program_id, "nr_valid_diffuse_maps"), ++nr_spec);
+                    glUniform1i(glGetUniformLocation(program_id, "nr_valid_spec_maps"), ++nr_spec);
                 }
             }
         }

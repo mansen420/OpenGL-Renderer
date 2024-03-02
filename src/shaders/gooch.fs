@@ -15,6 +15,11 @@ vec3 warm_color, cool_color;
 
 uniform vec3 view_vector;
 
+uniform sampler2D diffuse_maps[16];
+uniform int material_index;  //each mesh points to one material (temporary implementation)
+uniform int nr_valid_diffuse_maps;
+uniform int nr_valid_material_indices;
+
 void main()
 {
     warm_color = vec3(0.65, 0.4, 0.0);
@@ -34,4 +39,8 @@ void main()
     vec3 res = warm_color*t+(1-t)*cool_color;
     res = s * vec3(1.0) + (1-s) * (res);
     fragment_output = vec4(res, 1.0);
+    if (nr_valid_diffuse_maps > 0)
+    {
+        fragment_output *= texture(diffuse_maps[material_index], TexCoords);
+    }
 }

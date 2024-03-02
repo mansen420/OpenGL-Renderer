@@ -1,5 +1,5 @@
 #include "object_interface.h"
-
+//TODO this whole module needs a refactor
 tinyobj::ObjReader obj_parser;
 bool read_obj(std::string path, object_3D::object &obj)
 {
@@ -23,6 +23,8 @@ bool read_obj(std::string path, object_3D::object &obj)
     std::vector<object_3D::vertex> &vertices = obj.vertices;
     vertices = std::vector<object_3D::vertex>(vertex_attribs.vertices.size()/3);
     
+    bool should_generate_normals = false;
+
     for(size_t i = 0; i < shapes.size(); i++)
     {   
         std::vector<unsigned int> recorded_indices;
@@ -62,7 +64,7 @@ bool read_obj(std::string path, object_3D::object &obj)
                 }
                 else    //generate our own normals
                 {
-                    //TODO add notifier 
+                    should_generate_normals = true;
                 }
 
                 const int tex_index = raw_indices[j].texcoord_index;
@@ -91,51 +93,55 @@ bool read_obj(std::string path, object_3D::object &obj)
             //note that tinyobject.h takes care of offsetting the obj indices by 1 so we don't have to do it.
             temp_mesh.indices[j] = indices[j].vertex_index;
         }
-        meshes[i] = temp_mesh;      //FIXME expensive copy
+        meshes[i]              = temp_mesh;      //FIXME expensive copy?
+        meshes[i].material_idx = shapes[i].mesh.material_ids;
     }
 
     //generate our own normals!
-    for(size_t i = 0; i < shapes.size(); i++)
+    if (should_generate_normals)
     {
-        int counter = 0;
-        for (size_t j = 0; j < shapes[i].mesh.num_face_vertices.size(); j++)
+        for(size_t i = 0; i < shapes.size(); i++)
         {
-            tinyobj::index_t first_face_index = shapes[i].mesh.indices[0 + counter];
+            int counter = 0;
+            for (size_t j = 0; j < shapes[i].mesh.num_face_vertices.size(); j++)
+            {
+                tinyobj::index_t first_face_index = shapes[i].mesh.indices[0 + counter];
 
-            //TODO YES IT WORKS!! now just implement weighted per-vertex normals.
+                //TODO YES IT WORKS!! now just implement weighted per-vertex normals.
 
-            //we multiply the first face index by 3  --or the number of vertices per face--
-            //in order to get the index of a single float in the vertex_attribs vector.
-            //i.e., vertex indices != vertex_attrib indices
-            glm::vec3 A = glm::vec3 
-            (vertex_attribs.vertices[3*first_face_index.vertex_index + 0], 
-             vertex_attribs.vertices[3*first_face_index.vertex_index + 1],
-             vertex_attribs.vertices[3*first_face_index.vertex_index + 2]);
+                //we multiply the first face index by 3  --or the number of vertices per face--
+                //in order to get the index of a single float in the vertex_attribs vector.
+                //i.e., vertex indices != vertex_attrib indices
+                glm::vec3 A = glm::vec3 
+                (vertex_attribs.vertices[3*first_face_index.vertex_index + 0], 
+                vertex_attribs.vertices[3*first_face_index.vertex_index + 1],
+                vertex_attribs.vertices[3*first_face_index.vertex_index + 2]);
 
-            tinyobj::index_t second_face_index = shapes[i].mesh.indices[1 + counter];
-            glm::vec3 B = glm::vec3 
-            (vertex_attribs.vertices[3*second_face_index.vertex_index + 0], 
-             vertex_attribs.vertices[3*second_face_index.vertex_index + 1], 
-             vertex_attribs.vertices[3*second_face_index.vertex_index + 2]);
+                tinyobj::index_t second_face_index = shapes[i].mesh.indices[1 + counter];
+                glm::vec3 B = glm::vec3 
+                (vertex_attribs.vertices[3*second_face_index.vertex_index + 0], 
+                vertex_attribs.vertices[3*second_face_index.vertex_index + 1], 
+                vertex_attribs.vertices[3*second_face_index.vertex_index + 2]);
 
-            tinyobj::index_t third_face_index = shapes[i].mesh.indices[2 + counter];
-            glm::vec3 C = glm::vec3 
-            (vertex_attribs.vertices[3*third_face_index.vertex_index + 0], 
-             vertex_attribs.vertices[3*third_face_index.vertex_index + 1],
-             vertex_attribs.vertices[3*third_face_index.vertex_index + 2]);
-            
-            glm::vec3 AB = B - A;
-            glm::vec3 AC = C - A;
-            glm::vec3 normal = glm::normalize(glm::cross(AB, AC));
+                tinyobj::index_t third_face_index = shapes[i].mesh.indices[2 + counter];
+                glm::vec3 C = glm::vec3 
+                (vertex_attribs.vertices[3*third_face_index.vertex_index + 0], 
+                vertex_attribs.vertices[3*third_face_index.vertex_index + 1],
+                vertex_attribs.vertices[3*third_face_index.vertex_index + 2]);
+                
+                glm::vec3 AB = B - A;
+                glm::vec3 AC = C - A;
+                glm::vec3 normal = glm::normalize(glm::cross(AB, AC));
 
-            vertices[first_face_index.vertex_index].normal_coords  = normal;
-            vertices[second_face_index.vertex_index].normal_coords = normal;
-            vertices[third_face_index.vertex_index].normal_coords  = normal;
+                vertices[first_face_index.vertex_index].normal_coords  = normal;
+                vertices[second_face_index.vertex_index].normal_coords = normal;
+                vertices[third_face_index.vertex_index].normal_coords  = normal;
 
-            counter += shapes[i].mesh.num_face_vertices[j];
+                counter += shapes[i].mesh.num_face_vertices[j];
+            }
         }
     }
-
+    
     //get textures 
     std::vector<object_3D::material> &obj_materials = obj.materials;
     obj_materials = std::vector<object_3D::material>(materials.size());
