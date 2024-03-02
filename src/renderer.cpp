@@ -254,7 +254,6 @@ namespace renderer
         if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         {
             std::cout << "FRAMEBUFFER INCOMPLETE : "<< glCheckFramebufferStatus(GL_FRAMEBUFFER) << std::endl;
-            //TODO throw some eror or smth 
             return false;
         }
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -269,7 +268,7 @@ namespace renderer
             
         glGenBuffers(1, &vbo_ID);
         glBindBuffer(GL_ARRAY_BUFFER, vbo_ID);
-        //TODO maybe hardcoding the 24 floats in is not the best solution
+        //TODO 24 magic number, other magic nubmers 
         glBufferData(GL_ARRAY_BUFFER, sizeof(float)*24, scr_quad, GL_STATIC_DRAW);
         
         if (glIsVertexArray(screen_quad_vao_ID))
@@ -298,7 +297,7 @@ namespace renderer
     {   
         if (internal_state.SCR_TEX_MAX_RATIO > 1.0 || internal_state.SCR_TEX_MAX_RATIO < internal_state.SCR_TEX_MIN_RATIO || internal_state.SCR_TEX_MIN_RATIO < 0)
         {
-            //TODO throw error
+            //TODO make this function return a boolean value for this failure
             std::cout << "BAD TEX RATIOS"<<std::endl;
             return;
         } 
@@ -353,7 +352,7 @@ namespace renderer
         * glm::scale(glm::mat4(1.0), glm::vec3(internal_state.object_scale_factor));
     }
     void update_state()
-    {
+    {   //TODO this is a primitive callback system. It works now, but maybe implement a more sophisticated system?
         camera::update_camera();
 
         bool should_update_import, should_update_scr_tex_coords, should_update_offscr_tex_params,
@@ -461,7 +460,7 @@ namespace renderer
     }
     void update_import()
     {
-        //TODO write virutal destructor
+        //TODO write virutal destructor?
         object_3D::object* backup = obj_ptr; 
         obj_ptr = new object_3D::object;
         if(read_obj(internal_state.PATH_TO_OBJ, *obj_ptr))

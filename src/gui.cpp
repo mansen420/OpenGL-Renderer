@@ -223,6 +223,7 @@ void workspace_panel()
         }
         if(BeginTabItem("Shaders"))
         {
+            //TODO allow reading from file and writing to disk (shaders)
             //TODO make this a dynamic size
             static char shader_code_buffer[1024*16];
             static bool first_time = true;

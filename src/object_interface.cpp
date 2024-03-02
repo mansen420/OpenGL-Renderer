@@ -1,5 +1,5 @@
 #include "object_interface.h"
-//TODO this whole module needs a refactor
+//TODO this whole module needs a fundamental rework!!
 tinyobj::ObjReader obj_parser;
 bool read_obj(std::string path, object_3D::object &obj)
 {
