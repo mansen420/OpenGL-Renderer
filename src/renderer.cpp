@@ -31,8 +31,7 @@ namespace renderer
     static    unsigned int offscreen_framebuffer_ID;
     static    unsigned int       screen_quad_vao_ID;
 
-    //TODO find a better way to handle uniforms
-    static glm::mat4       model_transform;
+    //TODO find a better way to handle these uniforms
     static glm::mat4        view_transform;
     static glm::mat4 perspective_transform;
 
@@ -124,8 +123,10 @@ namespace renderer
         shader_manager::shader_prg_t* program;
         if(program_type == OBJECT_SHADER)
             program = object_shader_program_ptr;
-        if(program_type == POSTPROCESS_SHADER)
+        else if(program_type == POSTPROCESS_SHADER)
             program = postprocess_shader_program_ptr;
+        else 
+            return false;
         return program->link();
     }
     /*---------------------------------------------------------------------------------*/
