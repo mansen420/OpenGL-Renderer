@@ -1,7 +1,15 @@
 #include "engine_interface.h"
 #include "gui.h"
 #include "input_handling.h"
+
+#include <fstream>
+
 static bool should_show_filedialog = false;
+static bool load_obj_path          = false;
+static bool load_shader_path       = false;
+bool read_file(const char* file_path, char* &file_contents_holder);
+//TODO make this a dynamic size?
+static char shader_code_buffer[1024*16]; //16KB
 void workspace_panel()
 {
     //FIXME probably a bad idea
@@ -217,6 +225,23 @@ void workspace_panel()
                 SameLine();
                 DragFloat3("Displacement", glm::value_ptr(ENGINE_SETTINGS.object_displacement), 0.01);
 
+                static bool show_dimensions = true;
+                if(Button("Calculate Dimensions"))
+                {}
+                SameLine();
+                if (Button("Center"))
+                {}
+                SameLine();
+                if(Button("Normalize Scale"))
+                {}
+                float dim[3]{1.2, -1.0, 0.0};
+                if (show_dimensions)
+                {
+                    Text("Dimensions : ");SameLine();
+                    std::ostringstream ss;
+                    ss << dim[0] << ' ' << dim[1] << ' ' << dim[2];
+                    Text(ss.str().c_str());
+                }
             }
             Spacing();
             EndTabItem();
@@ -224,28 +249,56 @@ void workspace_panel()
         if(BeginTabItem("Shaders"))
         {
             //TODO allow reading from file and writing to disk (shaders)
-            //TODO make this a dynamic size
-            static char shader_code_buffer[1024*16];
-            static bool first_time = true;
-            if (first_time)
-                strcpy(shader_code_buffer, renderer::get_shader_source_reflection(renderer::OBJECT_SHADER, renderer::FRAGMENT_SHADER));
-            first_time = false;
+            static bool should_load_shader = true;
 
-            GetFont()->Scale =1.5f;
-            PushFont(GetFont());
+            if(Button("Load File"))
+            {
+                window::file_dialog.Open();
+                should_show_filedialog = true;
+                load_shader_path = true;
+            }
+            static int shader_type_option = 0;
+            static int prog_type_option   = 0;
+
+            static renderer::shader_type_option shader_type = renderer::FRAGMENT_SHADER;
+            static renderer::shader_prg_option prog_type    = renderer::OBJECT_SHADER;
+            PushItemWidth(GetWindowWidth()*0.25);
+            if (Combo("Shader Type", &shader_type_option, "Fragment Shader\0Vertex Shader\0\0\0"))
+            {
+                if(shader_type_option == 0)
+                    shader_type = renderer::FRAGMENT_SHADER;
+                if(shader_type_option == 1)
+                    shader_type = renderer::VERTEX_SHADER;
+                should_load_shader = true;
+            }
+            SameLine();
+            if (Combo("Program", &prog_type_option, "Object Shader\0Screen Shader\0\0\0"))
+            {
+                if(prog_type_option == 0)
+                    prog_type = renderer::OBJECT_SHADER;
+                if(prog_type_option == 1)
+                    prog_type = renderer::POSTPROCESS_SHADER;
+                should_load_shader = true;
+            }
+            PopItemWidth();
+
+            if (should_load_shader)
+            {
+                strcpy(shader_code_buffer, renderer::get_shader_source_reflection(prog_type, shader_type));
+                should_load_shader = false;
+            }
+
             ImGui::InputTextMultiline("##source", shader_code_buffer, sizeof(shader_code_buffer), whole_window->Size);
-            GetFont()->Scale =1.0f;
-            PopFont();
 
             Spacing();
             if(Button("Compile"))
             {
-                renderer::update_shader(renderer::OBJECT_SHADER, renderer::FRAGMENT_SHADER, shader_code_buffer);
+                renderer::update_shader(prog_type, shader_type, shader_code_buffer);
             }
             SameLine();
             if(Button("Link"))
             {
-                renderer::link_program(renderer::OBJECT_SHADER);
+                renderer::link_program(prog_type);
             }
             EndTabItem();
         }
@@ -257,13 +310,31 @@ void conditional_gui()
 {
     if (should_show_filedialog)
     {
+        if (load_shader_path)
+            window::file_dialog.SetTypeFilters({".frag", ".vert", ".glsl", ".fs", ".vs"});
+        if (load_obj_path)
+            window::file_dialog.SetTypeFilters({".obj"});
+
         window::file_dialog.Display();
         if (window::file_dialog.HasSelected())
         {
-            renderer::ENGINE_SETTINGS.PATH_TO_OBJ = window::file_dialog.GetSelected();
-
-            window::file_dialog.ClearSelected();            
+            if(load_obj_path)
+            {
+                renderer::ENGINE_SETTINGS.PATH_TO_OBJ = window::file_dialog.GetSelected();
+                load_obj_path = false;
+            }
+            if(load_shader_path)
+            {
+                char* source;
+                read_file(window::file_dialog.GetSelected().c_str(), source);
+                strcpy(shader_code_buffer, source);
+                delete[] source;
+                load_shader_path = false;
+            }
+            window::file_dialog.ClearSelected(); 
+                       
             should_show_filedialog = false;
+            window::file_dialog.Close();
         }
     }
 }
@@ -290,9 +361,9 @@ void main_bar()
         {
             if(MenuItem("Import", "ctrl+o", false))
             {
-                //this is pretty retarded. why do I have to open it everytime?
                 window::file_dialog.Open();
                 should_show_filedialog = true;
+                load_obj_path = true;
             }
             EndMenu();
         }
@@ -314,4 +385,27 @@ void GUI::render()
     workspace_panel();
     main_bar();
     conditional_gui();
+}
+
+//FIXME Utility function. move this somewhere else!!
+//Caller must ensure that file_contents_holder is delete[]`d!
+bool read_file(const char* file_path, char* &file_contents_holder)
+{
+    std::ifstream reader;
+    reader.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+    try
+    {
+        reader.open(file_path);
+        std::stringstream file_stream;
+        file_stream << reader.rdbuf();
+        reader.close();
+        file_contents_holder = new char[strlen(file_stream.str().c_str())];
+        strcpy(file_contents_holder, file_stream.str().c_str());
+    }
+    catch (std::ifstream::failure e)
+    {
+        std::cout << "failed to open file : " << file_path << std::endl;
+        return false;
+    }
+    return true;
 }

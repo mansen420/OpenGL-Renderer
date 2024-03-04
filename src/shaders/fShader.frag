@@ -6,15 +6,6 @@ in vec3 surface_normal;
 in vec2 tex_coord;
 in vec3 frag_pos;
 
-uniform sampler2D diffuse_maps[16];
-uniform sampler2D spec_maps[16];
-uniform int nr_valid_diffuse_maps;
-uniform int nr_valid_spec_maps;
-
-uniform sampler2D tex_sampler0;
-uniform sampler2D tex_sampler1;
-uniform sampler2D tex_sampler2;
-
 struct light 
 {
     vec4 pos;   //pos.w == 0 for directional light, pos == vec4(0) for ambient light,
@@ -28,7 +19,7 @@ struct spotlight
 };
 
 uniform bool emissive;
-uniform vec3 eye_pos;
+uniform vec3 view_vector;
 const int NR_LIGHTS = 5;
 uniform light lights[NR_LIGHTS];
 int valid_size = 1;
@@ -37,9 +28,10 @@ vec4 shade_directional(light dir_light);
 vec4 shade_point(light point_light);
 vec3 shade_spot(spotlight s_light);
 //statics
-vec4 diffuse_map = texture(diffuse_maps[0], tex_coord);
-vec4 spec_map = texture(spec_maps[0], tex_coord);
-vec3 object_color = vertex_color;
+vec3 obj_color = vec3(0.5, 0.5, 0.75);
+vec4 diffuse_map = vec4(obj_color, 1.0);
+vec4 spec_map = vec4(1.0);
+//vec3 object_color = vertex_color;
 
 const float SHININESS = 24.0;
 const float KL = 0.00;    //linear distance attenuation factor
@@ -63,19 +55,19 @@ void main()
     }
     spotlight s;
     s.core.color = vec3(1.0);
-    s.core.pos = vec4(eye_pos, 1);
+    s.core.pos = vec4(view_vector, 1);
     s.direction = vec3(0, 0, -1);
     s.cosine_angle = cos(radians(12.5));
     light_output += vec4(shade_spot(s), 1);
     light sunlight;
     sunlight.pos = vec4(0.0, -1.0, 0.0, 0.0);
     sunlight.color = vec3(1.0, 0.85, 0.65);
-    //light_output += shade_directional(sunlight);
+    light_output += shade_directional(sunlight);
     fragment_output = vec4(pow(light_output.rgb, vec3(1/gamma)), 1.0);
 }
 float spec(vec3 light_dir)
 {   //expects light_dir TOWARDS the surface
-    vec3 view_direction = normalize(eye_pos-frag_pos);
+    vec3 view_direction = normalize(view_vector-frag_pos);
     //vec3 reflect_direction = reflect(vec3(light_dir), normalize(surface_normal));
     vec3 halfway_vector;
     if (dot(normalize(surface_normal), normalize(light_dir))>0)
