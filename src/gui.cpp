@@ -328,7 +328,7 @@ void conditional_gui()
         if (load_shader_path)
             window::file_dialog.SetTypeFilters({".frag", ".vert", ".glsl", ".fs", ".vs"});
         if (load_obj_path)
-            window::file_dialog.SetTypeFilters({".obj"});
+            window::file_dialog.SetTypeFilters({".obj", ".OBJ"});
 
         window::file_dialog.Display();
         if (window::file_dialog.HasSelected())
