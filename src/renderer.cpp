@@ -5,6 +5,7 @@
 #include "object_interface.h"
 #include "camera_module.h"
 #include <fstream>
+#include <thread>
 
 //TODO add error logging for all opengl calls
 namespace renderer
@@ -35,7 +36,9 @@ namespace renderer
     static glm::mat4        view_transform;
     static glm::mat4 perspective_transform;
 
-    object_3D::object*    obj_ptr     = new object_3D::object;
+    static object_3D::object*    obj_ptr = new object_3D::object;
+    static object_3D::object*    obj_loader;
+    static bool should_switch_obj_ptrs = false;
 
     //screen quad texture data
     static float scr_tex_top_edge   = 1.0, scr_tex_bottom_edge = 0.0;
@@ -404,7 +407,10 @@ namespace renderer
         internal_state = ENGINE_SETTINGS;
 
         if(should_update_import)
-            update_import();
+        {
+            std::thread obj_thread(update_import);
+            obj_thread.detach();
+        }
         if (should_update_offscr_tex_params)
             update_offscreen_tex_params();
         if (should_update_scr_tex_coords)
@@ -413,7 +419,13 @@ namespace renderer
             update_projection();
         if(should_update_obj_mdl_trnsfrm)
             update_object_model_transform();
-        
+        if(should_switch_obj_ptrs)
+        {
+            delete obj_ptr;
+            obj_ptr = obj_loader;
+            obj_ptr->send_data();
+            should_switch_obj_ptrs = false;
+        }
         ENGINE_SETTINGS = internal_state;
     }
 
@@ -479,17 +491,15 @@ namespace renderer
     void update_import()
     {
         //TODO write virtual destructor?
-        object_3D::object* backup = obj_ptr; 
-        obj_ptr = new object_3D::object;
-        if(read_obj(internal_state.PATH_TO_OBJ, *obj_ptr))
+        object_3D::object* temp_ptr = new object_3D::object;
+        if(read_obj(internal_state.PATH_TO_OBJ, *temp_ptr))
         {
-            obj_ptr->send_data();
-            delete backup;
+            obj_loader = temp_ptr;
+            should_switch_obj_ptrs = true;
         }
         else
         {
-            delete obj_ptr;
-            obj_ptr = backup;
+            delete temp_ptr;
         }
     }
     void terminate()
