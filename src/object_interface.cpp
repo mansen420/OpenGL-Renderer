@@ -26,6 +26,7 @@ bool read_obj(std::string path, object_3D::object &obj)
     
     bool should_generate_normals = false;
 
+    std::cout << "Loading object : " << path << '\n';
     for(size_t i = 0; i < shapes.size(); i++)
     {   
         std::vector<unsigned int> recorded_indices;
@@ -34,19 +35,23 @@ bool read_obj(std::string path, object_3D::object &obj)
         {
             const unsigned int vertex_index = raw_indices[j].vertex_index;
             bool new_vertex = true;
-            for (size_t k = 0; k < recorded_indices.size(); k++) //is this vertex index recorded?
-            {
+
+            //TODO good news: disabling this check has massively sped up our object loading! :))))  
+            //bad news : I don't know why.
+
+            /*for (size_t k = 0; k < recorded_indices.size(); k++) //is this vertex index recorded?
+            {  
                 if(recorded_indices[k] == vertex_index) //vertex index is recorded
                 {
                     new_vertex = false;
                     break;
                 }
             }
-
-            if (new_vertex)  //construct and record the vertex
+            */
+            if (true)  //construct and record the vertex
             {
-                recorded_indices.push_back(vertex_index);
-                object_3D::vertex temp_vert;
+                //recorded_indices.push_back(vertex_index);
+                object_3D::vertex &temp_vert = vertices[vertex_index];
 
 
                 temp_vert.pos_coords.x = vertex_attribs.vertices[3*vertex_index + 0];
@@ -75,7 +80,7 @@ bool read_obj(std::string path, object_3D::object &obj)
                     temp_vert.tex_coords.x = vertex_attribs.texcoords[2*tex_index + 0];
                     temp_vert.tex_coords.y = vertex_attribs.texcoords[2*tex_index + 1];
                 }
-                vertices[vertex_index] = temp_vert;
+                std::cout << "Building vertices : " << float(j)/raw_indices.size() << '%'<< '\r';
             }
         }
 
@@ -87,14 +92,14 @@ bool read_obj(std::string path, object_3D::object &obj)
     for (size_t i = 0; i < shapes.size(); i++)
     {
         const std::vector<tinyobj::index_t> &indices = shapes[i].mesh.indices;
-        object_3D::mesh temp_mesh;
+        object_3D::mesh &temp_mesh = meshes[i];
         temp_mesh.indices = std::vector<unsigned int>(indices.size());
         for (size_t j = 0; j < indices.size(); j++)
         {
             //note that tinyobject.h takes care of offsetting the obj indices by 1 so we don't have to do it.
             temp_mesh.indices[j] = indices[j].vertex_index;
         }
-        meshes[i]              = temp_mesh;      //FIXME expensive copy?
+        //meshes[i]              = temp_mesh;      //FIXME expensive copy?
         meshes[i].material_idx = shapes[i].mesh.material_ids;
     }
 
@@ -106,7 +111,7 @@ bool read_obj(std::string path, object_3D::object &obj)
             int counter = 0;
             for (size_t j = 0; j < shapes[i].mesh.num_face_vertices.size(); j++)
             {
-                tinyobj::index_t first_face_index = shapes[i].mesh.indices[0 + counter];
+                const tinyobj::index_t &first_face_index = shapes[i].mesh.indices[0 + counter];
 
                 //TODO YES IT WORKS!! now just implement weighted per-vertex normals.
 
@@ -118,13 +123,13 @@ bool read_obj(std::string path, object_3D::object &obj)
                 vertex_attribs.vertices[3*first_face_index.vertex_index + 1],
                 vertex_attribs.vertices[3*first_face_index.vertex_index + 2]);
 
-                tinyobj::index_t second_face_index = shapes[i].mesh.indices[1 + counter];
+                const tinyobj::index_t &second_face_index = shapes[i].mesh.indices[1 + counter];
                 glm::vec3 B = glm::vec3 
                 (vertex_attribs.vertices[3*second_face_index.vertex_index + 0], 
                 vertex_attribs.vertices[3*second_face_index.vertex_index + 1], 
                 vertex_attribs.vertices[3*second_face_index.vertex_index + 2]);
 
-                tinyobj::index_t third_face_index = shapes[i].mesh.indices[2 + counter];
+                const tinyobj::index_t &third_face_index = shapes[i].mesh.indices[2 + counter];
                 glm::vec3 C = glm::vec3 
                 (vertex_attribs.vertices[3*third_face_index.vertex_index + 0], 
                 vertex_attribs.vertices[3*third_face_index.vertex_index + 1],
@@ -143,8 +148,9 @@ bool read_obj(std::string path, object_3D::object &obj)
         }
     }
     
-    //get textures 
-    std::vector<object_3D::material> &obj_materials = obj.materials;
+    //get textures
+    //HACK not worrying about textures for now!
+   /* std::vector<object_3D::material> &obj_materials = obj.materials;
     obj_materials = std::vector<object_3D::material>(materials.size());
     for (size_t i = 0; i < materials.size(); i++)
     {
@@ -161,7 +167,7 @@ bool read_obj(std::string path, object_3D::object &obj)
         file_name = materials[i].specular_texname;
         if (!file_name.empty())
             gen_texture((directory+file_name).c_str(), obj_materials[i].spec_map.id);
-    }
+    } */
     return true;
 }
 
