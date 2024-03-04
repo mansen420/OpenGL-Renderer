@@ -37,7 +37,7 @@ namespace renderer
 
     object_3D::object*    obj_ptr     = new object_3D::object;
 
-    //on-screen texture data
+    //screen quad texture data
     static float scr_tex_top_edge   = 1.0, scr_tex_bottom_edge = 0.0;
     static float scr_tex_right_edge = 1.0, scr_tex_left_edge   = 0.0;
     //parameters
@@ -128,6 +128,23 @@ namespace renderer
         else 
             return false;
         return program->link();
+    }
+    
+    void calculate_object_dimensions()
+    {
+        obj_ptr->calculate_dimensions();
+        ENGINE_SETTINGS.OBJ_DIMENSIONS = obj_ptr->dimensions;
+        ENGINE_SETTINGS.OBJ_CENTER     = obj_ptr->center;
+    }
+    void center_object()
+    {
+        ENGINE_SETTINGS.OBJ_DISPLACEMENT = -obj_ptr->center;
+    }
+    void rescale_object(float scale)
+    {
+        float max_dimension = 
+        std::max(obj_ptr->dimensions[0],std::max(obj_ptr->dimensions[1], obj_ptr->dimensions[2]));
+        ENGINE_SETTINGS.OBJ_SCALE_FACTOR = scale/max_dimension; 
     }
     /*---------------------------------------------------------------------------------*/
     /*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-* internal procedures *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*/
@@ -349,8 +366,8 @@ namespace renderer
     {
         if (obj_ptr == nullptr)
             return;
-        obj_ptr->model_transform = glm::translate(glm::mat4(1.0), internal_state.object_displacement) 
-        * glm::scale(glm::mat4(1.0), glm::vec3(internal_state.object_scale_factor));
+        obj_ptr->model_transform = glm::translate(glm::mat4(1.0), internal_state.OBJ_DISPLACEMENT) 
+        * glm::scale(glm::mat4(1.0), glm::vec3(internal_state.OBJ_SCALE_FACTOR));
     }
     void update_state()
     {   //TODO this is a primitive callback system. It works now, but maybe implement a more sophisticated system?
@@ -381,8 +398,8 @@ namespace renderer
             internal_state.FAR_PLANE  != ENGINE_SETTINGS.FAR_PLANE;
 
         should_update_obj_mdl_trnsfrm = 
-            internal_state.object_scale_factor != ENGINE_SETTINGS.object_scale_factor||
-            internal_state.object_displacement != ENGINE_SETTINGS.object_displacement;
+            internal_state.OBJ_SCALE_FACTOR != ENGINE_SETTINGS.OBJ_SCALE_FACTOR||
+            internal_state.OBJ_DISPLACEMENT != ENGINE_SETTINGS.OBJ_DISPLACEMENT;
         
         internal_state = ENGINE_SETTINGS;
 
@@ -461,7 +478,7 @@ namespace renderer
     }
     void update_import()
     {
-        //TODO write virutal destructor?
+        //TODO write virtual destructor?
         object_3D::object* backup = obj_ptr; 
         obj_ptr = new object_3D::object;
         if(read_obj(internal_state.PATH_TO_OBJ, *obj_ptr))

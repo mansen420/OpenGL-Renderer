@@ -221,25 +221,40 @@ void workspace_panel()
             Spacing();
             SeparatorText("Object Parameters");
             {
-                DragFloat("Scale Factor", &ENGINE_SETTINGS.object_scale_factor, 0.005);
+                DragFloat("Scale Factor", &ENGINE_SETTINGS.OBJ_SCALE_FACTOR, 0.005);
                 SameLine();
-                DragFloat3("Displacement", glm::value_ptr(ENGINE_SETTINGS.object_displacement), 0.01);
+                DragFloat3("Displacement", glm::value_ptr(ENGINE_SETTINGS.OBJ_DISPLACEMENT), 0.01);
 
-                static bool show_dimensions = true;
+                static bool show_dimensions = false;
                 if(Button("Calculate Dimensions"))
-                {}
+                {
+                    renderer::calculate_object_dimensions();
+                    show_dimensions = true;
+                }
                 SameLine();
                 if (Button("Center"))
-                {}
+                {
+                    renderer::center_object();
+                }
                 SameLine();
-                if(Button("Normalize Scale"))
-                {}
-                float dim[3]{1.2, -1.0, 0.0};
+                static float scale;
+                if(DragFloat("Normalize Object Scale", &scale, 0.005))
+                {
+                    renderer::rescale_object(scale);
+                }
                 if (show_dimensions)
                 {
-                    Text("Dimensions : ");SameLine();
+                    Text("Dimensions (before transforms) : ");SameLine();
                     std::ostringstream ss;
-                    ss << dim[0] << ' ' << dim[1] << ' ' << dim[2];
+                    ss << renderer::ENGINE_SETTINGS.OBJ_DIMENSIONS[0] << ' ' << renderer::ENGINE_SETTINGS.OBJ_DIMENSIONS[0]
+                    << ' ' << renderer::ENGINE_SETTINGS.OBJ_DIMENSIONS[0];
+                    Text(ss.str().c_str());
+
+                    ss.str(std::string()); //empty stream
+
+                    Text("Center (before transforms) : "); SameLine();
+                    ss << renderer::ENGINE_SETTINGS.OBJ_CENTER[0] << ' ' << renderer::ENGINE_SETTINGS.OBJ_CENTER[1]
+                    << ' ' << renderer::ENGINE_SETTINGS.OBJ_CENTER[2];
                     Text(ss.str().c_str());
                 }
             }

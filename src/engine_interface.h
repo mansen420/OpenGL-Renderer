@@ -46,7 +46,12 @@ namespace renderer
     
     struct engine_state_t
     {
-        std::string PATH_TO_OBJ;
+        std::string  PATH_TO_OBJ;
+        glm::vec3 OBJ_DIMENSIONS;
+        glm::vec3     OBJ_CENTER;
+
+        glm::vec3 OBJ_DISPLACEMENT;
+        float     OBJ_SCALE_FACTOR;
 
         bool DEPTH_CLR_ENBLD, COLOR_CLR_ENBLD, STENCIL_CLR_ENBLD;
         bool                DEPTH_TEST_ENBLD, STENCIL_TEST_ENBLD;
@@ -71,11 +76,10 @@ namespace renderer
         float     SCR_TEX_MAX_RATIO;
         float     SCR_TEX_MIN_RATIO;
                 
-        glm::vec3 object_displacement;
-        float     object_scale_factor;
         engine_state_t()
         {
             PATH_TO_OBJ = "assets/cube.obj"; 
+
 
             CLR_COLOR        = glm::vec4(0.6, 0.3, 0.3, 1.0);
             DEPTH_VIEW_COLOR = glm::vec3(1.0, 1.0, 1.0);
@@ -102,8 +106,10 @@ namespace renderer
 
             SHOW_REAL_RENDER_SIZE = false;
 
-            object_displacement = glm::vec3(0.0);
-            object_scale_factor = 1.0f;
+            OBJ_DISPLACEMENT = glm::vec3(0.0);
+            OBJ_SCALE_FACTOR =           1.0f;
+            OBJ_DIMENSIONS = glm::vec3(-1.0f);
+            OBJ_CENTER     =  glm::vec3(0.0f);
         }
     };
     extern engine_state_t ENGINE_SETTINGS;
@@ -161,7 +167,7 @@ namespace renderer
     
     void calculate_object_dimensions();
     void center_object();
-    void rescale_object();
+    void rescale_object(float scale);
 
     //TODO improve shader public interface
 
