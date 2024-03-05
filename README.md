@@ -19,7 +19,7 @@
   - [x]  Resizable rendering dimension, with configurable render to view port transform
   - [x]  Basic camera with input handling and time synchronization
   - [x]  Simple object operations (scaling, displacement)
-  - [x]  .obj file loading
+  - [x]  Multithreaded .obj file loading
   - [x]  GUI that exposes the entire engine state (ongoing)
   - [ ]  Shadow mapping
   - [ ]  A lot more
