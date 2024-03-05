@@ -232,6 +232,7 @@ void workspace_panel()
                     SameLine();
                     Text(ss.str().c_str());
                 }
+                Spacing();
                 DragFloat("Scale Factor", &ENGINE_SETTINGS.OBJ_SCALE_FACTOR, 0.005);
                 SameLine();
                 DragFloat3("Displacement", glm::value_ptr(ENGINE_SETTINGS.OBJ_DISPLACEMENT), 0.01);
@@ -249,13 +250,12 @@ void workspace_panel()
                 {
                     renderer::center_object();
                 }
-                SameLine();
                 static float scale;
                 if(DragFloat("Normalize Object Scale", &scale, 0.005))
                 {
                     renderer::rescale_object(scale);
                 }
-                
+                Spacing();
                 if (show_dimensions)
                 {
                     Text("Dimensions (before transforms) : ");SameLine();
