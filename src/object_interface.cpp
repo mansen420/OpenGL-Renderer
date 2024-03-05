@@ -37,7 +37,7 @@ bool read_obj(std::string path, object_3D::object &obj)
             bool new_vertex = true;
 
             //TODO good news: disabling this check has massively sped up our object loading! :))))  
-            //bad news : I don't know why.
+            //bad news : I don't know why it worked.
 
             /*for (size_t k = 0; k < recorded_indices.size(); k++) //is this vertex index recorded?
             {  
