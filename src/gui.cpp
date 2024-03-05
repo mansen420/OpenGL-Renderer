@@ -225,6 +225,8 @@ void workspace_panel()
                 SameLine();
                 DragFloat3("Displacement", glm::value_ptr(ENGINE_SETTINGS.OBJ_DISPLACEMENT), 0.01);
 
+                DragFloat3("Rotation", glm::value_ptr(ENGINE_SETTINGS.OBJ_ROTATION), 0.1);
+                SameLine();
                 static bool show_dimensions = false;
                 if(Button("Calculate Dimensions"))
                 {

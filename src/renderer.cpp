@@ -369,7 +369,13 @@ namespace renderer
     {
         if (obj_ptr == nullptr)
             return;
-        obj_ptr->model_transform = glm::translate(glm::mat4(1.0), internal_state.OBJ_DISPLACEMENT) 
+        glm::mat4 rotation = glm::rotate(glm::mat4(1.0), glm::radians(internal_state.OBJ_ROTATION.x), 
+        glm::vec3(1.0, 0.0, 0.0));
+        rotation = glm::rotate(rotation, glm::radians(internal_state.OBJ_ROTATION.y),
+        glm::vec3(0.0, 1.0, 0.0));
+        rotation = glm::rotate(rotation, glm::radians(internal_state.OBJ_ROTATION.z),
+        glm::vec3(0.0, 0.0, 1.0));
+        obj_ptr->model_transform = glm::translate(glm::mat4(1.0), internal_state.OBJ_DISPLACEMENT) * rotation
         * glm::scale(glm::mat4(1.0), glm::vec3(internal_state.OBJ_SCALE_FACTOR));
     }
     void update_state()
@@ -402,7 +408,8 @@ namespace renderer
 
         should_update_obj_mdl_trnsfrm = 
             internal_state.OBJ_SCALE_FACTOR != ENGINE_SETTINGS.OBJ_SCALE_FACTOR||
-            internal_state.OBJ_DISPLACEMENT != ENGINE_SETTINGS.OBJ_DISPLACEMENT;
+            internal_state.OBJ_DISPLACEMENT != ENGINE_SETTINGS.OBJ_DISPLACEMENT||
+            internal_state.OBJ_ROTATION     != ENGINE_SETTINGS.OBJ_ROTATION;
         
         internal_state = ENGINE_SETTINGS;
 
