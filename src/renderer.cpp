@@ -149,6 +149,14 @@ namespace renderer
         std::max(obj_ptr->dimensions[0],std::max(obj_ptr->dimensions[1], obj_ptr->dimensions[2]));
         ENGINE_SETTINGS.OBJ_SCALE_FACTOR = scale/max_dimension; 
     }
+    size_t object_nr_vertices()
+    {
+        return obj_ptr->nr_vertices();
+    }
+    size_t object_nr_triangles()
+    {
+        return obj_ptr->nr_triangles();
+    }
     /*---------------------------------------------------------------------------------*/
     /*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-* internal procedures *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*/
     /*---------------------------------------------------------------------------------*/

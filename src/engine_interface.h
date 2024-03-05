@@ -166,7 +166,8 @@ namespace renderer
         extern camera_parameter_t CAMERA_PARAMS;
     }
 
-    
+    size_t object_nr_vertices();
+    size_t object_nr_triangles();   
     void calculate_object_dimensions();
     void center_object();
     void rescale_object(float scale);

@@ -221,6 +221,17 @@ void workspace_panel()
             Spacing();
             SeparatorText("Object Parameters");
             {
+                {
+                    std::ostringstream ss;
+                    ss << renderer::object_nr_vertices() << " Vertices";
+                    Text(ss.str().c_str());
+
+                    ss.str(std::string());
+
+                    ss << renderer::object_nr_triangles() << " Triangles";
+                    SameLine();
+                    Text(ss.str().c_str());
+                }
                 DragFloat("Scale Factor", &ENGINE_SETTINGS.OBJ_SCALE_FACTOR, 0.005);
                 SameLine();
                 DragFloat3("Displacement", glm::value_ptr(ENGINE_SETTINGS.OBJ_DISPLACEMENT), 0.01);
@@ -244,6 +255,7 @@ void workspace_panel()
                 {
                     renderer::rescale_object(scale);
                 }
+                
                 if (show_dimensions)
                 {
                     Text("Dimensions (before transforms) : ");SameLine();
