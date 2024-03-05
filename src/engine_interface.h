@@ -52,6 +52,7 @@ namespace renderer
 
         glm::vec3 OBJ_DISPLACEMENT;
         float     OBJ_SCALE_FACTOR;
+        glm::vec3 OBJ_ROTATION;
 
         bool DEPTH_CLR_ENBLD, COLOR_CLR_ENBLD, STENCIL_CLR_ENBLD;
         bool                DEPTH_TEST_ENBLD, STENCIL_TEST_ENBLD;
@@ -106,10 +107,11 @@ namespace renderer
 
             SHOW_REAL_RENDER_SIZE = false;
 
-            OBJ_DISPLACEMENT = glm::vec3(0.0);
-            OBJ_SCALE_FACTOR =           1.0f;
-            OBJ_DIMENSIONS = glm::vec3(-1.0f);
-            OBJ_CENTER     =  glm::vec3(0.0f);
+            OBJ_SCALE_FACTOR =             1.0f;
+            OBJ_DISPLACEMENT =   glm::vec3(0.0);
+            OBJ_DIMENSIONS   = glm::vec3(-1.0f);
+            OBJ_CENTER       =  glm::vec3(0.0f);
+            OBJ_ROTATION     =   glm::vec3(0.0);
         }
     };
     extern engine_state_t ENGINE_SETTINGS;
