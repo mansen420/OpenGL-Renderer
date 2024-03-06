@@ -59,7 +59,6 @@ void window::render_gui()
 
     //TODO something about fonts
     GUI::render();
-    ImGui::ShowDemoWindow();
     
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

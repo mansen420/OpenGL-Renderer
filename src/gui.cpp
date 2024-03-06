@@ -273,6 +273,125 @@ void workspace_panel()
                 }
             }
             Spacing();
+            SeparatorText("Demos");
+            {
+                DragFloat3("Light Position", glm::value_ptr(renderer::ENGINE_SETTINGS.LIGHT_POS), 0.01f);
+                Spacing();
+                if(Button("John The Baptist"))
+                {
+                    renderer::ENGINE_SETTINGS.demo_obj = renderer::JOHN_THE_BAPTIST;
+                    renderer::ENGINE_SETTINGS.CLR_COLOR = glm::vec4(glm::vec3(0.0), 1.0);
+                    renderer::calculate_object_dimensions();
+                    renderer::rescale_object(2.0);
+                    renderer::ENGINE_SETTINGS.OBJ_ROTATION = glm::vec3(-90.0, 0.0, 0.0);
+                    renderer::ENGINE_SETTINGS.OBJ_DISPLACEMENT = glm::vec3(0.0, -1.0, 0.0);
+                }SameLine();
+                if(Button("Armored Man"))
+                {
+                    renderer::ENGINE_SETTINGS.demo_obj = renderer::ARMORED_MAN;
+                    renderer::calculate_object_dimensions();
+                    renderer::ENGINE_SETTINGS.CLR_COLOR = glm::vec4(glm::vec3(0.0), 1.0);
+                    renderer::rescale_object(2.0);
+                    renderer::ENGINE_SETTINGS.OBJ_ROTATION = glm::vec3(180.0, 0.0, 0.0);
+                    renderer::ENGINE_SETTINGS.OBJ_DISPLACEMENT = glm::vec3(-0.5, 1.0, 0.0);
+                }SameLine();
+                if(Button("Stanford Bunny"))
+                {
+                    renderer::ENGINE_SETTINGS.demo_obj = renderer::STANFORD_BUNNY;
+                    renderer::ENGINE_SETTINGS.CLR_COLOR = glm::vec4(glm::vec3(0.0), 1.0);
+                    renderer::calculate_object_dimensions();
+                    renderer::rescale_object(2.0);
+                    renderer::ENGINE_SETTINGS.OBJ_ROTATION = glm::vec3(0.0);
+                    renderer::ENGINE_SETTINGS.OBJ_DISPLACEMENT = glm::vec3(0.0, -1.0, 0.0);
+                }SameLine();
+                if(Button("BMW M3 E30"))
+                {
+                    renderer::calculate_object_dimensions();
+                    renderer::center_object();
+                    renderer::rescale_object(2.0);
+                    renderer::ENGINE_SETTINGS.OBJ_ROTATION = glm::vec3(0.0);
+                    renderer::ENGINE_SETTINGS.OBJ_DISPLACEMENT = glm::vec3(0.0, -1.0, 0.0);
+                    renderer::ENGINE_SETTINGS.demo_obj = BMW;
+                }SameLine();
+                if(Button("Engine"))
+                {
+                    renderer::ENGINE_SETTINGS.demo_obj = MOTOR_ENGINE;
+                    renderer::calculate_object_dimensions();
+                    renderer::center_object();
+                    renderer::rescale_object(3.0);
+                    renderer::ENGINE_SETTINGS.OBJ_ROTATION = glm::vec3(0.0);
+                }
+                static bool see_inside = false;
+                Checkbox("See Inside?", &see_inside);
+                SameLine();
+                
+                DragFloatRange2("Slice!", &ENGINE_SETTINGS.NEAR_PLANE,
+                &ENGINE_SETTINGS.FAR_PLANE, 0.001, 0.0001, 100.0, "%.3f", NULL, ImGuiSliderFlags_AlwaysClamp);
+                
+                ENGINE_SETTINGS.DEPTH_TEST_ENBLD = !see_inside;
+                Spacing();
+                static int current_shader_option = 0;
+                if (Combo("Object Shader", &current_shader_option, 
+                "Stone\0Highlight\0Horror\0Retro\0Matte\0Shiny\0\0\0"))
+                {
+                    switch (current_shader_option)
+                    {
+                    char* source;
+                    case 0:
+                        ENGINE_SETTINGS.RENDER_W = ENGINE_SETTINGS.RENDER_H = 1000;
+                        read_file("src/shaders/STATUE_DEMO/john_the_baptist.fs", source);
+                        strcpy(shader_code_buffer, source);
+                        renderer::update_shader(renderer::OBJECT_SHADER, renderer::FRAGMENT_SHADER, source);
+                        renderer::link_program(OBJECT_SHADER);
+                        delete[] source;
+                        break;
+                    case 1:
+                        ENGINE_SETTINGS.RENDER_W = ENGINE_SETTINGS.RENDER_H = 1000;
+                        read_file("src/shaders/STATUE_DEMO/armored_guy.fs", source);
+                        strcpy(shader_code_buffer, source);
+                        renderer::update_shader(renderer::OBJECT_SHADER, renderer::FRAGMENT_SHADER, source);
+                        renderer::link_program(OBJECT_SHADER);
+                        delete[] source;
+                        break;
+                    case 2:
+                        ENGINE_SETTINGS.LIGHT_POS = glm::vec3(0.0);
+                        ENGINE_SETTINGS.RENDER_W = ENGINE_SETTINGS.RENDER_H = 300;
+                        read_file("src/shaders/STATUE_DEMO/bunny.fs", source);
+                        strcpy(shader_code_buffer, source);
+                        renderer::update_shader(renderer::OBJECT_SHADER, renderer::FRAGMENT_SHADER, source);
+                        renderer::link_program(OBJECT_SHADER);
+                        delete[] source;
+                        break;
+                    case 3:
+                        ENGINE_SETTINGS.RENDER_W = ENGINE_SETTINGS.RENDER_H = 300;
+                        read_file("src/shaders/STATUE_DEMO/2D.fs", source);
+                        strcpy(shader_code_buffer, source);
+                        renderer::update_shader(renderer::OBJECT_SHADER, renderer::FRAGMENT_SHADER, source);
+                        renderer::link_program(OBJECT_SHADER);
+                        delete[] source;
+                        break;
+                    case 4:
+                        ENGINE_SETTINGS.RENDER_W = ENGINE_SETTINGS.RENDER_H = 1000;
+                        read_file("src/shaders/STATUE_DEMO/3D.fs", source);
+                        strcpy(shader_code_buffer, source);
+                        renderer::update_shader(renderer::OBJECT_SHADER, renderer::FRAGMENT_SHADER, source);
+                        renderer::link_program(OBJECT_SHADER);
+                        delete[] source;
+                        break;
+                   case 5:
+                        ENGINE_SETTINGS.RENDER_W = ENGINE_SETTINGS.RENDER_H = 1000;
+                        read_file("src/shaders/STATUE_DEMO/3D_shiny.fs", source);
+                        strcpy(shader_code_buffer, source);
+                        renderer::update_shader(renderer::OBJECT_SHADER, renderer::FRAGMENT_SHADER, source);
+                        renderer::link_program(OBJECT_SHADER);
+                        delete[] source;
+                        break;
+                    default:
+                        break;
+                    }
+                }
+            }
+            Spacing();
             EndTabItem();
         }
         if(BeginTabItem("Shaders"))
