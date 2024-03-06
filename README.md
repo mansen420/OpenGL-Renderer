@@ -56,8 +56,7 @@ This will compile and link with the GLFW library, and generate an executable cal
 
 
 
-You have probably run into an error at the final step, or any of the steps before it. 
-
+#
 
 This project is **heavily a work in progress** and so far is only maintained for Linux. \
 GCC compiles the project with no issue. The Visual Studio compiler is known to throw many errors.
