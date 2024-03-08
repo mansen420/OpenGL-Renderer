@@ -182,7 +182,20 @@ namespace object_3D
         vector<mesh> meshes;
         vector<material> materials;
         mat4 model_transform;
-
+        
+        size_t nr_vertices()
+        {
+            return vertices.size();
+        }
+        size_t nr_triangles()
+        {
+            size_t result = 0;
+            for (auto m : meshes)
+            {
+                result += m.indices.size();
+            }
+            return result/3;
+        }
         void calculate_dimensions()
         {
             if (vertices.size() == 0)

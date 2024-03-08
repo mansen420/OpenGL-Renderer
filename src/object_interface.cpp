@@ -168,6 +168,8 @@ bool read_obj(std::string path, object_3D::object &obj)
         if (!file_name.empty())
             gen_texture((directory+file_name).c_str(), obj_materials[i].spec_map.id);
     } */
+
+    std::cout << "\nLoaded object" << path << std::endl;
     return true;
 }
 

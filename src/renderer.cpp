@@ -38,6 +38,20 @@ namespace renderer
 
     static object_3D::object*    obj_ptr = new object_3D::object;
     static object_3D::object*    obj_loader;
+
+    //demo objects
+    static object_3D::object*     JOHN;
+    static object_3D::object*    JOHN_Loader;
+    static object_3D::object*    ARMOR;
+    static object_3D::object*    ARMOR_Loader;
+    static object_3D::object*    BUNNY;
+    static object_3D::object*    BUNNY_Loader;
+    static object_3D::object*    CAR;
+    static object_3D::object*    BMW_Loader;
+    static object_3D::object*    MOTOR;
+    static object_3D::object*    MOTOR_Loader;
+    static bool finished_loading = false;
+
     static bool should_switch_obj_ptrs = false;
 
     //screen quad texture data
@@ -149,6 +163,15 @@ namespace renderer
         std::max(obj_ptr->dimensions[0],std::max(obj_ptr->dimensions[1], obj_ptr->dimensions[2]));
         ENGINE_SETTINGS.OBJ_SCALE_FACTOR = scale/max_dimension; 
     }
+    size_t object_nr_vertices()
+    {
+        return obj_ptr->nr_vertices();
+    }
+    size_t object_nr_triangles()
+    {
+        return obj_ptr->nr_triangles();
+    }
+    
     /*---------------------------------------------------------------------------------*/
     /*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-* internal procedures *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*/
     /*---------------------------------------------------------------------------------*/
@@ -159,6 +182,9 @@ namespace renderer
     {
         using namespace glm;
         view_transform = lookAt(camera::POS, camera::LOOK_AT, camera::UP);
+
+        glUniform3f(glGetUniformLocation(object_shader_program_ptr->get_ID(), "light_pos"), 
+        internal_state.LIGHT_POS.x, internal_state.LIGHT_POS.y, internal_state.LIGHT_POS.z);
 
         glUniform3f(glGetUniformLocation(object_shader_program_ptr->get_ID(), "view_vector"), camera::POS.x, camera::POS.y, camera::POS.z);
         glUniformMatrix4fv(glGetUniformLocation(object_shader_program_ptr->get_ID(), "projection_transform"), 1, GL_FALSE,
@@ -383,7 +409,7 @@ namespace renderer
         camera::update_camera();
 
         bool should_update_import, should_update_scr_tex_coords, should_update_offscr_tex_params,
-        should_update_projection, should_update_obj_mdl_trnsfrm;
+        should_update_projection, should_update_obj_mdl_trnsfrm, should_update_demo_obj;
 
         should_update_import = 
             internal_state.PATH_TO_OBJ != ENGINE_SETTINGS.PATH_TO_OBJ;
@@ -411,6 +437,9 @@ namespace renderer
             internal_state.OBJ_DISPLACEMENT != ENGINE_SETTINGS.OBJ_DISPLACEMENT||
             internal_state.OBJ_ROTATION     != ENGINE_SETTINGS.OBJ_ROTATION;
         
+        should_update_demo_obj = 
+            internal_state.demo_obj != ENGINE_SETTINGS.demo_obj;
+
         internal_state = ENGINE_SETTINGS;
 
         if(should_update_import)
@@ -426,18 +455,89 @@ namespace renderer
             update_projection();
         if(should_update_obj_mdl_trnsfrm)
             update_object_model_transform();
+        if(finished_loading)
+        {
+            BUNNY = BUNNY_Loader;
+            BUNNY->send_data();
+
+            JOHN = JOHN_Loader;
+            JOHN->send_data();
+
+            ARMOR = ARMOR_Loader;
+            ARMOR->send_data();
+
+            CAR = BMW_Loader;
+            CAR->send_data();
+
+            MOTOR = MOTOR_Loader;
+            MOTOR->send_data();
+
+            finished_loading = false;
+        }
         if(should_switch_obj_ptrs)
         {
-            delete obj_ptr;
+            //delete obj_ptr;
             obj_ptr = obj_loader;
             obj_ptr->send_data();
             should_switch_obj_ptrs = false;
         }
+        if(should_update_demo_obj)
+        {
+            switch (ENGINE_SETTINGS.demo_obj)
+            {
+            case NONE:
+                break;
+            case ARMORED_MAN:
+                obj_ptr = ARMOR;
+                break;
+            case STANFORD_BUNNY:
+                    obj_ptr = BUNNY;
+                break;
+            case JOHN_THE_BAPTIST:
+                    obj_ptr = JOHN;
+                break;
+            case BMW:
+                    obj_ptr = CAR;
+                break;  
+            case MOTOR_ENGINE:
+                    obj_ptr = MOTOR;
+                break;     
+            default:
+                break;
+            }
+        }
+
         ENGINE_SETTINGS = internal_state;
     }
+    void load(std::string path,  object_3D::object* &loader)
+    {
+        object_3D::object* temp = new object_3D::object;
+        read_obj(path, *temp);
+        loader = temp;
+    }
+    void preload_objects()
+    {
+        std::thread a(load, "assets/FullBody_Decimated.obj", std::ref(ARMOR_Loader));
+        a.join();
 
+        std::thread j(load, "assets/John_the_Baptist.obj", std::ref(JOHN_Loader));
+        j.join();
+
+        std::thread b(load, "assets/stanford-bunny.obj", std::ref(BUNNY_Loader));
+        b.join();
+        
+        std::thread m(load, "assets/motorcycle-engine-obj/Motorcycle engine.obj", std::ref(MOTOR_Loader));
+        m.join();
+        
+        std::thread c(load, "assets/car/car.obj", std::ref(BMW_Loader));
+        c.join();
+        
+        finished_loading = true;
+    }
     int init()
     {
+        std::thread t(preload_objects);
+        t.detach();
         camera::init();
         {
             bool shader_success = true;
@@ -485,14 +585,15 @@ namespace renderer
         
         eng_log.open("engine_log.txt", std::ofstream::out | std::ofstream::trunc);
 
-        read_obj(internal_state.PATH_TO_OBJ, *obj_ptr);
-        obj_ptr->send_data();
+        //read_obj(internal_state.PATH_TO_OBJ, *obj_ptr);
+        //obj_ptr->send_data();
          
         if (!setup_offscreen_framebuffer(internal_state.RENDER_W, internal_state.RENDER_H))
             return false;
         update_screen_tex_coords();       
 
         update_projection();
+
         return true;
     }
     void update_import()
@@ -512,7 +613,7 @@ namespace renderer
     void terminate()
     {
         eng_log.close();        
-        delete obj_ptr;
+        //delete obj_ptr;
         delete[] scr_quad;
     }
 }
