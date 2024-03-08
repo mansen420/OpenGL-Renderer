@@ -71,6 +71,7 @@ namespace renderer
 
         size_t RENDER_W, RENDER_H;
         float  RENDER_AR;
+        unsigned int SHADOW_MAP_W, SHADOW_MAP_H;
 
         float NEAR_PLANE, FAR_PLANE, FOV;
 
@@ -98,6 +99,7 @@ namespace renderer
 
             RENDER_W   = 1920, RENDER_H = 1080;
             RENDER_AR  = 16.0/9.0;
+            SHADOW_MAP_H =    SHADOW_MAP_W = 1024;
             NEAR_PLANE = 0.1f, FAR_PLANE = 100.0f;
             FOV        = 45.0;
 

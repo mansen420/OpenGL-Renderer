@@ -5,28 +5,29 @@ out vec4 fragment_output;
 in vec3  frag_pos;
 in vec3    normal;
 in vec2 TexCoords;
+in vec4 lightspace_frag_pos;
 
 struct light
 {
     vec4 pos;
     vec3 color;
 };
-vec3 warm_color, cool_color;
 
 uniform vec3 view_vector;
 uniform vec3 light_pos;
+uniform sampler2D shadow_map;
+float calculate_shadow(vec4 lightspace_pos)
+{
+    vec3 projected_coordinates = lightspace_pos.xyz / lightspace_pos.w;
+    projected_coordinates *= 0.5;
+    projected_coordinates += 0.5;
 
-
-uniform sampler2D diffuse_maps[16];
-uniform int material_index;  //each mesh points to one material (temporary implementation)
-uniform int nr_valid_diffuse_maps;
-uniform int nr_valid_material_indices;
-
+    float closest_depth = texture(shadow_map, projected_coordinates.xy).r;
+    float current_depth = projected_coordinates.z;
+    return current_depth;
+}
 void main()
 {
-    warm_color = vec3(0.65, 0.4, 0.0);
-    cool_color = vec3(0.0, 0.2, 0.5);
-
     light foo_light = light(vec4(vec3(light_pos), 1.0), vec3(1.0));
 
     float t;
@@ -43,13 +44,12 @@ void main()
           s = 1.0*pow(s, 1.0);
     }
 
-
-    vec3 res = warm_color*t+(1-t)*cool_color;
-    res = s * vec3(1.0) + (1-s) * (res);
     fragment_output = 
 
     0*normalize(vec4(vec3(pow(t, 1)), 1.0)) 
 
     + 0.6*(vec4(vec3(s), 1.0))
     * (vec4(1.0, 1.0, 1.0, 1.0));
+
+    fragment_output = vec4(vec3(calculate_shadow(lightspace_frag_pos)), 1.0);
 }

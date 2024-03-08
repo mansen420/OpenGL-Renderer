@@ -39,8 +39,5 @@ void main()
     vec3 res = warm_color*t+(1-t)*cool_color;
     res = s * vec3(1.0) + (1-s) * (res);
     fragment_output = vec4(res, 1.0);
-    if (nr_valid_diffuse_maps > 0)
-    {
-        fragment_output *= texture(diffuse_maps[material_index], TexCoords);
-    }
+    fragment_output = pow(fragment_output, vec4(1.0/2.2));
 }

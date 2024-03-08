@@ -19,22 +19,26 @@ namespace renderer
            engine_state_t ENGINE_SETTINGS;    //public state 
     static engine_state_t  internal_state;   //actual state of the engine
 
-    //DO NOT initialize global non-POD variables in the global namespace. YOU HAVE BEEN WARNED!!  
+    //DO NOT initialize non-POD variables in the global scope. YOU HAVE BEEN WARNED!!  
     static shader_manager::shader_prg_t* postprocess_shader_program_ptr;
     static shader_manager::shader_prg_t*      object_shader_program_ptr;
+    static shader_manager::shader_prg_t*  shadow_map_shader_program_ptr;
 
     static std::map<unsigned int, shader_manager::shader_t*> shader_map;
 
-    static    unsigned int     offscr_tex_IDs[2];
     constexpr unsigned int     COLOR_TEX_IDX = 0, DEPTH_STENCIL_TEX_IDX = 1;
+    static    unsigned int          offscr_tex_IDs[2];
+    static    unsigned int     shadowmap_depth_tex_ID;
 
     constexpr unsigned int   SCR_FRAMEBUFFER_ID = 0;
     static    unsigned int offscreen_framebuffer_ID;
     static    unsigned int       screen_quad_vao_ID;
+    static    unsigned int shadowmap_framebuffer_ID;
 
     //TODO find a better way to handle these uniforms
     static glm::mat4        view_transform;
     static glm::mat4 perspective_transform;
+    static glm::mat4  lightspace_transform;
 
     class loadable_object 
     {
@@ -87,8 +91,9 @@ namespace renderer
         }
     };
     
-    static loadable_object                         my_object;
-    static object_3D::object*   &obj_ptr = my_object.obj_ptr;
+    static loadable_object                       my_object;
+    static object_3D::object* &obj_ptr = my_object.obj_ptr;
+    static object_3D::array_drawable*     ground_plane_ptr;
 
     //screen quad texture data
     static float scr_tex_top_edge   = 1.0, scr_tex_bottom_edge = 0.0;
@@ -183,6 +188,7 @@ namespace renderer
         return program->link();
     }
     
+    //TODO make these return size_t 
     void calculate_object_dimensions()
     {
         obj_ptr->calculate_dimensions();
@@ -214,7 +220,35 @@ namespace renderer
     void update_projection();
     void update_import();
 
-    void send_uniforms()
+    void send_shadow_map_uniforms()
+    {
+        using namespace glm;
+        glm::mat4 light_view_transform = lookAt(internal_state.LIGHT_POS, glm::vec3(0.0), glm::vec3(0.0, 1.0, 0.0));
+        glm::mat4 light_perspective_transform = glm::ortho(-10.f, 10.f, -10.f, 10.f, 0.1f, 10.f);
+
+        //glm::mat4 light_perspective_transform = glm::perspective(glm::radians(45.f), 1.f, 0.1f, 100.f);
+
+        glUniformMatrix4fv(glGetUniformLocation(shadow_map_shader_program_ptr->get_ID(), "projection_transform"), 1, GL_FALSE,
+        glm::value_ptr(light_perspective_transform));
+        glUniformMatrix4fv(glGetUniformLocation(shadow_map_shader_program_ptr->get_ID(), "view_transform"), 1, GL_FALSE,
+        glm::value_ptr(light_view_transform));
+
+        lightspace_transform = light_perspective_transform*light_view_transform;
+    }
+    void shadow_pass()
+    {
+        glEnable(GL_DEPTH_TEST);
+        glViewport(0, 0, internal_state.SHADOW_MAP_W, internal_state.SHADOW_MAP_H);
+        glBindFramebuffer(GL_FRAMEBUFFER, shadowmap_framebuffer_ID);
+        glClear(GL_DEPTH_BUFFER_BIT);
+
+        glUseProgram(shadow_map_shader_program_ptr->get_ID());
+        send_shadow_map_uniforms();
+
+        obj_ptr->draw(shadow_map_shader_program_ptr->get_ID());
+        ground_plane_ptr->draw(shadow_map_shader_program_ptr->get_ID());
+    }
+    void send_offscr_uniforms()
     {
         using namespace glm;
         view_transform = lookAt(camera::POS, camera::LOOK_AT, camera::UP);
@@ -227,6 +261,8 @@ namespace renderer
         glm::value_ptr(perspective_transform));
         glUniformMatrix4fv(glGetUniformLocation(object_shader_program_ptr->get_ID(), "view_transform"), 1, GL_FALSE,
         glm::value_ptr(view_transform));
+        glUniformMatrix4fv(glGetUniformLocation(object_shader_program_ptr->get_ID(), "lightspace_transform"), 1, GL_FALSE,
+        glm::value_ptr(lightspace_transform));
     }
     void offscreen_pass()
     {
@@ -238,10 +274,14 @@ namespace renderer
         glClear(GL_COLOR_BUFFER_BIT*internal_state.COLOR_CLR_ENBLD | GL_DEPTH_BUFFER_BIT*internal_state.DEPTH_CLR_ENBLD | GL_STENCIL_BUFFER_BIT*internal_state.STENCIL_CLR_ENBLD);
 
         glUseProgram(object_shader_program_ptr->get_ID());
- 
-        send_uniforms();
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, shadowmap_depth_tex_ID);
+
+        send_offscr_uniforms();
 
         obj_ptr->draw(object_shader_program_ptr->get_ID());
+        ground_plane_ptr->draw(object_shader_program_ptr->get_ID());
     }
     void postprocess_pass()
     {
@@ -249,7 +289,7 @@ namespace renderer
             glViewport(OPENGL_VIEWPORT_X, OPENGL_VIEWPORT_Y, internal_state.RENDER_W, internal_state.RENDER_H);
         else
             glViewport(OPENGL_VIEWPORT_X, OPENGL_VIEWPORT_Y, OPENGL_VIEWPORT_W, OPENGL_VIEWPORT_H);
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glBindFramebuffer(GL_FRAMEBUFFER, SCR_FRAMEBUFFER_ID);
         glClear(GL_COLOR_BUFFER_BIT);
         //if we do not disable the depth test here, the screen will draw over itself
         glDisable(GL_DEPTH_TEST);   
@@ -261,7 +301,8 @@ namespace renderer
         glActiveTexture(GL_TEXTURE0); 
         if(internal_state.DISPLAY_BUFFER == DEPTH)
         {
-            glBindTexture(GL_TEXTURE_2D, offscr_tex_IDs[DEPTH_STENCIL_TEX_IDX]);
+            //glBindTexture(GL_TEXTURE_2D, offscr_tex_IDs[DEPTH_STENCIL_TEX_IDX]);
+            glBindTexture(GL_TEXTURE_2D, shadowmap_depth_tex_ID);
             glUniform1i(glGetUniformLocation(postprocess_shader_program_ptr->get_ID(), "rendering_depth"), GL_TRUE);
             glUniform3f(glGetUniformLocation(postprocess_shader_program_ptr->get_ID(), "depth_view_color"), 
             internal_state.DEPTH_VIEW_COLOR.r, internal_state.DEPTH_VIEW_COLOR.g, internal_state.DEPTH_VIEW_COLOR.b);
@@ -279,6 +320,7 @@ namespace renderer
     void render_scene()
     {
         glClearColor(internal_state.CLR_COLOR.r, internal_state.CLR_COLOR.g, internal_state.CLR_COLOR.b, internal_state.CLR_COLOR.a);
+        shadow_pass();
         offscreen_pass();
         postprocess_pass();
     }
@@ -295,6 +337,44 @@ namespace renderer
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, internal_state.SCR_TEX_MAG_FLTR);
 
         glBindTexture(GL_TEXTURE_2D, 0);
+    }
+    bool setup_shadowmap_framebuffer(const unsigned int resolution_w, const unsigned int resolution_h)
+    {
+        if (glIsFramebuffer(offscreen_framebuffer_ID) == GL_TRUE)
+        {
+            glDeleteFramebuffers(1, &offscreen_framebuffer_ID);
+        }
+        glGenFramebuffers(1, &shadowmap_framebuffer_ID);
+        glBindFramebuffer(GL_FRAMEBUFFER, shadowmap_framebuffer_ID);
+
+        if(glIsTexture(shadowmap_depth_tex_ID) == GL_TRUE)
+        {
+            glDeleteTextures(1, &shadowmap_depth_tex_ID);
+        }
+        glGenTextures(1, &shadowmap_depth_tex_ID);
+
+        glBindTexture(GL_TEXTURE_2D, shadowmap_depth_tex_ID);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, resolution_w, resolution_h, 0, GL_DEPTH_COMPONENT,
+        GL_FLOAT, NULL);
+        //glTexStorage2D(GL_TEXTURE_2D, 1, GL_DEPTH_COMPONENT, resolution_w, resolution_h); 
+        glGenerateMipmap(GL_TEXTURE_2D);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, internal_state.SCR_TEX_MIN_FLTR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, internal_state.SCR_TEX_MAG_FLTR);
+
+        glBindTexture(GL_TEXTURE_2D, 0);
+
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, shadowmap_depth_tex_ID, 0);
+        glDrawBuffer(GL_NONE);
+        glReadBuffer(GL_NONE);
+
+        if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        {
+            std::cout << "SHADOW MAP FRAMEBUFFER INCOMPLETE : "<< glCheckFramebufferStatus(GL_FRAMEBUFFER) << std::endl;
+            return false;
+        }
+        glBindFramebuffer(GL_FRAMEBUFFER, SCR_FRAMEBUFFER_ID);
+        return true;
     }
     bool setup_offscreen_framebuffer(const size_t rendering_width, const size_t rendering_height)
     {
@@ -336,10 +416,10 @@ namespace renderer
 
         if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         {
-            std::cout << "FRAMEBUFFER INCOMPLETE : "<< glCheckFramebufferStatus(GL_FRAMEBUFFER) << std::endl;
+            std::cout << "OFF-SCREEN FRAMEBUFFER INCOMPLETE : "<< glCheckFramebufferStatus(GL_FRAMEBUFFER) << std::endl;
             return false;
         }
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glBindFramebuffer(GL_FRAMEBUFFER, SCR_FRAMEBUFFER_ID);
         return true;
     }
     void send_screen_coords()
@@ -490,11 +570,30 @@ namespace renderer
 
         ENGINE_SETTINGS = internal_state;
     }
+    void setup_ground_plane()
+    {
+        //TODO parameterize this 
+        float vertices[]
+        {
+            -1.0, -0.05,  1.0,     0.0, 1.0, 0.0,      0.0, 0.0,  //bottom left
+             1.0, -0.05,  1.0,     0.0, 1.0, 0.0,      1.0, 0.0,  //bottom right
+            -1.0, -0.05, -1.0,     0.0, 1.0, 0.0,      0.0, 1.0,  //top left
+
+             1.0, -0.05, -1.0,     0.0, 1.0, 0.0,      1.0, 1.0,  //top right
+             1.0, -0.05,  1.0,     0.0, 1.0, 0.0,      1.0, 0.0,  //botom right
+            -1.0, -0.05, -1.0,     0.0, 1.0, 0.0,      0.0, 0.0,  //top left
+        };
+        static object_3D::array_drawable ground_plane(vertices, sizeof(vertices));
+        ground_plane.send_data();
+        ground_plane_ptr = &ground_plane;
+        ground_plane.model_transform = glm::scale(glm::mat4(1.0), glm::vec3(100.f, 1.f, 100.f));
+    }
     int init()
     {
         my_object.load(internal_state.OBJECT_PATH.c_str());
         camera::init();
         {
+            //for the love of god make this a function or something man  
             bool shader_success = true;
             
             static shader_manager::shader_t obj_vert_shader(VERTEX_SHADER);
@@ -522,9 +621,26 @@ namespace renderer
             posprocess_shader_program.attach_shader(pp_frag_shader);
             posprocess_shader_program.attach_shader(pp_vert_shader);
             shader_success &= posprocess_shader_program.link();
-            
             postprocess_shader_program_ptr = &posprocess_shader_program;
 
+
+            static shader_manager::shader_t shadow_map_vert_shader(VERTEX_SHADER);
+            shader_success &= shadow_map_vert_shader.load_source_from_path("src/shaders/shadow_map.vs");
+            static shader_manager::shader_t shadow_map_frag_shader(FRAGMENT_SHADER);
+            shader_success &= shadow_map_frag_shader.load_source_from_path("src/shaders/shadow_map.fs");
+
+            shader_success &= shadow_map_frag_shader.compile() && shadow_map_vert_shader.compile();
+
+            static shader_manager::shader_prg_t shadow_map_shader_program;
+            shadow_map_shader_program.attach_shader(shadow_map_vert_shader);
+            shadow_map_shader_program.attach_shader(shadow_map_frag_shader);
+            shader_success &= shadow_map_shader_program.link();
+            shadow_map_shader_program_ptr = &shadow_map_shader_program;      
+
+            
+            shader_map.insert(std::pair<unsigned int, shader_manager::shader_t*>(shadow_map_vert_shader.get_ID(), &shadow_map_vert_shader));
+            shader_map.insert(std::pair<unsigned int, shader_manager::shader_t*>(shadow_map_frag_shader.get_ID(), &shadow_map_frag_shader));
+            
             shader_map.insert(std::pair<unsigned int, shader_manager::shader_t*>(obj_vert_shader.get_ID(), &obj_vert_shader));
             shader_map.insert(std::pair<unsigned int, shader_manager::shader_t*>(obj_frag_shader.get_ID(), &obj_frag_shader));
 
@@ -542,9 +658,14 @@ namespace renderer
 
         if (!setup_offscreen_framebuffer(internal_state.RENDER_W, internal_state.RENDER_H))
             return false;
-        update_screen_tex_coords();       
 
         update_projection();
+
+        if(!setup_shadowmap_framebuffer(internal_state.SHADOW_MAP_W, internal_state.SHADOW_MAP_H))
+            return false; //or proceed without shadow map?
+         
+        setup_ground_plane();
+        update_screen_tex_coords();       
 
         return true;
     }

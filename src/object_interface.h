@@ -245,6 +245,7 @@ namespace object_3D
         virtual void bind_VAO() const override {glBindVertexArray(VAO_id);}
         virtual void gl_draw(const unsigned int &program_id) const override
         {
+            //FIXME counting this every time is ineffecient
             const size_t nr_floats = size_t(array_size/sizeof(float));
             const unsigned int nr_floats_per_vertex = pos_dimension + (tex_dimension*texture) + (normals_dimension*normals);
             glDrawArrays(GL_TRIANGLES, 0, nr_floats/nr_floats_per_vertex);
