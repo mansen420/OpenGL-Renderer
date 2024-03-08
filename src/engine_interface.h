@@ -43,22 +43,12 @@ namespace renderer
         MIPMAP_LINEAR_NEAREST  =  GL_LINEAR_MIPMAP_NEAREST,
         MIPMAP_NEAREST_LINEAR  =  GL_NEAREST_MIPMAP_LINEAR
     };
-    enum object_demo_option
-    {
-        NONE,
-        JOHN_THE_BAPTIST,
-        ARMORED_MAN,
-        STANFORD_BUNNY,
-        BMW,
-        MOTOR_ENGINE
-    };
+    
     struct engine_state_t
     {
         glm::vec3 LIGHT_POS;
 
-        object_demo_option demo_obj;
-        
-        std::string  PATH_TO_OBJ;
+        std::string  OBJECT_PATH;
         glm::vec3 OBJ_DIMENSIONS;
         glm::vec3     OBJ_CENTER;
 
@@ -91,8 +81,8 @@ namespace renderer
                 
         engine_state_t()
         {
-            PATH_TO_OBJ = "assets/cube.obj"; 
-
+            OBJECT_PATH = "assets/stanford-bunny.obj"; 
+            
             LIGHT_POS = glm::vec3(1.0);
 
             CLR_COLOR        = glm::vec4(0.6, 0.3, 0.3, 1.0);

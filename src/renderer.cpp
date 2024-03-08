@@ -36,23 +36,59 @@ namespace renderer
     static glm::mat4        view_transform;
     static glm::mat4 perspective_transform;
 
-    static object_3D::object*    obj_ptr = new object_3D::object;
-    static object_3D::object*    obj_loader;
+    class loadable_object 
+    {
+        public :
 
-    //demo objects
-    static object_3D::object*     JOHN;
-    static object_3D::object*    JOHN_Loader;
-    static object_3D::object*    ARMOR;
-    static object_3D::object*    ARMOR_Loader;
-    static object_3D::object*    BUNNY;
-    static object_3D::object*    BUNNY_Loader;
-    static object_3D::object*    CAR;
-    static object_3D::object*    BMW_Loader;
-    static object_3D::object*    MOTOR;
-    static object_3D::object*    MOTOR_Loader;
-    static bool finished_loading = false;
+        object_3D::object* obj_ptr;
+        loadable_object() : obj_ptr(new object_3D::object), obj_loader(nullptr), should_update(false){}
+        //Reads object on a separate thread. 
+        //Note that this function will not affect the current obj_ptr until update() has been called AND only if the object has been loaded by that point!
+        void load(const char* path)
+        {
+            std::thread obj_thread(&loadable_object::prepare, this, path);
+            obj_thread.detach();
+        }
+        //Swaps current obj_ptr with newly loaded object, if available.
+        //Call this after load()
+        void update()
+        {
+            if(!should_update)
+                return;
 
-    static bool should_switch_obj_ptrs = false;
+            auto old_ptr = obj_ptr;
+
+            //FIXME calling this in prepare() causes segfault, why? 
+            //Calling send_data() in any non-main thread causes segfaults in general...
+            obj_loader->send_data();
+            obj_ptr = obj_loader;
+
+            delete old_ptr;        //delete old address
+            obj_loader = nullptr; //so that delete operations don't affect the current object address
+            should_update = false;
+        }
+        ~loadable_object()
+        {
+            delete obj_loader;
+            delete    obj_ptr;
+        }
+        
+        private:
+        bool should_update;
+        object_3D::object* obj_loader;
+        void prepare(const char* path)
+        {
+            delete obj_loader;
+            obj_loader =  new object_3D::object;
+            
+            read_obj(std::string(path), *obj_loader);
+
+            should_update = true;
+        }
+    };
+    
+    static loadable_object                         my_object;
+    static object_3D::object*   &obj_ptr = my_object.obj_ptr;
 
     //screen quad texture data
     static float scr_tex_top_edge   = 1.0, scr_tex_bottom_edge = 0.0;
@@ -407,12 +443,13 @@ namespace renderer
     void update_state()
     {   //TODO this is a primitive callback system. It works now, but maybe implement a more sophisticated system?
         camera::update_camera();
+        my_object.update();
 
         bool should_update_import, should_update_scr_tex_coords, should_update_offscr_tex_params,
-        should_update_projection, should_update_obj_mdl_trnsfrm, should_update_demo_obj;
+        should_update_projection, should_update_obj_mdl_trnsfrm;
 
         should_update_import = 
-            internal_state.PATH_TO_OBJ != ENGINE_SETTINGS.PATH_TO_OBJ;
+            internal_state.OBJECT_PATH != ENGINE_SETTINGS.OBJECT_PATH;
         
         should_update_scr_tex_coords =  //yeah, that's a lot!
             internal_state.RENDER_H            != ENGINE_SETTINGS.RENDER_H          || 
@@ -437,16 +474,11 @@ namespace renderer
             internal_state.OBJ_DISPLACEMENT != ENGINE_SETTINGS.OBJ_DISPLACEMENT||
             internal_state.OBJ_ROTATION     != ENGINE_SETTINGS.OBJ_ROTATION;
         
-        should_update_demo_obj = 
-            internal_state.demo_obj != ENGINE_SETTINGS.demo_obj;
 
         internal_state = ENGINE_SETTINGS;
 
         if(should_update_import)
-        {
-            std::thread obj_thread(update_import);
-            obj_thread.detach();
-        }
+            update_import();
         if (should_update_offscr_tex_params)
             update_offscreen_tex_params();
         if (should_update_scr_tex_coords)
@@ -455,89 +487,12 @@ namespace renderer
             update_projection();
         if(should_update_obj_mdl_trnsfrm)
             update_object_model_transform();
-        if(finished_loading)
-        {
-            BUNNY = BUNNY_Loader;
-            BUNNY->send_data();
-
-            JOHN = JOHN_Loader;
-            JOHN->send_data();
-
-            ARMOR = ARMOR_Loader;
-            ARMOR->send_data();
-
-            CAR = BMW_Loader;
-            CAR->send_data();
-
-            MOTOR = MOTOR_Loader;
-            MOTOR->send_data();
-
-            finished_loading = false;
-        }
-        if(should_switch_obj_ptrs)
-        {
-            //delete obj_ptr;
-            obj_ptr = obj_loader;
-            obj_ptr->send_data();
-            should_switch_obj_ptrs = false;
-        }
-        if(should_update_demo_obj)
-        {
-            switch (ENGINE_SETTINGS.demo_obj)
-            {
-            case NONE:
-                break;
-            case ARMORED_MAN:
-                obj_ptr = ARMOR;
-                break;
-            case STANFORD_BUNNY:
-                    obj_ptr = BUNNY;
-                break;
-            case JOHN_THE_BAPTIST:
-                    obj_ptr = JOHN;
-                break;
-            case BMW:
-                    obj_ptr = CAR;
-                break;  
-            case MOTOR_ENGINE:
-                    obj_ptr = MOTOR;
-                break;     
-            default:
-                break;
-            }
-        }
 
         ENGINE_SETTINGS = internal_state;
     }
-    void load(std::string path,  object_3D::object* &loader)
-    {
-        object_3D::object* temp = new object_3D::object;
-        read_obj(path, *temp);
-        loader = temp;
-    }
-    void preload_objects()
-    {
-        std::thread a(load, "assets/FullBody_Decimated.obj", std::ref(ARMOR_Loader));
-        a.join();
-
-        std::thread j(load, "assets/John_the_Baptist.obj", std::ref(JOHN_Loader));
-        j.join();
-
-        std::thread b(load, "assets/stanford-bunny.obj", std::ref(BUNNY_Loader));
-        b.join();
-        
-        std::thread m(load, "assets/motorcycle-engine-obj/Motorcycle engine.obj", std::ref(MOTOR_Loader));
-        m.join();
-        
-        std::thread c(load, "assets/car/car.obj", std::ref(BMW_Loader));
-        c.join();
-        
-        finished_loading = true;
-    }
     int init()
     {
-        std::thread t(preload_objects);
-        t.detach();
+        my_object.load(internal_state.OBJECT_PATH.c_str());
         camera::init();
         {
             bool shader_success = true;
@@ -585,9 +540,6 @@ namespace renderer
         
         eng_log.open("engine_log.txt", std::ofstream::out | std::ofstream::trunc);
 
-        //read_obj(internal_state.PATH_TO_OBJ, *obj_ptr);
-        //obj_ptr->send_data();
-         
         if (!setup_offscreen_framebuffer(internal_state.RENDER_W, internal_state.RENDER_H))
             return false;
         update_screen_tex_coords();       
@@ -598,22 +550,11 @@ namespace renderer
     }
     void update_import()
     {
-        //TODO write virtual destructor?
-        object_3D::object* temp_ptr = new object_3D::object;
-        if(read_obj(internal_state.PATH_TO_OBJ, *temp_ptr))
-        {
-            obj_loader = temp_ptr;
-            should_switch_obj_ptrs = true;
-        }
-        else
-        {
-            delete temp_ptr;
-        }
+        my_object.load(internal_state.OBJECT_PATH.c_str());
     }
     void terminate()
     {
         eng_log.close();        
-        //delete obj_ptr;
         delete[] scr_quad;
     }
 }
