@@ -69,6 +69,8 @@ void renderer::camera::update_camera()
         internal_state.PHI = internal_state.PHI >  89.9 ?  89.9 : internal_state.PHI;
         internal_state.PHI = internal_state.PHI < -89.9 ? -89.9 : internal_state.PHI;
 
+        internal_state.THETA = fmod(internal_state.THETA, 360.0);
+
         //TODO for some reason the order of matrix multiplication is significant here. Why?
         renderer::camera::POS = (
         glm::rotate(glm::mat4(1.0), glm::radians(internal_state.THETA), glm::vec3(0.f, 1.f, 0.f)) 

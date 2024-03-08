@@ -273,7 +273,7 @@ void workspace_panel()
                 }
             }
             Spacing();
-            SeparatorText("Demos");
+            SeparatorText("Scene Parameters");
             {
                 DragFloat3("Light Position", glm::value_ptr(renderer::ENGINE_SETTINGS.LIGHT_POS), 0.01f);
                 Spacing();
