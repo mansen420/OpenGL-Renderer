@@ -27,3 +27,10 @@ It's all coming together
 
 ![ezgif-2-c1abe71fce](https://github.com/mansen420/OpenGL-Renderer/assets/50342436/aa99a9af-2613-4a7a-b8f1-c1901056d486)
 
+### Shadow Mapping
+I have PTSD from messing the direct draw calls in OpenGL, and this time is no different. \
+This took me a few hours of debugging, and part of my sanity, to stumble my way into making it work. But it works!
+![Screenshot from 2024-03-09 02-08-19](https://github.com/mansen420/OpenGL-Renderer/assets/50342436/980a54cb-03e8-4d2b-abad-2f1e619bef20)
+
+![Screenshot from 2024-03-09 02-21-49](https://github.com/mansen420/OpenGL-Renderer/assets/50342436/54f5a006-7b88-488d-bd90-a2285fefb551)
+
