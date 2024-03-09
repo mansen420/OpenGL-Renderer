@@ -21,7 +21,7 @@
   - [x]  Simple object operations (scaling, displacement)
   - [x]  Multithreaded .obj file loading
   - [x]  GUI that exposes the entire engine state (ongoing)
-  - [ ]  Shadow mapping
+  - [x]  Shadow mapping
   - [ ]  A lot more
 
 ![screenshot-from-2024-03-01-00-](https://github.com/mansen420/OpenGL-Renderer/assets/50342436/fde54939-884a-49d8-a7fb-b1fbf205be6b)
