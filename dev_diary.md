@@ -37,3 +37,4 @@ This took me a few hours of debugging, and part of my sanity, to stumble my way 
 
 ![Screenshot from 2024-03-09 02-21-49](https://github.com/mansen420/OpenGL-Renderer/assets/50342436/54f5a006-7b88-488d-bd90-a2285fefb551)
 
+![Screenshot from 2024-03-09 03-00-27](https://github.com/mansen420/OpenGL-Renderer/assets/50342436/ecc5c314-e27f-410d-bccc-bfd59bd4ceec)
