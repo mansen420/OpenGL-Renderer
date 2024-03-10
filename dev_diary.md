@@ -17,16 +17,19 @@ Correct result :
 
 ![Screencast from 17-02-24 17 24 50](https://github.com/mansen420/OpenGL-Renderer/assets/50342436/17e3354c-a452-44a3-b4f9-d627923518c8)
 
+#
 ### Runtime Shader Editing
 Finally!
 
 ![shader_editing](https://github.com/mansen420/OpenGL-Renderer/assets/50342436/945dc70f-1918-438c-8d40-bdc0430934aa)
 
+#
 ### Camera and Object Operations
 It's all coming together 
 
 ![ezgif-2-c1abe71fce](https://github.com/mansen420/OpenGL-Renderer/assets/50342436/aa99a9af-2613-4a7a-b8f1-c1901056d486)
 
+#
 ### Shadow Mapping
 I have PTSD from messing the direct draw calls in OpenGL, and this time is no different. \
 This took me a few hours of debugging, and part of my sanity, to stumble my way into making it work. But it works!
@@ -34,3 +37,4 @@ This took me a few hours of debugging, and part of my sanity, to stumble my way 
 
 ![Screenshot from 2024-03-09 02-21-49](https://github.com/mansen420/OpenGL-Renderer/assets/50342436/54f5a006-7b88-488d-bd90-a2285fefb551)
 
+![Screenshot from 2024-03-09 03-00-27](https://github.com/mansen420/OpenGL-Renderer/assets/50342436/ecc5c314-e27f-410d-bccc-bfd59bd4ceec)
