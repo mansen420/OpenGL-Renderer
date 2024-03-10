@@ -191,6 +191,9 @@ namespace renderer
     bool compile_shader(shader_prg_option program_type, shader_type_option shader_type);
     //Attempts to link program. Returns false upon unsuccessful linkage.
     bool link_program(shader_prg_option program_type);
+    //Invokes the preprocessor on the specifid shader program, replacing its source code with the processed code.
+    //Note that after calling this, it becomes impossible to access the old code.
+    bool unroll_includes(shader_prg_option program_type, shader_type_option shader_type);
 
     //Initializes internal engine state. Call this only once, and only after you call window::init.
     int          init();

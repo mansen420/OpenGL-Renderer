@@ -34,14 +34,15 @@ bool readFile(const char* file_path, char* &file_contents_holder)
     }
     return true;
 }
-bool compileShader(const shader_type_option shader, const unsigned int &shader_id, const char* const &shader_source)
+bool compileShader(const shader_type_option shader, const unsigned int &shader_id, const char* shader_source)
 {
-    char* processed_shader_source;
+    char* processed_shader_source = nullptr;
     if (!preprocessor::process_shader(shader_source, processed_shader_source))
     {
         delete[] processed_shader_source;
         return false;
     }
+
     glShaderSource(shader_id, 1, &processed_shader_source, NULL);
     glCompileShader(shader_id);
     {
@@ -107,6 +108,9 @@ bool shader_manager::shader_t::load_source_from_path(const char* const path)
         return false;
 }  
 bool shader_manager::shader_t::compile() const{return compileShader(type, ID, source_code.c_str());}
+bool shader_manager::shader_t::unroll_includes()
+{
+}
 shader_manager::shader_t::~shader_t()
 {
     if(glIsShader(ID) == GL_TRUE)

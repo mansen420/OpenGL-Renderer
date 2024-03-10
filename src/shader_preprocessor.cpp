@@ -5,18 +5,24 @@
 #include "read_file.h"
 #include "shader_preprocessor.h"
 
-bool internal_process_shader(const char* const source, char* &processed_source_holder, std::vector<std::string> included_paths = std::vector<std::string>())
+std::stringstream preprocessor_log;
+static std::ofstream log_file("preprocessor_log.txt", std::ofstream::out | std::ofstream::trunc);
+
+bool internal_process_shader(const char* source, char* &processed_source_holder, std::vector<std::string> included_paths = std::vector<std::string>())
 {
     constexpr char EMPTY_SPACE =  ' ';
     constexpr char NEW_LINE    = '\n';
     constexpr char END_OF_FILE = '\0';
 
+    preprocessor_log << "BEGIN.\nINPUT : " << strlen(source) << NEW_LINE;
+
     const char* char_ptr = source;
-    const size_t LENGTH = strlen(source);
+    const size_t LENGTH = strlen(char_ptr);
+
     //WARNING : don't use the fill constructor with pushback()! reserve() instead...!
     std::vector<char> processed_source; 
     processed_source.reserve(LENGTH);
-    
+    size_t counter = 0;
     while (*char_ptr != END_OF_FILE)
     {
         if(*char_ptr == '#')
@@ -28,7 +34,7 @@ bool internal_process_shader(const char* const source, char* &processed_source_h
             std::string token(char_ptr, token_ptr);
             if(token == "#include")
             {
-                std::cout << "INCLUDING FILE : ";
+                preprocessor_log << "\nINCLUDING FILE : ";
 
                 //skip to next token or end of line or end of file
                 while(*token_ptr == EMPTY_SPACE && *token_ptr != NEW_LINE && *token_ptr != END_OF_FILE)
@@ -64,7 +70,7 @@ bool internal_process_shader(const char* const source, char* &processed_source_h
                     }
                 }
 
-                std::cout << input << std::endl;
+                preprocessor_log << input << std::endl;
 
                 char* file;
                 for(auto s : included_paths)
@@ -101,14 +107,24 @@ bool internal_process_shader(const char* const source, char* &processed_source_h
         }
         processed_source.push_back(*(char_ptr++));
     }
+    //add the terminating character so that strcpy() works properly
+    processed_source.push_back(END_OF_FILE);
+
+    preprocessor_log << "VECTOR SIZE : " << processed_source.size() << NEW_LINE;
 
     processed_source_holder = new char[processed_source.size()];
+
     strcpy(processed_source_holder, processed_source.data());
+
+    preprocessor_log << "OUTPUT : " << strlen(processed_source_holder) << NEW_LINE;
+    preprocessor_log << "FIN.\n"; 
     
+
+    std::cout << preprocessor_log.rdbuf() << std::endl;
+    log_file << preprocessor_log.rdbuf() << std::endl;
     return true;
-}
-        
-bool renderer::preprocessor::process_shader(const char* const source, char* &processed_source_holder)
+}    
+bool renderer::preprocessor::process_shader(const char* source, char* &processed_source_holder)
 {
     return internal_process_shader(source, processed_source_holder);
 }
