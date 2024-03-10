@@ -22,9 +22,9 @@ bool internal_process_shader(const char* source, char* &processed_source_holder,
     //WARNING : don't use the fill constructor with pushback()! reserve() instead...!
     std::vector<char> processed_source; 
     processed_source.reserve(LENGTH);
-    size_t counter = 0;
     while (*char_ptr != END_OF_FILE)
     {
+        //TODO this doesn't account for paths with spaces. read everything between the quotes as input.
         if(*char_ptr == '#')
         {
             const char* token_ptr = char_ptr;
@@ -44,7 +44,7 @@ bool internal_process_shader(const char* source, char* &processed_source_holder,
                 while (*input_ptr != EMPTY_SPACE && *input_ptr != NEW_LINE && *input_ptr != END_OF_FILE)
                     input_ptr++;
                 
-                //FIXME knowsn issue : faults when #include at the end of file with no empty space OR just one char...?
+                //FIXME knowsn issue : faults when #include at the end of file with no empty space.
                 //this will probably never be a real issue but whatever...
                 
                 if(input_ptr == token_ptr)
