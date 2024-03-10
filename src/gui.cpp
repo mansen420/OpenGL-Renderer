@@ -282,10 +282,13 @@ void workspace_panel()
                 if (Combo("Object Shader", &current_shader_option, 
                 "Stone\0Highlight\0Horror\0Retro\0Matte\0Shiny\0\0\0"))
                 {
+                    std::cout << "COMBO : " << current_shader_option << std::endl;
                     std::function load([](const char* path) -> void 
                     {
                         char* source;
+                        std::cout << "BEFORE" << std::endl;
                         read_file(path, source);
+                        std::cout << "AFTER" << std::endl;
                         strcpy(shader_code_buffer, source);
                         renderer::update_shader(renderer::OBJECT_SHADER, renderer::FRAGMENT_SHADER, source);
                         renderer::link_program(OBJECT_SHADER);
@@ -334,6 +337,7 @@ void workspace_panel()
 
             if(Button("Load File"))
             {
+                //TODO wrap this in a function call for the love of all that is sacred
                 window::file_dialog.Open();
                 should_show_filedialog = true;
                 load_shader_path = true;
@@ -360,6 +364,12 @@ void workspace_panel()
                 if(prog_type_option == 1)
                     prog_type = renderer::POSTPROCESS_SHADER;
                 should_load_shader = true;
+            }
+            SameLine();
+            if(Button("Unroll Includes"))
+            {
+                if (renderer::unroll_includes(prog_type, shader_type))
+                    should_load_shader = true;
             }
             PopItemWidth();
 

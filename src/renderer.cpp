@@ -121,6 +121,7 @@ namespace renderer
 
     //TODO implement a system of identifiying programs and shaders for dynamic stuff
     //TODO might be better to stop using std::strings for shader code, not every user may want to include the string header
+    //TODO shader could be nullptr
     shader_manager::shader_t* find_shader(shader_prg_option program_type, shader_type_option shader_type)
     {
         //search shader map for shaders attached to program of type shader.
@@ -129,7 +130,8 @@ namespace renderer
             prg_ptr = postprocess_shader_program_ptr;
         if (program_type == OBJECT_SHADER)
             prg_ptr = object_shader_program_ptr;
-        //TODO provide else statement
+        else //unknown program
+            return nullptr;
         const unsigned int* shader_IDs = prg_ptr->get_attached_shader_IDs();
         const size_t IDs_size          =    prg_ptr->num_attached_shaders();
 
@@ -146,7 +148,7 @@ namespace renderer
         return shader;
     }
     const char* get_shader_source_reflection(shader_prg_option program_type, shader_type_option shader_type)
-    {  //TODO shader could be nullptr
+    {  
         const shader_manager::shader_t* shader = find_shader(program_type, shader_type);
         return shader->source_code.c_str();
     }
@@ -163,8 +165,10 @@ namespace renderer
     bool update_shader(shader_prg_option program_type, shader_type_option shader_type, const char* source)
     {
         shader_manager::shader_t* shader = find_shader(program_type, shader_type);
-        const std::string& backup = shader->source_code;
+
+        const std::string backup = shader->source_code;
         shader->source_code = std::string(source);
+        
         if(shader->compile())
             return true;
         else
@@ -173,6 +177,16 @@ namespace renderer
             shader->compile();
             return false;
         }
+    }
+    bool unroll_includes(shader_prg_option program_type, shader_type_option shader_type)
+    {
+        shader_manager::shader_t* shader = find_shader(program_type, shader_type);
+        if (nullptr == shader)
+        {
+            return false;
+        }
+        shader->unroll_includes();
+        return true;
     }
     //TODO it would be better to relink the program upon any attempt to compile any of its attached shaders.
     bool link_program(shader_prg_option program_type)
