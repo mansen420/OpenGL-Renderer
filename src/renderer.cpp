@@ -181,15 +181,12 @@ namespace renderer
     bool unroll_includes(shader_prg_option program_type, shader_type_option shader_type)
     {
         shader_manager::shader_t* shader = find_shader(program_type, shader_type);
-        std::cout << shader << std::endl;
         if (nullptr == shader)
         {
-            std::cout << "HI." << std::endl;
             return false;
-        }//XXX WHAT THE FUCK
-        std::cout << "HI. yo." << std::endl;
-        //std::cout << shader;
-        //shader->unroll_includes();
+        }
+        shader->unroll_includes();
+        return true;
     }
     //TODO it would be better to relink the program upon any attempt to compile any of its attached shaders.
     bool link_program(shader_prg_option program_type)

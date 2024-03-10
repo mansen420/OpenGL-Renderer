@@ -368,15 +368,15 @@ void workspace_panel()
             SameLine();
             if(Button("Unroll Includes"))
             {
-                if (renderer::unroll_includes(prog_type, shader_type)){std::cout << "HI?" << std::endl;}
-                    //should_load_shader = true;
+                if (renderer::unroll_includes(prog_type, shader_type))
+                    should_load_shader = true;
             }
             PopItemWidth();
 
             if (should_load_shader)
             {
                 strcpy(shader_code_buffer, renderer::get_shader_source_reflection(prog_type, shader_type));
-                //should_load_shader = false;
+                should_load_shader = false;
             }
 
             ImGui::InputTextMultiline("##source", shader_code_buffer, sizeof(shader_code_buffer), whole_window->Size);

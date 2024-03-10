@@ -110,6 +110,11 @@ bool shader_manager::shader_t::load_source_from_path(const char* const path)
 bool shader_manager::shader_t::compile() const{return compileShader(type, ID, source_code.c_str());}
 bool shader_manager::shader_t::unroll_includes()
 {
+    char* processed_source =  nullptr;
+    renderer::preprocessor::process_shader(source_code.c_str(), processed_source);
+    source_code = std::string(processed_source);
+    delete[] processed_source;
+    return true;
 }
 shader_manager::shader_t::~shader_t()
 {
