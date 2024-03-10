@@ -6,7 +6,6 @@
 #include "camera_module.h"
 #include <fstream>
 #include <thread>
-
 //TODO add error logging for all opengl calls
 namespace renderer
 {

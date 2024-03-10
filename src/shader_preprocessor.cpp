@@ -1,0 +1,114 @@
+#include <iostream>
+#include <chrono>
+#include <vector>
+#include <string>
+#include "read_file.h"
+#include "shader_preprocessor.h"
+
+bool internal_process_shader(const char* const source, char* &processed_source_holder, std::vector<std::string> included_paths = std::vector<std::string>())
+{
+    constexpr char EMPTY_SPACE =  ' ';
+    constexpr char NEW_LINE    = '\n';
+    constexpr char END_OF_FILE = '\0';
+
+    const char* char_ptr = source;
+    const size_t LENGTH = strlen(source);
+    //WARNING : don't use the fill constructor with pushback()! reserve() instead...!
+    std::vector<char> processed_source; 
+    processed_source.reserve(LENGTH);
+    
+    while (*char_ptr != END_OF_FILE)
+    {
+        if(*char_ptr == '#')
+        {
+            const char* token_ptr = char_ptr;
+            //read token
+            while(*token_ptr != EMPTY_SPACE && *token_ptr != NEW_LINE && *token_ptr != END_OF_FILE)
+                token_ptr++;
+            std::string token(char_ptr, token_ptr);
+            if(token == "#include")
+            {
+                std::cout << "INCLUDING FILE : ";
+
+                //skip to next token or end of line or end of file
+                while(*token_ptr == EMPTY_SPACE && *token_ptr != NEW_LINE && *token_ptr != END_OF_FILE)
+                    token_ptr++;
+                //read input
+                const char* input_ptr = token_ptr;
+                while (*input_ptr != EMPTY_SPACE && *input_ptr != NEW_LINE && *input_ptr != END_OF_FILE)
+                    input_ptr++;
+                
+                //FIXME knowsn issue : faults when #include at the end of file with no empty space OR just one char...?
+                //this will probably never be a real issue but whatever...
+                
+                if(input_ptr == token_ptr)
+                {
+                    std::cout << "\nEMPTY INPUT FOUND.\nPREPROCESSOR TERMINATED." << std::endl;
+                    return false;
+                }
+                std::string input(token_ptr, input_ptr);
+                if(input.at(0) == '\'' || input.at(0) == '\"')
+                {
+                    input.erase(0, 1);
+                    if(input.size() == 0)
+                    {
+                        std::cout << "\nODD QUOTES FOUND.\nPREPROCESSOR TERMINATED." << std::endl;
+                        return false;
+                    }
+                    if(input.at(input.size() - 1) == '\'' || input.at(input.size() - 1) == '\"' )
+                        input.erase(input.size() - 1, 1);
+                    else
+                    {
+                        std::cout << "\nODD QUOTES FOUND.\nPREPROCESSOR TERMINATED." << std::endl;
+                        return false;
+                    }
+                }
+
+                std::cout << input << std::endl;
+
+                char* file;
+                for(auto s : included_paths)
+                {
+                    if (s == input)
+                    {   //TODO including the same file twice will also cause this error, is this intended?
+                        std::cout << "\nCIRCULAR DEPENDENCY FOUND.\nPREPROCESSOR TERMINATED." << std::endl;
+                        return false;
+                    }
+                }
+                included_paths.push_back(input);
+                if (!readFile(input.c_str(), file))
+                    return false;
+                
+                //WARNING : never mutate a pointer you are going to delete[] later. Better make it const if possible.
+                const char* const file_ptr = file;
+                char* processed_file = nullptr;
+                
+                if (!internal_process_shader(file_ptr, processed_file, included_paths))
+                    return false;
+
+                size_t PROCESSED_LENGTH = strlen(processed_file);
+                processed_source.reserve(processed_source.size() + PROCESSED_LENGTH);
+
+                const char* processed_file_ptr = processed_file; 
+                while (*processed_file_ptr != END_OF_FILE)
+                    processed_source.push_back(*(processed_file_ptr++));
+                    
+                delete[]           file;
+                delete[] processed_file;
+                char_ptr = input_ptr;
+                continue;
+            }
+        }
+        processed_source.push_back(*(char_ptr++));
+    }
+
+    processed_source_holder = new char[processed_source.size()];
+    strcpy(processed_source_holder, processed_source.data());
+    
+    return true;
+}
+        
+bool renderer::preprocessor::process_shader(const char* const source, char* &processed_source_holder)
+{
+    return internal_process_shader(source, processed_source_holder);
+}

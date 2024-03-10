@@ -8,7 +8,7 @@
 #include <vector>
 #include <map>
 #include "engine_interface.h"
-
+#include "shader_preprocessor.h"
 using namespace renderer;
 
 //helper functions
@@ -36,7 +36,13 @@ bool readFile(const char* file_path, char* &file_contents_holder)
 }
 bool compileShader(const shader_type_option shader, const unsigned int &shader_id, const char* const &shader_source)
 {
-    glShaderSource(shader_id, 1, &shader_source, NULL);
+    char* processed_shader_source;
+    if (!preprocessor::process_shader(shader_source, processed_shader_source))
+    {
+        delete[] processed_shader_source;
+        return false;
+    }
+    glShaderSource(shader_id, 1, &processed_shader_source, NULL);
     glCompileShader(shader_id);
     {
         int success_status;
@@ -46,10 +52,12 @@ bool compileShader(const shader_type_option shader, const unsigned int &shader_i
         { 
             glGetShaderInfoLog(shader_id, 512, NULL, infoLog);
             std::cout << "compilation failed : " << (shader == VERTEX_SHADER ? "vertex  shader" : "fragment shader") 
-            << "\n" << infoLog << std::endl; 
+            << "\n" << infoLog << std::endl;
+            delete[] processed_shader_source;
             return false;
         }
     }
+    delete[] processed_shader_source;
     return true;
 }
 bool linkShaders(unsigned int &program_id, std::vector<unsigned int> shader_ids)
