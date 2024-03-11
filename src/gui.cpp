@@ -130,7 +130,7 @@ void workspace_panel()
 
                 int render_w_candidate = int(ENGINE_SETTINGS.RENDER_W), render_h_candidate = int(ENGINE_SETTINGS.RENDER_H);
 
-                if (InputInt("Width", &render_w_candidate, 50.0, 500.0, ImGuiInputTextFlags_None))
+                if (InputInt("Width##renderH", &render_w_candidate, 50.0, 500.0, ImGuiInputTextFlags_None))
                 {
                     if(render_w_candidate >= 0 && render_w_candidate <= MAX_RENDER_W)
                     {
@@ -138,11 +138,34 @@ void workspace_panel()
                     }
                 } 
                 SameLine();
-                if (InputInt("Height", &render_h_candidate, 50.0, 500.0, ImGuiInputTextFlags_None))
+                if (InputInt("Height##renderW", &render_h_candidate, 50.0, 500.0, ImGuiInputTextFlags_None))
                 {
                     if(render_h_candidate >= 0 && render_h_candidate <= MAX_RENDER_H)
                     {
                         ENGINE_SETTINGS.RENDER_H = size_t(render_h_candidate);
+                    }
+                }
+            }
+            Spacing();
+            Text("Shadow Map Dimensions");
+            Spacing();
+            {
+                
+                int w_candidate = ENGINE_SETTINGS.SHADOW_MAP_W, h_candidate = ENGINE_SETTINGS.SHADOW_MAP_H;
+
+                if (InputInt("Width##shadowW", &w_candidate, 50.0, 500.0, ImGuiInputTextFlags_None))
+                {
+                    if(w_candidate >= 0 && w_candidate <= MAX_RENDER_W)
+                    {
+                        ENGINE_SETTINGS.SHADOW_MAP_W = w_candidate;
+                    }
+                } 
+                SameLine();
+                if (InputInt("Height##shadowH", &h_candidate, 50.0, 500.0, ImGuiInputTextFlags_None))
+                {
+                    if(h_candidate >= 0 && h_candidate <= MAX_RENDER_H)
+                    {
+                        ENGINE_SETTINGS.SHADOW_MAP_H = h_candidate;
                     }
                 }
             }
@@ -282,13 +305,10 @@ void workspace_panel()
                 if (Combo("Object Shader", &current_shader_option, 
                 "Stone\0Highlight\0Horror\0Retro\0Matte\0Shiny\0\0\0"))
                 {
-                    std::cout << "COMBO : " << current_shader_option << std::endl;
                     std::function load([](const char* path) -> void 
                     {
                         char* source;
-                        std::cout << "BEFORE" << std::endl;
                         read_file(path, source);
-                        std::cout << "AFTER" << std::endl;
                         strcpy(shader_code_buffer, source);
                         renderer::update_shader(renderer::OBJECT_SHADER, renderer::FRAGMENT_SHADER, source);
                         renderer::link_program(OBJECT_SHADER);

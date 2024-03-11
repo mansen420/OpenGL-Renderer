@@ -97,11 +97,11 @@ namespace renderer
 
             PP_ENBLD = 1;
 
-            RENDER_W   = 1920, RENDER_H = 1080;
-            RENDER_AR  = 16.0/9.0;
-            SHADOW_MAP_H =    SHADOW_MAP_W = 1024;
-            NEAR_PLANE = 0.1f, FAR_PLANE = 100.0f;
-            FOV        = 45.0;
+            RENDER_W     = 1920, RENDER_H = 1080;
+            RENDER_AR    = 16.0/9.0;
+            SHADOW_MAP_H =      SHADOW_MAP_W = 1024;
+            NEAR_PLANE   = 0.1f, FAR_PLANE = 100.0f;
+            FOV          = 45.0;
 
             USE_MIPMAPS      = false;
             SCR_TEX_MAG_FLTR = NEAREST, SCR_TEX_MIN_FLTR = LINEAR;
