@@ -19,9 +19,10 @@
   - [x]  Resizable rendering dimension, with configurable render to view port transform
   - [x]  Basic camera with input handling and time synchronization
   - [x]  Simple object operations (scaling, displacement)
-  - [x]  Multithreaded .obj file loading
+  - [x]  Multithreaded ``.obj`` file loading
   - [x]  GUI that exposes the entire engine state (ongoing)
   - [x]  Shadow mapping
+  - [x]  Shader preprocessor for ``#include`` functionality
   - [ ]  A lot more
 
 ![screenshot-from-2024-03-01-00-](https://github.com/mansen420/OpenGL-Renderer/assets/50342436/fde54939-884a-49d8-a7fb-b1fbf205be6b)
