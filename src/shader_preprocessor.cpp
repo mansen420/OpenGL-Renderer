@@ -121,7 +121,7 @@ bool internal_process_shader(const char* source, char* &processed_source_holder,
     
 
     std::cout << preprocessor_log.rdbuf() << std::endl;
-    log_file << preprocessor_log.rdbuf() << std::endl;
+    log_file  << preprocessor_log.rdbuf() << std::endl;
     return true;
 }    
 bool renderer::preprocessor::process_shader(const char* source, char* &processed_source_holder)
