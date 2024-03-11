@@ -314,8 +314,8 @@ namespace renderer
         glActiveTexture(GL_TEXTURE0); 
         if(internal_state.DISPLAY_BUFFER == DEPTH)
         {
-            //glBindTexture(GL_TEXTURE_2D, offscr_tex_IDs[DEPTH_STENCIL_TEX_IDX]);
-            glBindTexture(GL_TEXTURE_2D, shadowmap_depth_tex_ID);
+            glBindTexture(GL_TEXTURE_2D, offscr_tex_IDs[DEPTH_STENCIL_TEX_IDX]);
+            //glBindTexture(GL_TEXTURE_2D, shadowmap_depth_tex_ID);
             glUniform1i(glGetUniformLocation(postprocess_shader_program_ptr->get_ID(), "rendering_depth"), GL_TRUE);
             glUniform3f(glGetUniformLocation(postprocess_shader_program_ptr->get_ID(), "depth_view_color"), 
             internal_state.DEPTH_VIEW_COLOR.r, internal_state.DEPTH_VIEW_COLOR.g, internal_state.DEPTH_VIEW_COLOR.b);
@@ -353,9 +353,9 @@ namespace renderer
     }
     bool setup_shadowmap_framebuffer(const unsigned int resolution_w, const unsigned int resolution_h)
     {
-        if (glIsFramebuffer(offscreen_framebuffer_ID) == GL_TRUE)
+        if (glIsFramebuffer(shadowmap_framebuffer_ID) == GL_TRUE)
         {
-            glDeleteFramebuffers(1, &offscreen_framebuffer_ID);
+            glDeleteFramebuffers(1, &shadowmap_framebuffer_ID);
         }
         glGenFramebuffers(1, &shadowmap_framebuffer_ID);
         glBindFramebuffer(GL_FRAMEBUFFER, shadowmap_framebuffer_ID);
@@ -369,8 +369,7 @@ namespace renderer
         glBindTexture(GL_TEXTURE_2D, shadowmap_depth_tex_ID);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, resolution_w, resolution_h, 0, GL_DEPTH_COMPONENT,
         GL_FLOAT, NULL);
-        //glTexStorage2D(GL_TEXTURE_2D, 1, GL_DEPTH_COMPONENT, resolution_w, resolution_h); 
-        glGenerateMipmap(GL_TEXTURE_2D);
+        //glGenerateMipmap(GL_TEXTURE_2D);
 
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, internal_state.SCR_TEX_MIN_FLTR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, internal_state.SCR_TEX_MAG_FLTR);
@@ -398,6 +397,7 @@ namespace renderer
         glGenFramebuffers(1, &offscreen_framebuffer_ID);
         glBindFramebuffer(GL_FRAMEBUFFER, offscreen_framebuffer_ID);
 
+        //TODO maybe we don't need to delete the old texture?
         if(glIsTexture(offscr_tex_IDs[COLOR_TEX_IDX]) == GL_TRUE)
         {
             glDeleteTextures(2, offscr_tex_IDs);
@@ -468,7 +468,6 @@ namespace renderer
         using namespace glm;
         perspective_transform = perspective(radians(internal_state.FOV), internal_state.RENDER_AR, internal_state.NEAR_PLANE, internal_state.FAR_PLANE);
     }
- 
     void update_screen_tex_coords()
     {   
         if (internal_state.SCR_TEX_MAX_RATIO > 1.0 || internal_state.SCR_TEX_MAX_RATIO < internal_state.SCR_TEX_MIN_RATIO || internal_state.SCR_TEX_MIN_RATIO < 0)
@@ -533,13 +532,17 @@ namespace renderer
         obj_ptr->model_transform = glm::translate(glm::mat4(1.0), internal_state.OBJ_DISPLACEMENT) * rotation
         * glm::scale(glm::mat4(1.0), glm::vec3(internal_state.OBJ_SCALE_FACTOR));
     }
+    void update_shadow_map_resolution()
+    {
+        setup_shadowmap_framebuffer(internal_state.SHADOW_MAP_W, internal_state.SHADOW_MAP_H);
+    }
     void update_state()
     {   //TODO this is a primitive callback system. It works now, but maybe implement a more sophisticated system?
         camera::update_camera();
         my_object.update();
 
         bool should_update_import, should_update_scr_tex_coords, should_update_offscr_tex_params,
-        should_update_projection, should_update_obj_mdl_trnsfrm;
+        should_update_projection, should_update_obj_mdl_trnsfrm, should_update_shadow_map_resolution;
 
         should_update_import = 
             internal_state.OBJECT_PATH != ENGINE_SETTINGS.OBJECT_PATH;
@@ -567,6 +570,9 @@ namespace renderer
             internal_state.OBJ_DISPLACEMENT != ENGINE_SETTINGS.OBJ_DISPLACEMENT||
             internal_state.OBJ_ROTATION     != ENGINE_SETTINGS.OBJ_ROTATION;
         
+        should_update_shadow_map_resolution = 
+            internal_state.SHADOW_MAP_H != ENGINE_SETTINGS.SHADOW_MAP_H||
+            internal_state.SHADOW_MAP_W != ENGINE_SETTINGS.SHADOW_MAP_W;
 
         internal_state = ENGINE_SETTINGS;
 
@@ -580,6 +586,8 @@ namespace renderer
             update_projection();
         if(should_update_obj_mdl_trnsfrm)
             update_object_model_transform();
+        if(should_update_shadow_map_resolution)
+            update_shadow_map_resolution();
 
         ENGINE_SETTINGS = internal_state;
     }
