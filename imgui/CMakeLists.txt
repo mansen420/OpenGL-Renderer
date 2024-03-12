@@ -6,6 +6,5 @@ add_library(
 
 set (CMAKE_CXX_STANDARD 11)
 set (CMAKE_CXX_STANDARD_REQUIRED true)
-target_compile_options(my_renderer PRIVATE "-Wall" "-Wextra" "-Wpedantic" "-O3") #TODO have compiler flags be global
 
 target_include_directories(imgui PUBLIC "." "backends/" "../glfw/include")
