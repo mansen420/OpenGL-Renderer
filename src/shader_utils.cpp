@@ -94,11 +94,13 @@ bool shader_manager::shader_t::load_source_from_path(const char* const filename)
         char* source_holder = nullptr;
         bool success = false;
         
-        std::filesystem::path path_to_shader(std::string(SHADER_DIR_PATH).append(filename));
-        if (!std::filesystem::exists(path_to_shader))
+        std::filesystem::path path_to_shader;
+        for(const auto& entry : std::filesystem::recursive_directory_iterator(SHADER_DIR_PATH))
         {
-            path_to_shader = (std::string(SHADER_LIBRARY_DIR_PATH).append(filename));
+            if(entry.path().filename() == filename)
+                path_to_shader = entry;
         }
+        std::cout << "Loaded shader source  : " << path_to_shader.c_str() << std::endl;
         if (readFile(path_to_shader.c_str(), source_holder))
         {
             source_code = std::string(source_holder);
