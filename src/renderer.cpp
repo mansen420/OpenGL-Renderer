@@ -270,7 +270,8 @@ namespace renderer
         glUseProgram(shadow_map_shader_program_ptr->get_ID());
         send_shadow_map_uniforms();
 
-        obj_ptr->draw(shadow_map_shader_program_ptr->get_ID());
+        if(internal_state.RENDER_GROUND)
+            obj_ptr->draw(shadow_map_shader_program_ptr->get_ID());
         ground_plane_ptr->draw(shadow_map_shader_program_ptr->get_ID());
     }
     void send_offscr_uniforms()
@@ -304,8 +305,10 @@ namespace renderer
         glBindTexture(GL_TEXTURE_2D, shadowmap_depth_tex_ID);
 
         send_offscr_uniforms();
-        
-        ground_plane_ptr->draw(object_shader_program_ptr->get_ID());
+
+        //FIXME object does not occlude itself with this enabled?
+        if(internal_state.RENDER_GROUND)
+            ground_plane_ptr->draw(object_shader_program_ptr->get_ID());
         obj_ptr->draw(object_shader_program_ptr->get_ID());
     }
     void postprocess_pass()
@@ -345,7 +348,8 @@ namespace renderer
     void render_scene()
     {
         glClearColor(internal_state.CLR_COLOR.r, internal_state.CLR_COLOR.g, internal_state.CLR_COLOR.b, internal_state.CLR_COLOR.a);
-        shadow_pass();
+        if(internal_state.SHADOW_PASS_ENBLD)
+            shadow_pass();
         offscreen_pass();
         postprocess_pass();
     }
@@ -657,9 +661,9 @@ namespace renderer
             bool shader_success = true;
             
             static shader_manager::shader_t obj_vert_shader(VERTEX_SHADER);
-            shader_success &= obj_vert_shader.load_source_from_path("gooch.vs");
+            shader_success &= obj_vert_shader.load_source_from_path("default_object.vs");
             static shader_manager::shader_t obj_frag_shader(FRAGMENT_SHADER);
-            shader_success &= obj_frag_shader.load_source_from_path("gooch.fs");
+            shader_success &= obj_frag_shader.load_source_from_path("default_object.fs");
 
             shader_success &= obj_frag_shader.compile() && obj_vert_shader.compile();
 

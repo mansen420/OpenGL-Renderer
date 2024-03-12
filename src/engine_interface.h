@@ -67,7 +67,10 @@ namespace renderer
         texture_filtering SCR_TEX_MAG_FLTR, SCR_TEX_MIN_FLTR;
         bool                                     USE_MIPMAPS;
 
-        bool PP_ENBLD;
+        bool     PP_PASS_ENBLD;
+        //Expect undefined behaviour if you disable this while reading the shadow map textue.
+        bool SHADOW_PASS_ENBLD;
+        bool RENDER_GROUND;
 
         size_t RENDER_W, RENDER_H;
         float  RENDER_AR;
@@ -95,7 +98,8 @@ namespace renderer
             DISPLAY_BUFFER      = COLOR;
             RENDER_TO_VIEW_MODE =  CROP;
 
-            PP_ENBLD = 1;
+            PP_PASS_ENBLD     = true;
+            SHADOW_PASS_ENBLD = true;
 
             RENDER_W     = 1920, RENDER_H = 1080;
             RENDER_AR    = 16.0/9.0;
@@ -117,6 +121,8 @@ namespace renderer
             OBJ_DIMENSIONS   = glm::vec3(-1.0f);
             OBJ_CENTER       =  glm::vec3(0.0f);
             OBJ_ROTATION     =   glm::vec3(0.0);
+
+            RENDER_GROUND = true;
         }
     };
     extern engine_state_t ENGINE_SETTINGS;

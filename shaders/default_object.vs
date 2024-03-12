@@ -1,15 +1,5 @@
 #version 450 core
-
-layout (location = 0) in vec3     vertexPos;
-layout (location = 1) in vec3 vertexNormals;
-layout (location = 2) in vec2     vertexTex;
-
-uniform mat4 view_transform, projection_transform, model_transform, lightspace_transform;
-
-out vec3  frag_pos;
-out vec3    normal;
-out vec2 TexCoords;
-out vec4 lightspace_frag_pos;
+#include "object_shader_h.vs"
 void main()
 {
     normal         = normalize(vec3(transpose(inverse(model_transform))*vec4(vertexNormals, 1.0))); 
@@ -18,6 +8,6 @@ void main()
     gl_Position =      projection_transform*view_transform*frag_pos4;
 
     frag_pos  = frag_pos4.xyz;
-    TexCoords = vertexTex;
+    tex_coords = vertexTex;
     lightspace_frag_pos = lightspace_transform*vec4(frag_pos, 1.0);
 }

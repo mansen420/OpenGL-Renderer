@@ -168,6 +168,7 @@ void workspace_panel()
                         ENGINE_SETTINGS.SHADOW_MAP_H = h_candidate;
                     }
                 }
+                Checkbox("Enable Shadow Pass", &renderer::ENGINE_SETTINGS.SHADOW_PASS_ENBLD);
             }
             Spacing();
             {
@@ -300,7 +301,9 @@ void workspace_panel()
             {
                 DragFloat3("Light Position", glm::value_ptr(renderer::ENGINE_SETTINGS.LIGHT_POS), 0.01f);
                 Spacing();
-                
+
+                SameLine();
+                Checkbox("Render Ground", &renderer::ENGINE_SETTINGS.RENDER_GROUND);
                 static int current_shader_option = 0;
                 if (Combo("Object Shader", &current_shader_option, 
                 "Stone\0Highlight\0Horror\0Retro\0Matte\0Shiny\0\0\0"))

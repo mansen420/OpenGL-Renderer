@@ -1,9 +1,9 @@
 out vec4 fragment_output;
 
 //TODO standardize naming 
-in vec3            frag_pos;
-in vec3              normal;
-in vec2           TexCoords;
+in vec3   frag_pos;
+in vec3     normal;
+in vec2 tex_coords;
 
 struct light
 {
