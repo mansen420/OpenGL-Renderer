@@ -4,9 +4,10 @@
 #include <fstream>
 #include <iostream>
 #include <sstream>
+#include <string>
 #include <cstring>
 #include <vector>
-#include <map>
+#include <filesystem>
 #include "engine_interface.h"
 #include "shader_preprocessor.h"
 using namespace renderer;
@@ -86,14 +87,19 @@ shader_manager::shader_t::shader_t(shader_type_option type, const char* const so
     if (source != nullptr)
         this->source_code = std::string(source);  
 }
-bool shader_manager::shader_t::load_source_from_path(const char* const path)
+bool shader_manager::shader_t::load_source_from_path(const char* const filename)
 {
-    if(path != nullptr)
+    if(filename != nullptr)
     {
         char* source_holder = nullptr;
         bool success = false;
-
-        if (readFile(path, source_holder))
+        
+        std::filesystem::path path_to_shader(std::string(SHADER_DIR_PATH).append(filename));
+        if (!std::filesystem::exists(path_to_shader))
+        {
+            path_to_shader = (std::string(SHADER_LIBRARY_DIR_PATH).append(filename));
+        }
+        if (readFile(path_to_shader.c_str(), source_holder))
         {
             source_code = std::string(source_holder);
             success = true;

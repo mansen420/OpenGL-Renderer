@@ -305,10 +305,11 @@ void workspace_panel()
                 if (Combo("Object Shader", &current_shader_option, 
                 "Stone\0Highlight\0Horror\0Retro\0Matte\0Shiny\0\0\0"))
                 {
-                    std::function load([](const char* path) -> void 
+                    std::function load([](const char* filename) -> void 
                     {
-                        char* source;
-                        read_file(path, source);
+                        char* source = nullptr;
+                        if(!renderer::load_source(filename, source))
+                            return;
                         strcpy(shader_code_buffer, source);
                         renderer::update_shader(renderer::OBJECT_SHADER, renderer::FRAGMENT_SHADER, source);
                         renderer::link_program(OBJECT_SHADER);
@@ -319,28 +320,28 @@ void workspace_panel()
                     {
                     case 0:
                         ENGINE_SETTINGS.RENDER_W = ENGINE_SETTINGS.RENDER_H = 1000;
-                        load("src/shaders/STATUE_DEMO/john_the_baptist.fs");
+                        load("john_the_baptist.fs");
                         break;
                     case 1:
                         ENGINE_SETTINGS.RENDER_W = ENGINE_SETTINGS.RENDER_H = 1000;
-                        load("src/shaders/STATUE_DEMO/armored_guy.fs");
+                        load("armored_guy.fs");
                         break;
                     case 2:
                         ENGINE_SETTINGS.LIGHT_POS = glm::vec3(0.0);
                         ENGINE_SETTINGS.RENDER_W = ENGINE_SETTINGS.RENDER_H = 300;
-                        load("src/shaders/STATUE_DEMO/bunny.fs");
+                        load("bunny.fs");
                         break;
                     case 3:
                         ENGINE_SETTINGS.RENDER_W = ENGINE_SETTINGS.RENDER_H = 300;
-                        load("src/shaders/STATUE_DEMO/2D.fs");
+                        load("2D.fs");
                         break;
                     case 4:
                         ENGINE_SETTINGS.RENDER_W = ENGINE_SETTINGS.RENDER_H = 1000;
-                        load("src/shaders/STATUE_DEMO/3D.fs");
+                        load("3D.fs");
                         break;
                    case 5:
                         ENGINE_SETTINGS.RENDER_W = ENGINE_SETTINGS.RENDER_H = 1000;
-                        load("src/shaders/STATUE_DEMO/3D_shiny.fs");
+                        load("3D_shiny.fs");
                         break;
                     default:
                         break;

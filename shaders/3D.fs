@@ -1,4 +1,6 @@
-#include "src/shaders/object_shader_h.fs"
+#version 450 core
+#include "object_shader_h.fs"
+#include "shadow_h.fs"
 void main()
 {
     light foo_light = light(vec4(vec3(light_pos), 1.0), vec3(1.0));

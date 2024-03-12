@@ -6,6 +6,8 @@
 #include "camera_module.h"
 #include <fstream>
 #include <thread>
+#include <filesystem>
+#include "read_file.h"
 //TODO add error logging for all opengl calls
 namespace renderer
 {
@@ -23,7 +25,7 @@ namespace renderer
     static shader_manager::shader_prg_t*      object_shader_program_ptr;
     static shader_manager::shader_prg_t*  shadow_map_shader_program_ptr;
 
-    static std::map<unsigned int, shader_manager::shader_t*> shader_map;
+    static std::map<const unsigned int, shader_manager::shader_t*> shader_map;
 
     constexpr unsigned int     COLOR_TEX_IDX = 0, DEPTH_STENCIL_TEX_IDX = 1;
     static    unsigned int          offscr_tex_IDs[2];
@@ -203,6 +205,12 @@ namespace renderer
         else 
             return false;
         return program->link();
+    }
+    bool load_source(const char* filename, char* &source_holder)
+    {   
+        if(!readFile(std::string(SHADER_DIR_PATH).append(filename).c_str(), source_holder))
+            return false;
+        return true;
     }
     
     //TODO make these return size_t 
@@ -613,8 +621,31 @@ namespace renderer
         ground_plane_ptr = &ground_plane;
         ground_plane.model_transform = glm::scale(glm::mat4(1.0), glm::vec3(100.f, 1.f, 100.f));
     }
+    
+    //only call this function after initializing the program pointers!
+    bool attach_shader_library()
+    {
+        for(auto entry : std::filesystem::recursive_directory_iterator(SHADER_LIBRARY_DIR_PATH))
+        {
+            //FIXME hardcoding this can't be good
+            if(entry.path().extension() == ".fs")
+            {
+                shader_manager::shader_t shader(FRAGMENT_SHADER);
+                if(!shader.load_source_from_path(entry.path().filename().c_str()))
+                    return false;
+                if (!shader.compile())
+                    return false;
+                object_shader_program_ptr->attach_shader(shader);
+                postprocess_shader_program_ptr->attach_shader(shader);
+                shadow_map_shader_program_ptr->attach_shader(shader);
+            }
+            //TODO add the other extensions 
+        }
+        return true;
+    }
     int init()
     {
+        //TODO  use fs::current_dir to do some useful stuff
         my_object.load(internal_state.OBJECT_PATH.c_str());
         camera::init();
         {
@@ -622,55 +653,65 @@ namespace renderer
             bool shader_success = true;
             
             static shader_manager::shader_t obj_vert_shader(VERTEX_SHADER);
-            shader_success &= obj_vert_shader.load_source_from_path("src/shaders/gooch.vs");
+            shader_success &= obj_vert_shader.load_source_from_path("gooch.vs");
             static shader_manager::shader_t obj_frag_shader(FRAGMENT_SHADER);
-            shader_success &= obj_frag_shader.load_source_from_path("src/shaders/gooch.fs");
+            shader_success &= obj_frag_shader.load_source_from_path("gooch.fs");
 
             shader_success &= obj_frag_shader.compile() && obj_vert_shader.compile();
 
             static shader_manager::shader_prg_t object_shader_program;
             object_shader_program.attach_shader(obj_frag_shader);
             object_shader_program.attach_shader(obj_vert_shader);
-            shader_success &= object_shader_program.link();
 
             object_shader_program_ptr = &object_shader_program;
-
+            
             static shader_manager::shader_t pp_vert_shader(VERTEX_SHADER);
-            shader_success &= pp_vert_shader.load_source_from_path("src/shaders/screen_PP.vs");
+            shader_success &= pp_vert_shader.load_source_from_path("screen_PP.vs");
             static shader_manager::shader_t pp_frag_shader(FRAGMENT_SHADER);
-            shader_success &= pp_frag_shader.load_source_from_path("src/shaders/screen_PP.fs");
+            shader_success &= pp_frag_shader.load_source_from_path("screen_PP.fs");
 
             shader_success &= pp_frag_shader.compile() && pp_vert_shader.compile();
 
             static shader_manager::shader_prg_t posprocess_shader_program;
             posprocess_shader_program.attach_shader(pp_frag_shader);
             posprocess_shader_program.attach_shader(pp_vert_shader);
-            shader_success &= posprocess_shader_program.link();
+
             postprocess_shader_program_ptr = &posprocess_shader_program;
 
 
             static shader_manager::shader_t shadow_map_vert_shader(VERTEX_SHADER);
-            shader_success &= shadow_map_vert_shader.load_source_from_path("src/shaders/shadow_map.vs");
+            shader_success &= shadow_map_vert_shader.load_source_from_path("shadow_map.vs");
             static shader_manager::shader_t shadow_map_frag_shader(FRAGMENT_SHADER);
-            shader_success &= shadow_map_frag_shader.load_source_from_path("src/shaders/shadow_map.fs");
+            shader_success &= shadow_map_frag_shader.load_source_from_path("shadow_map.fs");
 
             shader_success &= shadow_map_frag_shader.compile() && shadow_map_vert_shader.compile();
 
             static shader_manager::shader_prg_t shadow_map_shader_program;
             shadow_map_shader_program.attach_shader(shadow_map_vert_shader);
             shadow_map_shader_program.attach_shader(shadow_map_frag_shader);
-            shader_success &= shadow_map_shader_program.link();
+
             shadow_map_shader_program_ptr = &shadow_map_shader_program;      
 
-            
-            shader_map.insert(std::pair<unsigned int, shader_manager::shader_t*>(shadow_map_vert_shader.get_ID(), &shadow_map_vert_shader));
-            shader_map.insert(std::pair<unsigned int, shader_manager::shader_t*>(shadow_map_frag_shader.get_ID(), &shadow_map_frag_shader));
-            
-            shader_map.insert(std::pair<unsigned int, shader_manager::shader_t*>(obj_vert_shader.get_ID(), &obj_vert_shader));
-            shader_map.insert(std::pair<unsigned int, shader_manager::shader_t*>(obj_frag_shader.get_ID(), &obj_frag_shader));
+            if(!attach_shader_library())
+            {
+                std::cout << "Failed to compile shader library." << std::endl;
+                return false;
+            }
+            //TODO ensure all dynamically generated shader programs (if any) are linked against the library
+            //dont forget to attach the library before linking
+            shader_success &= object_shader_program_ptr->link();
+            shader_success &= postprocess_shader_program_ptr->link();
+            shader_success &= shadow_map_shader_program_ptr->link();
 
-            shader_map.insert(std::pair<unsigned int, shader_manager::shader_t*>(pp_vert_shader.get_ID(), &pp_vert_shader));
-            shader_map.insert(std::pair<unsigned int, shader_manager::shader_t*>(pp_frag_shader.get_ID(), &pp_frag_shader));
+
+            shader_map.insert(std::pair<const unsigned int, shader_manager::shader_t*>(shadow_map_vert_shader.get_ID(), &shadow_map_vert_shader));
+            shader_map.insert(std::pair<const unsigned int, shader_manager::shader_t*>(shadow_map_frag_shader.get_ID(), &shadow_map_frag_shader));
+            
+            shader_map.insert(std::pair<const unsigned int, shader_manager::shader_t*>(obj_vert_shader.get_ID(), &obj_vert_shader));
+            shader_map.insert(std::pair<const unsigned int, shader_manager::shader_t*>(obj_frag_shader.get_ID(), &obj_frag_shader));
+
+            shader_map.insert(std::pair<const unsigned int, shader_manager::shader_t*>(pp_vert_shader.get_ID(), &pp_vert_shader));
+            shader_map.insert(std::pair<const unsigned int, shader_manager::shader_t*>(pp_frag_shader.get_ID(), &pp_frag_shader));
 
             if(!shader_success)
             {

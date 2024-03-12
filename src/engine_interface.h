@@ -194,6 +194,8 @@ namespace renderer
     //Invokes the preprocessor on the specifid shader program, replacing its source code with the processed code.
     //Note that after calling this, it becomes impossible to access the old code.
     bool unroll_includes(shader_prg_option program_type, shader_type_option shader_type);
+    //Attempts to read specified filename from available shader paths. Returns false on failure.
+    bool load_source(const char* filename, char* &source_holder);
 
     //Initializes internal engine state. Call this only once, and only after you call window::init.
     int          init();

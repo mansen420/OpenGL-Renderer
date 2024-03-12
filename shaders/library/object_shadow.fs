@@ -1,21 +1,6 @@
-#version 450 core
-
-out vec4 fragment_output;
-
-in vec3            frag_pos;
-in vec3              normal;
-in vec2           TexCoords;
-in vec4 lightspace_frag_pos;
-
-struct light
-{
-    vec4 pos;
-    vec3 color;
-};
-
-uniform vec3 view_vector;
-uniform vec3 light_pos;
-uniform sampler2D shadow_map;
+#version 450 core 
+#include "shadow_h.fs"
+#include "object_shader_h.fs"
 
 float calculate_shadow(vec4 lightspace_pos)
 {

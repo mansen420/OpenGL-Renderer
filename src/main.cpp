@@ -5,7 +5,7 @@
 //2. GUI elements (x)
 //3. Import feature (x)
 //4. Screen space processing (x)
-//5. shader pre-processor (probably not) 
+//5. shader pre-processor ~~(probably not)~~ (actually did it!)
 //6. shader post-processor (x)
 //7. center and rescale objects on load (1/2)
 //8. have default objects (cube or sphere) for experimenting with shaders (x)
@@ -13,7 +13,7 @@
 //10. allow positioning of viewport inside renderport (3/4)
 //11. write manual ()
 //12. display GL state information on gui ()
-//13. make camera system
+//13. make camera system (x)
 //14. display render stats and read-only info on gui ()
 //15. separate engine interface from gui engine reflection (mostly yes)
 //16. rework object module ()

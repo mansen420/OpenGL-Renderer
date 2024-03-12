@@ -13,7 +13,7 @@ namespace renderer
         
             shader_t(renderer::shader_type_option type, const char* source = nullptr);
 
-            bool load_source_from_path(const char* const path);
+            bool load_source_from_path(const char* const filename);
             bool compile() const;
             //Note that after calling this, it becomes impossible to access the old source code.
             bool unroll_includes();

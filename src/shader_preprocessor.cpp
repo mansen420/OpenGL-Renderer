@@ -1,11 +1,14 @@
+#include <filesystem>
+#include <fstream>
 #include <iostream>
 #include <chrono>
 #include <vector>
 #include <string>
 #include "read_file.h"
 #include "shader_preprocessor.h"
+#include "global_constants.h"
 
-std::stringstream preprocessor_log;
+static std::stringstream preprocessor_log;
 static std::ofstream log_file("preprocessor_log.txt", std::ofstream::out | std::ofstream::trunc);
 
 bool internal_process_shader(const char* source, char* &processed_source_holder, std::vector<std::string> included_paths = std::vector<std::string>())
@@ -82,7 +85,7 @@ bool internal_process_shader(const char* source, char* &processed_source_holder,
                     }
                 }
                 included_paths.push_back(input);
-                if (!readFile(input.c_str(), file))
+                if (!readFile(std::string(SHADER_HEADER_DIR_PATH).append(input).c_str(), file))
                     return false;
                 
                 //WARNING : never mutate a pointer you are going to delete[] later. Better make it const if possible.
@@ -120,11 +123,41 @@ bool internal_process_shader(const char* source, char* &processed_source_holder,
     preprocessor_log << "FIN.\n"; 
     
 
-    std::cout << preprocessor_log.rdbuf() << std::endl;
+    //std::cout << preprocessor_log.rdbuf() << std::endl;
     log_file  << preprocessor_log.rdbuf() << std::endl;
     return true;
 }    
 bool renderer::preprocessor::process_shader(const char* source, char* &processed_source_holder)
 {
     return internal_process_shader(source, processed_source_holder);
+}
+void renderer::preprocessor::write_unrolled_shaders()
+{
+    std::string read_dir_path = SHADER_DIR_PATH;
+
+    if (!std::filesystem::is_directory(UNROLLED_SHADER_DIR_PATH))
+        std::filesystem::create_directory(std::filesystem::path(UNROLLED_SHADER_DIR_PATH));
+
+    std::filesystem::path write_dir_path(UNROLLED_SHADER_DIR_PATH);
+    
+    for(const auto& entry : std::filesystem::recursive_directory_iterator(read_dir_path))
+    {
+        char* source = nullptr;
+        if (!readFile(entry.path().c_str(), source))
+            continue;
+
+        char* processed_shader = nullptr;
+        if(!renderer::preprocessor::process_shader(source, processed_shader))
+            continue;
+
+        delete[] source;
+
+        std::ofstream shader_file(write_dir_path.append(std::string(entry.path().filename())),
+        std::ofstream::out | std::ofstream::trunc);
+
+        shader_file << processed_shader;
+
+        shader_file.close();
+        delete[] processed_shader;
+    }
 }

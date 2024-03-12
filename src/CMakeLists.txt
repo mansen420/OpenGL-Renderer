@@ -3,9 +3,10 @@ add_executable(my_renderer
     gui.cpp renderer.cpp window.cpp stb_image.cpp tiny_obj_loader.cpp glad.c
     object_interface.cpp shader_utils.cpp input_handling.cpp camera_module.cpp
     shader_preprocessor.cpp
-    )   
+    )
 #FIXME this doesn't work with MSVC...
 target_compile_options(my_renderer PRIVATE "-Wall" "-Wextra" "-Wpedantic" "-O3") #TODO have different build configurations
+
 
 target_link_libraries(my_renderer glfw)
 target_link_libraries(my_renderer imgui)
