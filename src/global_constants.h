@@ -1,5 +1,7 @@
 #pragma once
 #include "GLFW/glfw3.h"
+constexpr const char*          SHADER_DIR_PATH = "shaders/";
+constexpr const char* UNROLLED_SHADER_DIR_PATH = "unrolled_shaders/";
 
 constexpr unsigned int MAX_RENDER_W = GL_MAX_FRAMEBUFFER_WIDTH;
 constexpr unsigned int MAX_RENDER_H = GL_MAX_FRAMEBUFFER_HEIGHT;

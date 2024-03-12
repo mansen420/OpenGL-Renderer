@@ -115,9 +115,9 @@ namespace renderer
         RIGHT_EDGE,  BOTTOM_EDGE,  scr_tex_right_edge, scr_tex_bottom_edge
     };
 
-    /*------------------------------------------------------------------------*/
-    /*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-* Public API *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*/
-    /*------------------------------------------------------------------------*/
+    /*------------------------------------------------------------------------------*/
+    /*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-* Public interface *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*/
+    /*------------------------------------------------------------------------------*/
 
     //TODO implement a system of identifiying programs and shaders for dynamic stuff
     //TODO might be better to stop using std::strings for shader code, not every user may want to include the string header
@@ -128,7 +128,7 @@ namespace renderer
         const shader_manager::shader_prg_t* prg_ptr = nullptr;
         if (program_type == POSTPROCESS_SHADER)
             prg_ptr = postprocess_shader_program_ptr;
-        if (program_type == OBJECT_SHADER)
+        else if (program_type == OBJECT_SHADER)
             prg_ptr = object_shader_program_ptr;
         else //unknown program
             return nullptr;
@@ -150,6 +150,8 @@ namespace renderer
     const char* get_shader_source_reflection(shader_prg_option program_type, shader_type_option shader_type)
     {  
         const shader_manager::shader_t* shader = find_shader(program_type, shader_type);
+        if(shader == nullptr)
+            return nullptr;
         return shader->source_code.c_str();
     }
     std::string get_shader_source_copy(shader_prg_option program_type, shader_type_option shader_type)
@@ -160,6 +162,8 @@ namespace renderer
     std::string* get_shader_source_reference(shader_prg_option program_type, shader_type_option shader_type)
     {
         shader_manager::shader_t* shader = find_shader(program_type, shader_type);
+        if(shader == nullptr)
+            return nullptr;
         return &shader->source_code;
     }
     bool update_shader(shader_prg_option program_type, shader_type_option shader_type, const char* source)
@@ -369,7 +373,7 @@ namespace renderer
         glBindTexture(GL_TEXTURE_2D, shadowmap_depth_tex_ID);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, resolution_w, resolution_h, 0, GL_DEPTH_COMPONENT,
         GL_FLOAT, NULL);
-        //glGenerateMipmap(GL_TEXTURE_2D);
+        glGenerateMipmap(GL_TEXTURE_2D);
 
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, internal_state.SCR_TEX_MIN_FLTR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, internal_state.SCR_TEX_MAG_FLTR);
@@ -537,7 +541,7 @@ namespace renderer
         setup_shadowmap_framebuffer(internal_state.SHADOW_MAP_W, internal_state.SHADOW_MAP_H);
     }
     void update_state()
-    {   //TODO this is a primitive callback system. It works now, but maybe implement a more sophisticated system?
+    {   //TODO make this more sophisticated?
         camera::update_camera();
         my_object.update();
 
