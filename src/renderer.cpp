@@ -304,9 +304,9 @@ namespace renderer
         glBindTexture(GL_TEXTURE_2D, shadowmap_depth_tex_ID);
 
         send_offscr_uniforms();
-
-        obj_ptr->draw(object_shader_program_ptr->get_ID());
+        
         ground_plane_ptr->draw(object_shader_program_ptr->get_ID());
+        obj_ptr->draw(object_shader_program_ptr->get_ID());
     }
     void postprocess_pass()
     {
