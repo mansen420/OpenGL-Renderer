@@ -365,18 +365,14 @@ namespace renderer
     }
     bool setup_shadowmap_framebuffer(const unsigned int resolution_w, const unsigned int resolution_h)
     {
-        if (glIsFramebuffer(shadowmap_framebuffer_ID) == GL_TRUE)
-        {
-            glDeleteFramebuffers(1, &shadowmap_framebuffer_ID);
-        }
-        glGenFramebuffers(1, &shadowmap_framebuffer_ID);
+        static bool first_time = true;
+
+        if(first_time)
+            glGenFramebuffers(1, &shadowmap_framebuffer_ID);
         glBindFramebuffer(GL_FRAMEBUFFER, shadowmap_framebuffer_ID);
 
-        if(glIsTexture(shadowmap_depth_tex_ID) == GL_TRUE)
-        {
-            glDeleteTextures(1, &shadowmap_depth_tex_ID);
-        }
-        glGenTextures(1, &shadowmap_depth_tex_ID);
+        if(first_time)
+            glGenTextures(1, &shadowmap_depth_tex_ID);
 
         glBindTexture(GL_TEXTURE_2D, shadowmap_depth_tex_ID);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, resolution_w, resolution_h, 0, GL_DEPTH_COMPONENT,
@@ -398,22 +394,26 @@ namespace renderer
             return false;
         }
         glBindFramebuffer(GL_FRAMEBUFFER, SCR_FRAMEBUFFER_ID);
+
+        first_time = false;
+
         return true;
     }
     bool setup_offscreen_framebuffer(const size_t rendering_width, const size_t rendering_height)
     {
-        if (glIsFramebuffer(offscreen_framebuffer_ID) == GL_TRUE)
-        {
-            glDeleteFramebuffers(1, &offscreen_framebuffer_ID);
-        }
-        glGenFramebuffers(1, &offscreen_framebuffer_ID);
+        static bool first_time = true;
+
+        if(first_time)
+            glGenFramebuffers(1, &offscreen_framebuffer_ID);
+
         glBindFramebuffer(GL_FRAMEBUFFER, offscreen_framebuffer_ID);
 
         //TODO maybe we don't need to delete the old texture?
-        if(glIsTexture(offscr_tex_IDs[COLOR_TEX_IDX]) == GL_TRUE)
+         if(glIsTexture(offscr_tex_IDs[COLOR_TEX_IDX]) == GL_TRUE)
         {
             glDeleteTextures(2, offscr_tex_IDs);
         }
+        //since the depth+stencil texture is immutable, we have to generate it on every update (I think) 
         glGenTextures(2, offscr_tex_IDs);
 
         //color attachment
@@ -445,6 +445,9 @@ namespace renderer
             return false;
         }
         glBindFramebuffer(GL_FRAMEBUFFER, SCR_FRAMEBUFFER_ID);
+
+        first_time = false;
+
         return true;
     }
     void send_screen_coords()
@@ -635,6 +638,7 @@ namespace renderer
                     return false;
                 if (!shader.compile())
                     return false;
+                //note that the GL does not delete a shader so long as it is attached to a program object.
                 object_shader_program_ptr->attach_shader(shader);
                 postprocess_shader_program_ptr->attach_shader(shader);
                 shadow_map_shader_program_ptr->attach_shader(shader);
