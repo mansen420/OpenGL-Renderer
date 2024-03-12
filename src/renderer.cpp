@@ -307,6 +307,7 @@ namespace renderer
         send_offscr_uniforms();
 
         //FIXME object does not occlude itself with this enabled?
+        //it seems the shadow pass and ground rendering are related?
         if(internal_state.RENDER_GROUND)
             ground_plane_ptr->draw(object_shader_program_ptr->get_ID());
         obj_ptr->draw(object_shader_program_ptr->get_ID());
