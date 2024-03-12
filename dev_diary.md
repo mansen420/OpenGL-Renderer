@@ -34,7 +34,11 @@ It's all coming together
 I have PTSD from messing the direct draw calls in OpenGL, and this time is no different. \
 This took me a few hours of debugging, and part of my sanity, to stumble my way into making it work. But it works!
 ![Screenshot from 2024-03-09 02-08-19](https://github.com/mansen420/OpenGL-Renderer/assets/50342436/980a54cb-03e8-4d2b-abad-2f1e619bef20)
-
 ![Screenshot from 2024-03-09 02-21-49](https://github.com/mansen420/OpenGL-Renderer/assets/50342436/54f5a006-7b88-488d-bd90-a2285fefb551)
-
+![Screenshot from 2024-03-12 00-37-44](https://github.com/mansen420/OpenGL-Renderer/assets/50342436/e78a53d0-65bd-45bc-a0f2-860964f3efe1)
 ![Screenshot from 2024-03-09 03-00-27](https://github.com/mansen420/OpenGL-Renderer/assets/50342436/ecc5c314-e27f-410d-bccc-bfd59bd4ceec)
+![Screenshot from 2024-03-09 02-12-16](https://github.com/mansen420/OpenGL-Renderer/assets/50342436/e911b59a-a023-4833-b788-c19a08360341)
+![Screenshot from 2024-03-09 02-18-10](https://github.com/mansen420/OpenGL-Renderer/assets/50342436/108eda88-bdb7-4b70-9481-d2aadce1b988)
+![Screenshot from 2024-03-12 01-00-41](https://github.com/mansen420/OpenGL-Renderer/assets/50342436/550504ad-3234-4411-8342-3a13e540fefc)
+
+

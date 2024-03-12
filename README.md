@@ -1,5 +1,6 @@
 # C++ OpenGL Engine
 
+![Screenshot from 2024-03-12 01-00-41](https://github.com/mansen420/OpenGL-Renderer/assets/50342436/f2a6d3cb-5f1c-452c-975e-0274d295ed47)
 
 ![ezgif-3-95df610dc4](https://github.com/mansen420/OpenGL-Renderer/assets/50342436/74d5e17e-4f5a-4fe6-af56-eda08ebe13b4)
 
