@@ -266,7 +266,7 @@ namespace renderer
         glViewport(0, 0, internal_state.SHADOW_MAP_W, internal_state.SHADOW_MAP_H);
         glBindFramebuffer(GL_FRAMEBUFFER, shadowmap_framebuffer_ID);
         glClear(GL_DEPTH_BUFFER_BIT);
-
+        glCullFace(GL_FRONT);
         glUseProgram(shadow_map_shader_program_ptr->get_ID());
         send_shadow_map_uniforms();
 
@@ -303,6 +303,8 @@ namespace renderer
 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, shadowmap_depth_tex_ID);
+
+        glCullFace(GL_BACK);
 
         send_offscr_uniforms();
 
@@ -386,6 +388,11 @@ namespace renderer
 
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, internal_state.SCR_TEX_MIN_FLTR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, internal_state.SCR_TEX_MAG_FLTR);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+        float borderColor[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+        glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
 
         glBindTexture(GL_TEXTURE_2D, 0);
 
@@ -629,7 +636,7 @@ namespace renderer
         ground_plane_ptr = &ground_plane;
         ground_plane.model_transform = glm::scale(glm::mat4(1.0), glm::vec3(100.f, 1.f, 100.f));
     }
-    
+    //TODO make it so you can recompile library shaders at runtime...   
     //only call this function after initializing the program pointers!
     bool attach_shader_library()
     {
