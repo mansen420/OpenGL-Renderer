@@ -249,9 +249,9 @@ namespace renderer
     {
         using namespace glm;
         glm::mat4 light_view_transform = lookAt(internal_state.LIGHT_POS, glm::vec3(0.0), glm::vec3(0.0, 1.0, 0.0));
-        glm::mat4 light_perspective_transform = glm::ortho(-10.f, 10.f, -10.f, 10.f, 0.1f, 10.f);
+        //glm::mat4 light_perspective_transform = glm::ortho(-10.f, 10.f, -10.f, 10.f, 0.1f, 10.f);
 
-        //glm::mat4 light_perspective_transform = glm::perspective(glm::radians(45.f), 1.f, 0.1f, 100.f);
+        glm::mat4 light_perspective_transform = glm::perspective(glm::radians(45.f), 1.f, 0.1f, 100.f);
 
         glUniformMatrix4fv(glGetUniformLocation(shadow_map_shader_program_ptr->get_ID(), "projection_transform"), 1, GL_FALSE,
         glm::value_ptr(light_perspective_transform));
