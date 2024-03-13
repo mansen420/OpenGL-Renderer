@@ -27,7 +27,8 @@ namespace renderer
     {
         COLOR,
         DEPTH,
-        STENCIL
+        STENCIL,
+        SHADOW_MAP
     };
     enum renderport_behaviour
     {
@@ -43,7 +44,11 @@ namespace renderer
         MIPMAP_LINEAR_NEAREST  =  GL_LINEAR_MIPMAP_NEAREST,
         MIPMAP_NEAREST_LINEAR  =  GL_NEAREST_MIPMAP_LINEAR
     };
-    
+    enum projection_option
+    {
+        PERSPECTIVE,
+        ORTHOGRAPHIC
+    };
     struct engine_state_t
     {
         glm::vec3 LIGHT_POS;
@@ -75,6 +80,7 @@ namespace renderer
         size_t RENDER_W, RENDER_H;
         float  RENDER_AR;
         unsigned int SHADOW_MAP_W, SHADOW_MAP_H;
+        projection_option SHADOW_MAP_PROJECTION;
 
         float NEAR_PLANE, FAR_PLANE, FOV;
 
@@ -123,6 +129,7 @@ namespace renderer
             OBJ_ROTATION     =   glm::vec3(0.0);
 
             RENDER_GROUND = true;
+            SHADOW_MAP_PROJECTION = ORTHOGRAPHIC;
         }
     };
     extern engine_state_t ENGINE_SETTINGS;

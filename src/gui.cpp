@@ -68,10 +68,14 @@ void workspace_panel()
                 {
                     ENGINE_SETTINGS.DISPLAY_BUFFER = COLOR;
                 }   SameLine();
-                if (RadioButton("View Depth BUffer", &active_1, 1))
+                if (RadioButton("View Depth Buffer", &active_1, 1))
                 {
                     ENGINE_SETTINGS.DISPLAY_BUFFER = DEPTH;
-                }   
+                } SameLine();
+                if (RadioButton("View Shadow Map", &active_1, 2))
+                {
+                    ENGINE_SETTINGS.DISPLAY_BUFFER = SHADOW_MAP;
+                }  
             }
             Spacing();
             Text("Framebuffer Texture Filtering");
@@ -169,6 +173,20 @@ void workspace_panel()
                     }
                 }
                 Checkbox("Enable Shadow Pass", &renderer::ENGINE_SETTINGS.SHADOW_PASS_ENBLD);
+                SameLine();
+                static int current_shadow_map_projection = 0;
+                Combo("Shadow Map Projection", &current_shadow_map_projection,
+                "Orthographics\0Perspective\0\0\0");
+                switch (current_shadow_map_projection)
+                {
+                case 0:
+                    renderer::ENGINE_SETTINGS.SHADOW_MAP_PROJECTION = renderer::ORTHOGRAPHIC;
+                    break;
+                case 1:
+                    renderer::ENGINE_SETTINGS.SHADOW_MAP_PROJECTION = renderer::PERSPECTIVE;
+                default:
+                    break;
+                }
             }
             Spacing();
             {
