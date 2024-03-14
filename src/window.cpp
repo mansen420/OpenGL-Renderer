@@ -50,7 +50,7 @@ int window::init()
 
     return true;
 }
-
+bool window::should_close(){return glfwWindowShouldClose(myWindow);}
 void window::render_gui()
 {
     ImGui_ImplOpenGL3_NewFrame();

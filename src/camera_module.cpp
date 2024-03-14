@@ -1,4 +1,5 @@
 #include "engine_interface.h"
+#include "global_constants.h"
 #include "camera_module.h"
 
 glm::vec3 renderer::camera::POS;

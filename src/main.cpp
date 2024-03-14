@@ -22,7 +22,7 @@ int main()
 {   
     if (!window::init()){window::terminate(); return -1;}
     if (!renderer::init()){window::terminate(); renderer::terminate(); return-1;}
-    while (!glfwWindowShouldClose(myWindow))
+    while (!window::should_close())
     {
         window::poll_events();
 

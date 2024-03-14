@@ -1,7 +1,6 @@
 #include "input_handling.h"
 #include "engine_interface.h"
-#include "GLFW/glfw3.h"
-
+#include "global_constants.h"
 #include <iostream>
 
 float window::input_camera_acceleration = 50.f;

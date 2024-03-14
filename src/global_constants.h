@@ -1,4 +1,5 @@
 #pragma once
+#include "glad/glad.h"
 #include "GLFW/glfw3.h"
 constexpr const char* SHADER_DIR_PATH           =          "shaders/";
 constexpr const char* UNROLLED_SHADER_DIR_PATH  = "unrolled_shaders/";

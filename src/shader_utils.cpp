@@ -10,31 +10,12 @@
 #include <filesystem>
 #include "engine_interface.h"
 #include "shader_preprocessor.h"
+#include "global_constants.h"
+#include "read_file.h"
+#include "gl_enum_converters.h"
 using namespace renderer;
 
 //helper functions
-
-//Caller must ensure that file_contents_holder is delete[]`d!
-bool readFile(const char* file_path, char* &file_contents_holder)
-{
-    std::ifstream reader;
-    reader.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-    try
-    {
-        reader.open(file_path);
-        std::stringstream file_stream;
-        file_stream << reader.rdbuf();
-        reader.close();
-        file_contents_holder = new char[strlen(file_stream.str().c_str())];
-        strcpy(file_contents_holder, file_stream.str().c_str());
-    }
-    catch (std::ifstream::failure e)
-    {
-        std::cout << "failed to open shader file : " << file_path << std::endl;
-        return false;
-    }
-    return true;
-}
 bool compileShader(const shader_type_option shader, const unsigned int &shader_id, const char* shader_source)
 {
     char* processed_shader_source = nullptr;
@@ -83,7 +64,7 @@ bool linkShaders(unsigned int &program_id, std::vector<unsigned int> shader_ids)
 shader_manager::shader_t::shader_t(shader_type_option type, const char* const source)
 {
     this->type = type;
-    ID = glCreateShader(type);
+    ID = glCreateShader(convert(type));
     if (source != nullptr)
         this->source_code = std::string(source);  
 }

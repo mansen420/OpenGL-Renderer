@@ -1,12 +1,9 @@
 #pragma once
 
-#include "glad/glad.h"
-
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
 
-#include "global_constants.h" 
 #include <string> 
 
 namespace renderer
@@ -19,9 +16,9 @@ namespace renderer
     //TODO maybe this should be an intrnal enum?
     enum shader_type_option
     {
-        VERTEX_SHADER   = GL_VERTEX_SHADER  ,
-        FRAGMENT_SHADER = GL_FRAGMENT_SHADER,
-        GEOMETRY_SHADER = GL_GEOMETRY_SHADER
+        VERTEX_SHADER  ,
+        FRAGMENT_SHADER,
+        GEOMETRY_SHADER
     };
     enum scr_display_mode_option
     {
@@ -35,7 +32,7 @@ namespace renderer
         FIT_TO_VIEW,
         CROP
     };
-    enum texture_filtering
+    /*enum texture_filtering
     {
         LINEAR                 =                 GL_LINEAR,
         NEAREST                =                GL_NEAREST,
@@ -43,6 +40,15 @@ namespace renderer
         MIPMAP_NEAREST_NEAREST = GL_NEAREST_MIPMAP_NEAREST,
         MIPMAP_LINEAR_NEAREST  =  GL_LINEAR_MIPMAP_NEAREST,
         MIPMAP_NEAREST_LINEAR  =  GL_NEAREST_MIPMAP_LINEAR
+    };*/
+    enum texture_filtering
+    {
+        LINEAR                ,
+        NEAREST               ,
+        MIPMAP_LINEAR_LINEAR  ,
+        MIPMAP_NEAREST_NEAREST,
+        MIPMAP_LINEAR_NEAREST ,
+        MIPMAP_NEAREST_LINEAR
     };
     enum projection_option
     {

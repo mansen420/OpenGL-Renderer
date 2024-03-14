@@ -1,4 +1,5 @@
 #include "engine_interface.h"
+#include "global_constants.h"
 #include <algorithm>        //for std::clamp
 #include <map>
 #include "shader_utils.h"
@@ -8,6 +9,7 @@
 #include <thread>
 #include <filesystem>
 #include "read_file.h"
+#include "gl_enum_converters.h"
 //TODO add error logging for all opengl calls
 namespace renderer
 {
@@ -33,8 +35,8 @@ namespace renderer
 
     constexpr unsigned int   SCR_FRAMEBUFFER_ID = 0;
     static    unsigned int offscreen_framebuffer_ID;
-    static    unsigned int       screen_quad_vao_ID;
     static    unsigned int shadowmap_framebuffer_ID;
+    static    unsigned int       screen_quad_vao_ID;
 
     //TODO find a better way to handle these uniforms
     static glm::mat4        view_transform;
@@ -366,12 +368,12 @@ namespace renderer
     {
         glBindTexture(GL_TEXTURE_2D, offscr_tex_IDs[COLOR_TEX_IDX]);
         //TODO check that the magnification filter is not set to use mipmaps
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, internal_state.SCR_TEX_MIN_FLTR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, internal_state.SCR_TEX_MAG_FLTR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, convert(internal_state.SCR_TEX_MIN_FLTR));
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, convert(internal_state.SCR_TEX_MAG_FLTR));
 
         glBindTexture(GL_TEXTURE_2D, offscr_tex_IDs[DEPTH_STENCIL_TEX_IDX]);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, internal_state.SCR_TEX_MIN_FLTR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, internal_state.SCR_TEX_MAG_FLTR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, convert(internal_state.SCR_TEX_MIN_FLTR));
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, convert(internal_state.SCR_TEX_MAG_FLTR));
 
         glBindTexture(GL_TEXTURE_2D, 0);
     }
@@ -391,8 +393,8 @@ namespace renderer
         GL_FLOAT, NULL);
         glGenerateMipmap(GL_TEXTURE_2D);
 
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, internal_state.SCR_TEX_MIN_FLTR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, internal_state.SCR_TEX_MAG_FLTR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, convert(internal_state.SCR_TEX_MIN_FLTR));
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, convert(internal_state.SCR_TEX_MAG_FLTR));
 
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
@@ -438,18 +440,15 @@ namespace renderer
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, rendering_width, rendering_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
         glGenerateMipmap(GL_TEXTURE_2D);
 
-        //TODO check that the magnification filter is not set to use mipmaps
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, internal_state.SCR_TEX_MIN_FLTR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, internal_state.SCR_TEX_MAG_FLTR);
 
         //depth+stencil for maximum portability. glTexStorage2D is necessary to view the depth buffer
         glBindTexture(GL_TEXTURE_2D, offscr_tex_IDs[DEPTH_STENCIL_TEX_IDX]);
         glTexStorage2D(GL_TEXTURE_2D, 1, GL_DEPTH24_STENCIL8, rendering_width, rendering_height); 
         glGenerateMipmap(GL_TEXTURE_2D);
 
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, internal_state.SCR_TEX_MIN_FLTR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, internal_state.SCR_TEX_MAG_FLTR);
-
+        //TODO check that the magnification filter is not set to use mipmaps
+        update_offscreen_tex_params();
+        
         //attaching a texture that is bound might cause undefined behaviour
         glBindTexture(GL_TEXTURE_2D, 0);
 
