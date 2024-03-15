@@ -11,9 +11,10 @@ namespace renderer
     enum shader_prg_option
     {
         POSTPROCESS_SHADER,
-        OBJECT_SHADER
+        OBJECT_SHADER     ,
+        SHADOW_MAP_SHADER ,
+        RAYTRACING_SHADER ,
     };
-    //TODO maybe this should be an intrnal enum?
     enum shader_type_option
     {
         VERTEX_SHADER  ,
@@ -32,15 +33,6 @@ namespace renderer
         FIT_TO_VIEW,
         CROP
     };
-    /*enum texture_filtering
-    {
-        LINEAR                 =                 GL_LINEAR,
-        NEAREST                =                GL_NEAREST,
-        MIPMAP_LINEAR_LINEAR   =   GL_LINEAR_MIPMAP_LINEAR,
-        MIPMAP_NEAREST_NEAREST = GL_NEAREST_MIPMAP_NEAREST,
-        MIPMAP_LINEAR_NEAREST  =  GL_LINEAR_MIPMAP_NEAREST,
-        MIPMAP_NEAREST_LINEAR  =  GL_NEAREST_MIPMAP_LINEAR
-    };*/
     enum texture_filtering
     {
         LINEAR                ,
@@ -82,6 +74,7 @@ namespace renderer
         //Expect undefined behaviour if you disable this while reading the shadow map textue.
         bool SHADOW_PASS_ENBLD;
         bool RENDER_GROUND;
+        bool RAYTRACING_ENBLED;
 
         size_t RENDER_W, RENDER_H;
         float  RENDER_AR;
@@ -136,6 +129,7 @@ namespace renderer
 
             RENDER_GROUND = true;
             SHADOW_MAP_PROJECTION = ORTHOGRAPHIC;
+            RAYTRACING_ENBLED = false;
         }
     };
     extern engine_state_t ENGINE_SETTINGS;

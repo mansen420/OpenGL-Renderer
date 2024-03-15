@@ -26,17 +26,20 @@ namespace renderer
     static shader_manager::shader_prg_t* postprocess_shader_program_ptr;
     static shader_manager::shader_prg_t*      object_shader_program_ptr;
     static shader_manager::shader_prg_t*  shadow_map_shader_program_ptr;
+    static shader_manager::shader_prg_t*  raytracing_shader_program_ptr;
 
     static std::map<const unsigned int, shader_manager::shader_t*> shader_map;
 
-    constexpr unsigned int     COLOR_TEX_IDX = 0, DEPTH_STENCIL_TEX_IDX = 1;
-    static    unsigned int          offscr_tex_IDs[2];
-    static    unsigned int     shadowmap_depth_tex_ID;
+    constexpr unsigned int COLOR_TEX_IDX = 0, DEPTH_STENCIL_TEX_IDX = 1;
+    static    unsigned int      offscr_tex_IDs[2];
+    static    unsigned int  raytracing_tex_IDs[2];
+    static    unsigned int shadowmap_depth_tex_ID;
 
-    constexpr unsigned int   SCR_FRAMEBUFFER_ID = 0;
-    static    unsigned int offscreen_framebuffer_ID;
-    static    unsigned int shadowmap_framebuffer_ID;
-    static    unsigned int       screen_quad_vao_ID;
+    constexpr unsigned int        SCR_FRAMEBUFFER_ID = 0;
+    static    unsigned int  offscreen_framebuffer_ID;
+    static    unsigned int raytracing_framebuffer_ID;
+    static    unsigned int  shadowmap_framebuffer_ID;
+    static    unsigned int        screen_quad_vao_ID;
 
     //TODO find a better way to handle these uniforms
     static glm::mat4        view_transform;
@@ -124,8 +127,6 @@ namespace renderer
     /*------------------------------------------------------------------------------*/
 
     //TODO implement a system of identifiying programs and shaders for dynamic stuff
-    //TODO might be better to stop using std::strings for shader code, not every user may want to include the string header
-    //TODO shader could be nullptr
     shader_manager::shader_t* find_shader(shader_prg_option program_type, shader_type_option shader_type)
     {
         //search shader map for shaders attached to program of type shader.
@@ -134,6 +135,8 @@ namespace renderer
             prg_ptr = postprocess_shader_program_ptr;
         else if (program_type == OBJECT_SHADER)
             prg_ptr = object_shader_program_ptr;
+        else if (program_type == RAYTRACING_SHADER)
+            prg_ptr = raytracing_shader_program_ptr;
         else //unknown program
             return nullptr;
         const unsigned int* shader_IDs = prg_ptr->get_attached_shader_IDs();
@@ -204,6 +207,8 @@ namespace renderer
             program = object_shader_program_ptr;
         else if(program_type == POSTPROCESS_SHADER)
             program = postprocess_shader_program_ptr;
+        else if(program_type == RAYTRACING_SHADER)
+            program = raytracing_shader_program_ptr;
         else 
             return false;
         return program->link();
@@ -325,17 +330,18 @@ namespace renderer
             glViewport(OPENGL_VIEWPORT_X, OPENGL_VIEWPORT_Y, internal_state.RENDER_W, internal_state.RENDER_H);
         else
             glViewport(OPENGL_VIEWPORT_X, OPENGL_VIEWPORT_Y, OPENGL_VIEWPORT_W, OPENGL_VIEWPORT_H);
+
         glBindFramebuffer(GL_FRAMEBUFFER, SCR_FRAMEBUFFER_ID);
         glClear(GL_COLOR_BUFFER_BIT);
         //if we do not disable the depth test here, the screen will draw over itself
         glDisable(GL_DEPTH_TEST);   
         glUseProgram(postprocess_shader_program_ptr->get_ID());
 
-        glBindVertexArray(screen_quad_vao_ID);
-
         //TODO implement viewing depth and stencil textures (1/2)
         glActiveTexture(GL_TEXTURE0); 
-        if(internal_state.DISPLAY_BUFFER != COLOR)
+        if(internal_state.RAYTRACING_ENBLED)
+            glBindTexture(GL_TEXTURE_2D, raytracing_tex_IDs[COLOR_TEX_IDX]);
+        else if(internal_state.DISPLAY_BUFFER != COLOR)
         {
             if(internal_state.DISPLAY_BUFFER == DEPTH)
                 glBindTexture(GL_TEXTURE_2D, offscr_tex_IDs[DEPTH_STENCIL_TEX_IDX]);
@@ -352,15 +358,31 @@ namespace renderer
         }
 
         glUniform1i(glGetUniformLocation(postprocess_shader_program_ptr->get_ID(), "screen_texture"), 0);
-        
+
+        glBindVertexArray(screen_quad_vao_ID);
+        glDrawArrays(GL_TRIANGLES, 0, 6);
+    }
+    void raytracing_pass()
+    {
+        glViewport(OPENGL_VIEWPORT_X, OPENGL_VIEWPORT_Y, internal_state.RENDER_W, internal_state.RENDER_H);
+        glBindFramebuffer(GL_FRAMEBUFFER, raytracing_framebuffer_ID);
+        glClear(GL_COLOR_BUFFER_BIT);
+        glDisable(GL_DEPTH_TEST);   
+        glUseProgram(raytracing_shader_program_ptr->get_ID());
+        glBindVertexArray(screen_quad_vao_ID);
         glDrawArrays(GL_TRIANGLES, 0, 6);
     }
     void render_scene()
     {
         glClearColor(internal_state.CLR_COLOR.r, internal_state.CLR_COLOR.g, internal_state.CLR_COLOR.b, internal_state.CLR_COLOR.a);
-        if(internal_state.SHADOW_PASS_ENBLD)
-            shadow_pass();
-        offscreen_pass();
+        if(internal_state.RAYTRACING_ENBLED)
+            raytracing_pass();
+        else
+        {
+            if(internal_state.SHADOW_PASS_ENBLD)
+                shadow_pass();
+            offscreen_pass();
+        }
         postprocess_pass();
     }
     
@@ -376,6 +398,51 @@ namespace renderer
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, convert(internal_state.SCR_TEX_MAG_FLTR));
 
         glBindTexture(GL_TEXTURE_2D, 0);
+    }
+    bool setup_raytracing_framebuffer(const unsigned int resolution_w, const unsigned int resolution_h)
+    {
+        static bool first_time = true;
+
+        if(first_time)
+            glGenFramebuffers(1, &raytracing_framebuffer_ID);
+
+        glBindFramebuffer(GL_FRAMEBUFFER, raytracing_framebuffer_ID);
+
+        if(first_time)
+            glGenTextures(2, raytracing_tex_IDs);
+
+        glBindTexture(GL_TEXTURE_2D, raytracing_tex_IDs[COLOR_TEX_IDX]);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, resolution_w, resolution_h, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+        glGenerateMipmap(GL_TEXTURE_2D);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, convert(internal_state.SCR_TEX_MIN_FLTR));
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, convert(internal_state.SCR_TEX_MAG_FLTR));
+
+        glBindTexture(GL_TEXTURE_2D, raytracing_tex_IDs[DEPTH_STENCIL_TEX_IDX]);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, resolution_w, resolution_h, 0, GL_DEPTH_COMPONENT, 
+        GL_FLOAT, NULL);
+        glGenerateMipmap(GL_TEXTURE_2D);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, convert(internal_state.SCR_TEX_MIN_FLTR));
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, convert(internal_state.SCR_TEX_MAG_FLTR));
+
+        //attaching a texture that is bound might cause undefined behaviour
+        glBindTexture(GL_TEXTURE_2D, 0);
+
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, raytracing_tex_IDs[COLOR_TEX_IDX], 0);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, raytracing_tex_IDs[DEPTH_STENCIL_TEX_IDX], 0);
+        glReadBuffer(GL_NONE);
+
+        if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        {
+            std::cout << "RAYTRACING FRAMEBUFFER INCOMPLETE : "<< glCheckFramebufferStatus(GL_FRAMEBUFFER) << std::endl;
+            return false;
+        }
+        glBindFramebuffer(GL_FRAMEBUFFER, SCR_FRAMEBUFFER_ID);
+
+        first_time = false;
+
+        return true;
     }
     bool setup_shadowmap_framebuffer(const unsigned int resolution_w, const unsigned int resolution_h)
     {
@@ -448,7 +515,7 @@ namespace renderer
 
         //TODO check that the magnification filter is not set to use mipmaps
         update_offscreen_tex_params();
-        
+
         //attaching a texture that is bound might cause undefined behaviour
         glBindTexture(GL_TEXTURE_2D, 0);
 
@@ -546,7 +613,6 @@ namespace renderer
             RIGHT_EDGE,  BOTTOM_EDGE,  scr_tex_right_edge, scr_tex_bottom_edge
         };
         
-        //update_projection();
         setup_offscreen_framebuffer(internal_state.RENDER_W, internal_state.RENDER_H);
         send_screen_coords();
     }
@@ -671,7 +737,21 @@ namespace renderer
         {
             //for the love of god make this a function or something man  
             bool shader_success = true;
-            
+
+            static shader_manager::shader_t rt_vert_shader(VERTEX_SHADER);
+            rt_vert_shader.load_source_from_path("screen_PP.vs");
+            static shader_manager::shader_t rt_frag_shader(FRAGMENT_SHADER);
+            rt_frag_shader.load_source_from_path("raytracer.fs");
+
+            shader_success &= rt_frag_shader.compile() && rt_vert_shader.compile();
+
+            static shader_manager::shader_prg_t raytracing_shader_program;
+            raytracing_shader_program.attach_shader(rt_vert_shader);
+            raytracing_shader_program.attach_shader(rt_frag_shader);
+
+            shader_success &= raytracing_shader_program.link();
+            raytracing_shader_program_ptr = &raytracing_shader_program;
+
             static shader_manager::shader_t obj_vert_shader(VERTEX_SHADER);
             shader_success &= obj_vert_shader.load_source_from_path("default_object.vs");
             static shader_manager::shader_t obj_frag_shader(FRAGMENT_SHADER);
@@ -732,6 +812,9 @@ namespace renderer
 
             shader_map.insert(std::pair<const unsigned int, shader_manager::shader_t*>(pp_vert_shader.get_ID(), &pp_vert_shader));
             shader_map.insert(std::pair<const unsigned int, shader_manager::shader_t*>(pp_frag_shader.get_ID(), &pp_frag_shader));
+            
+            shader_map.insert(std::pair<const unsigned int, shader_manager::shader_t*>(rt_frag_shader.get_ID(), &rt_frag_shader));
+            shader_map.insert(std::pair<const unsigned int, shader_manager::shader_t*>(rt_vert_shader.get_ID(), &rt_vert_shader));
 
             if(!shader_success)
             {
@@ -749,6 +832,9 @@ namespace renderer
 
         if(!setup_shadowmap_framebuffer(internal_state.SHADOW_MAP_W, internal_state.SHADOW_MAP_H))
             return false; //or proceed without shadow map?
+
+        if(!setup_raytracing_framebuffer(internal_state.RENDER_W, internal_state.RENDER_H))
+            return false;
          
         setup_ground_plane();
         update_screen_tex_coords();       
