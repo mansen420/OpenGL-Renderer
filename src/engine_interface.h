@@ -106,7 +106,7 @@ namespace renderer
             PP_PASS_ENBLD     = true;
             SHADOW_PASS_ENBLD = true;
 
-            RENDER_W     = 1920, RENDER_H = 1080;
+            RENDER_W     = 1000, RENDER_H = 1000;
             RENDER_AR    = 16.0/9.0;
             SHADOW_MAP_H =      SHADOW_MAP_W = 1024;
             NEAR_PLANE   = 0.1f, FAR_PLANE = 100.0f;

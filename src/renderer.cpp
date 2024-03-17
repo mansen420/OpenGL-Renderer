@@ -291,7 +291,6 @@ namespace renderer
 
         glUniform3f(glGetUniformLocation(object_shader_program_ptr->get_ID(), "light_pos"), 
         internal_state.LIGHT_POS.x, internal_state.LIGHT_POS.y, internal_state.LIGHT_POS.z);
-
         glUniform3f(glGetUniformLocation(object_shader_program_ptr->get_ID(), "view_vector"), camera::POS.x, camera::POS.y, camera::POS.z);
         glUniformMatrix4fv(glGetUniformLocation(object_shader_program_ptr->get_ID(), "projection_transform"), 1, GL_FALSE,
         glm::value_ptr(perspective_transform));
@@ -362,13 +361,22 @@ namespace renderer
         glBindVertexArray(screen_quad_vao_ID);
         glDrawArrays(GL_TRIANGLES, 0, 6);
     }
+    void send_raytracing_uniforms()
+    {
+        using namespace glm;
+        glUniform1f(glGetUniformLocation(raytracing_shader_program_ptr->get_ID(), "rand"), float(rand())/RAND_MAX);
+        glUniform1f(glGetUniformLocation(raytracing_shader_program_ptr->get_ID(), "time"), float(radians(glfwGetTime())));
+    }
     void raytracing_pass()
     {
         glViewport(OPENGL_VIEWPORT_X, OPENGL_VIEWPORT_Y, internal_state.RENDER_W, internal_state.RENDER_H);
         glBindFramebuffer(GL_FRAMEBUFFER, raytracing_framebuffer_ID);
         glClear(GL_COLOR_BUFFER_BIT);
         glDisable(GL_DEPTH_TEST);   
+
         glUseProgram(raytracing_shader_program_ptr->get_ID());
+
+        send_raytracing_uniforms();
         glBindVertexArray(screen_quad_vao_ID);
         glDrawArrays(GL_TRIANGLES, 0, 6);
     }

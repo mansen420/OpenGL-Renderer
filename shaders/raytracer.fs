@@ -1,4 +1,7 @@
 #version 450 core
+uniform float rand;
+uniform float time;
+
 out vec4 frag_output;
 in vec2 texture_coordinates;
 in vec2 pos_coords;
@@ -6,10 +9,16 @@ in vec2 pos_coords;
 
 struct sphere
 {
-    vec3 center;
-    float radius;
+    vec3   center;
+    float  radius;
+    vec3    color;
+    bool emissive;
 };
-
+struct light
+{
+    vec3 pos;
+    vec3 color;
+};
 struct ray
 {
     vec3 origin;
@@ -78,6 +87,7 @@ ray project_ray_perspective(camera_space cam_space, float focal_length)
     return ray(cam_space.origin, 
     normalize(cam_space.origin - cam_space.w*focal_length + cam_space.u*pos_coords.x + cam_space.v*pos_coords.y));
 }
+light LIGHT = light(vec3(1), vec3(1));
 vec3 trace(in ray r, in sphere[2] s, in int depth)
 {
     float t_min = 0, t_max = 10.0;
@@ -87,28 +97,61 @@ vec3 trace(in ray r, in sphere[2] s, in int depth)
     ray r_in = r;
     while(count++ < depth)
     {
+        bool hit_object = false;
+        float closest_intersection = t_max;
+        sphere obj;
         for(int i = 0; i < 2; ++i)
         {
             bool intersect;
-            float root = ray_sphere_intersection_root(r_in, s[i], t_min, t_max, intersect);
+            float root = ray_sphere_intersection_root(r_in, s[i], t_min, closest_intersection, intersect);
             if(intersect)
             {
-                vec3 P = extend_ray(r_in, root);
-                vec3 view_vec = cam_space.origin - P;
-                vec3 normal = P - s[i].center;
-                vec3 reflected_vec = normalize(reflect(view_vec, normal));
-                r_in = ray(r_in.origin, normalize( vec3(1.0, 1.0, 0.0) - P));
-                result = 0.5*normalize(normal)+0.5;
+                closest_intersection = root;
+                hit_object = true;
+                obj = s[i];
             }
+        }
+        if(hit_object)
+        {
+            if(obj.emissive)
+            {
+                result *= 1.0;
+                break;
+            }
+            else
+            {
+                vec3 P = extend_ray(r_in, closest_intersection);
+                vec3 n = normalize(P - obj.center);
+                result *= obj.color;
+                float intensity = dot(n, normalize(LIGHT.pos - P));
+                result *= intensity;
+                break;
+            }
+            //vec3 view_vec = P - cam_space.origin;
+            //vec3 r = normalize(reflect(-view_vec, n));
+            //r_in.direction = normalize(r); 
+        }
+        else
+        {
+            result = vec3(0.5, 0.8, 1.0);
+            //result *= mix(vec3(1.0), vec3(0.2, 0.5, 1.0), 0.5*normalize(r_in.direction).y+0.5);
+            //result *= 0;
+            break;
         }
     }
     return result;
 }
 void main()
 {
+    const float time_arg = 2*degrees(time);
+    const float time_var = (0.5*sin(2*degrees(time))+0.5);
+    const float time_neg = sin(time_arg);
     ray r = project_ray_perspective(cam_space, 1.0);
-    sphere my_s1 = sphere(vec3(0.5, 0, -1.5), 0.8);
-    sphere my_s2 = sphere(vec3(0, 0, -2), 0.8);
+
+    sphere my_s1 = sphere(vec3(1, 0.2, -4), 0.8, vec3(1), false);
+    sphere my_s2 = sphere(vec3(-0.5, 0.0, -2.0), 0.8, vec3(1,0,0), false);
+    my_s1.center += 2*vec3(0, time_neg,0);
     sphere s[2] = {my_s2, my_s1};
-    frag_output = vec4(trace(r, s, 10), 1.0);
+
+    frag_output =  vec4(trace(r, s, 1), 1.0);
 }
