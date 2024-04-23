@@ -1,14 +1,13 @@
 # C++ OpenGL Engine
 
-![Screenshot from 2024-03-12 01-00-41](https://github.com/mansen420/OpenGL-Renderer/assets/50342436/f2a6d3cb-5f1c-452c-975e-0274d295ed47)
 
-![ezgif-3-95df610dc4](https://github.com/mansen420/OpenGL-Renderer/assets/50342436/74d5e17e-4f5a-4fe6-af56-eda08ebe13b4)
+https://github.com/mansen420/OpenGL-Renderer/assets/50342436/7eb2b624-3534-4338-af53-d79fcd2f6e14
+
+
+![Screenshot from 2024-03-12 01-00-41](https://github.com/mansen420/OpenGL-Renderer/assets/50342436/f2a6d3cb-5f1c-452c-975e-0274d295ed47)
 
 [Sleeping Hermaphroditus](https://threedscans.com/uncategorized/sleeping-hermaphroditus/)
 
-![ezgif-7-dadbc90cdc](https://github.com/mansen420/OpenGL-Renderer/assets/50342436/32603ec7-2cb1-496f-ae9f-63f101c203db)
-
-[BMW M3 model](https://rigmodels.com/model.php?view=BMW_M3_Car-3d-model__99WX7I7CRTWJU9MKXT2CL412A)
 ## State of the Project
   **Heavily W.I.P**\
   Check the [dev diary](https://github.com/mansen420/OpenGL-Renderer/blob/dev/dev_diary.md) for updates on progress!
