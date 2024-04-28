@@ -11,7 +11,7 @@
 #include "read_file.h"
 #include "gl_enum_converters.h"
 //TODO add error logging for all opengl calls
-namespace renderer
+namespace engine
 {
     /*------------------------------------------------------------------------------*/
     /*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-* Global Variables *-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*/

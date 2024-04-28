@@ -13,7 +13,7 @@
 #include "global_constants.h"
 #include "read_file.h"
 #include "gl_enum_converters.h"
-using namespace renderer;
+using namespace engine;
 
 //helper functions
 bool compileShader(const shader_type_option shader, const unsigned int &shader_id, const char* shader_source)
@@ -101,7 +101,7 @@ bool shader_manager::shader_t::unroll_includes()
 {
     char* processed_source =  nullptr;
     //TODO check if this fails
-    renderer::preprocessor::process_shader(source_code.c_str(), processed_source);
+    engine::preprocessor::process_shader(source_code.c_str(), processed_source);
     source_code = std::string(processed_source);
     delete[] processed_source;
     return true;

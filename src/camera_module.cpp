@@ -2,40 +2,40 @@
 #include "global_constants.h"
 #include "camera_module.h"
 
-glm::vec3 renderer::camera::POS;
-glm::vec3 renderer::camera::UP;
-glm::vec3 renderer::camera::LOOK_AT;
+glm::vec3 engine::camera::POS;
+glm::vec3 engine::camera::UP;
+glm::vec3 engine::camera::LOOK_AT;
 
 
 static glm::vec2     velocity;
 static glm::vec2 acceleration;
 static glm::vec2   resistance;
 
-       renderer::camera::camera_parameter_t renderer::camera::CAMERA_PARAMS;
-static renderer::camera::camera_parameter_t internal_state;
+       engine::camera::camera_parameter_t engine::camera::CAMERA_PARAMS;
+static engine::camera::camera_parameter_t internal_state;
 
 static double previous_time;
 
-void renderer::camera::init()
+void engine::camera::init()
 {
     previous_time = glfwGetTime();
 
-    internal_state = renderer::camera::camera_parameter_t();
+    internal_state = engine::camera::camera_parameter_t();
 
-    renderer::camera::POS     = glm::vec3(0.f, 0.f, internal_state.DIST);
-    renderer::camera::UP      = glm::vec3(0.f, 1.f, 0.f);
-    renderer::camera::LOOK_AT = glm::vec3(0.f);
+    engine::camera::POS     = glm::vec3(0.f, 0.f, internal_state.DIST);
+    engine::camera::UP      = glm::vec3(0.f, 1.f, 0.f);
+    engine::camera::LOOK_AT = glm::vec3(0.f);
 
     velocity     = glm::vec3(0.f);
     acceleration = glm::vec3(0.f);
     resistance   = glm::vec3(0.f);
 }
-void renderer::camera::update_camera()
+void engine::camera::update_camera()
 {
     double time_interval = glfwGetTime() - previous_time;
     previous_time = glfwGetTime();
 
-    internal_state = renderer::camera::CAMERA_PARAMS;
+    internal_state = engine::camera::CAMERA_PARAMS;
 
     //*****************calculate pos*****************
     {
@@ -72,7 +72,7 @@ void renderer::camera::update_camera()
         internal_state.THETA = fmod(internal_state.THETA, 360.0);
 
         //TODO for some reason the order of matrix multiplication is significant here. Why?
-        renderer::camera::POS = (
+        engine::camera::POS = (
         glm::rotate(glm::mat4(1.0), glm::radians(internal_state.THETA), glm::vec3(0.f, 1.f, 0.f)) 
         * glm::rotate(glm::mat4(1.0), glm::radians(internal_state.PHI), glm::vec3(1.f, 0.f, 0.f)) 
         * glm::vec4(0.f, 0.f, internal_state.DIST, 1.f));
@@ -88,5 +88,5 @@ void renderer::camera::update_camera()
         velocity.y =   internal_state.DEFAULT_VELOCITY_PHI;       
     }
     //confirm state
-    renderer::camera::CAMERA_PARAMS = internal_state;
+    engine::camera::CAMERA_PARAMS = internal_state;
 }

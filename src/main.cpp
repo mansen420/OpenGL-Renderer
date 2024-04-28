@@ -21,20 +21,20 @@
 int main()
 {   
     if (!window::init()){window::terminate(); return -1;}
-    if (!renderer::init()){window::terminate(); renderer::terminate(); return-1;}
+    if (!engine::init()){window::terminate(); engine::terminate(); return-1;}
     while (!window::should_close())
     {
         window::poll_events();
 
-        renderer::update_state();
-        renderer::render_scene();
+        engine::update_state();
+        engine::render_scene();
 
         window::process_input();
         window::render_gui();
 
         window::swap_buffers();
     }
-    renderer::terminate();
+    engine::terminate();
     window::terminate();
     return 0;
 }

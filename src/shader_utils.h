@@ -2,7 +2,7 @@
 #include "engine_interface.h"
 #include <vector>
 
-namespace renderer
+namespace engine
 {
     namespace shader_manager
     {
@@ -11,19 +11,19 @@ namespace renderer
             public :
             std::string source_code;
         
-            shader_t(renderer::shader_type_option type, const char* source = nullptr);
+            shader_t(engine::shader_type_option type, const char* source = nullptr);
 
             bool load_source_from_path(const char* const filename);
             bool compile() const;
             //Note that after calling this, it becomes impossible to access the old source code.
             bool unroll_includes();
             const unsigned int get_ID()const {return ID;}
-            const renderer::shader_type_option get_type()const {return type;}
+            const engine::shader_type_option get_type()const {return type;}
             ~shader_t();
 
             private:
             
-            renderer::shader_type_option type;
+            engine::shader_type_option type;
             unsigned int ID = 0;
         };
         class shader_prg_t

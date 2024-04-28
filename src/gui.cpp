@@ -12,14 +12,14 @@ static const char* shader_filename = nullptr;
 static const char* shader_path     = nullptr;
 //TODO make this a dynamic size?
 static char shader_code_buffer[1024*16]; //16KB
-void load_and_update(const char* filename, renderer::shader_prg_option prg_type = renderer::OBJECT_SHADER, renderer::shader_type_option shader_type = renderer::FRAGMENT_SHADER)  
+void load_and_update(const char* filename, engine::shader_prg_option prg_type = engine::OBJECT_SHADER, engine::shader_type_option shader_type = engine::FRAGMENT_SHADER)  
 {
     char* source = nullptr;
-    if(!renderer::load_source(filename, source))
+    if(!engine::load_source(filename, source))
         return;
     strcpy(shader_code_buffer, source);
-    if(renderer::update_shader(prg_type, shader_type, source))
-        renderer::link_program(prg_type);
+    if(engine::update_shader(prg_type, shader_type, source))
+        engine::link_program(prg_type);
     delete[] source;
 }
 void workspace_panel()
@@ -54,7 +54,7 @@ void workspace_panel()
                 if(BeginTabItem("Rasterization"))
                 {
                     //FIXME
-                    using namespace renderer;
+                    using namespace engine;
                     Spacing();
                     SeparatorText("Render Target Framebuffer Parameters");
                     Spacing();
@@ -188,7 +188,7 @@ void workspace_panel()
                                 ENGINE_SETTINGS.SHADOW_MAP_H = h_candidate;
                             }
                         }
-                        Checkbox("Enable Shadow Pass", &renderer::ENGINE_SETTINGS.SHADOW_PASS_ENBLD);
+                        Checkbox("Enable Shadow Pass", &engine::ENGINE_SETTINGS.SHADOW_PASS_ENBLD);
                         SameLine();
                         static int current_shadow_map_projection = 0;
                         Combo("Shadow Map Projection", &current_shadow_map_projection,
@@ -196,10 +196,10 @@ void workspace_panel()
                         switch (current_shadow_map_projection)
                         {
                         case 0:
-                            renderer::ENGINE_SETTINGS.SHADOW_MAP_PROJECTION = renderer::ORTHOGRAPHIC;
+                            engine::ENGINE_SETTINGS.SHADOW_MAP_PROJECTION = engine::ORTHOGRAPHIC;
                             break;
                         case 1:
-                            renderer::ENGINE_SETTINGS.SHADOW_MAP_PROJECTION = renderer::PERSPECTIVE;
+                            engine::ENGINE_SETTINGS.SHADOW_MAP_PROJECTION = engine::PERSPECTIVE;
                         default:
                             break;
                         }
@@ -281,12 +281,12 @@ void workspace_panel()
                     {
                         {
                             std::ostringstream ss;
-                            ss << renderer::object_nr_vertices() << " Vertices";
+                            ss << engine::object_nr_vertices() << " Vertices";
                             Text(ss.str().c_str());
 
                             ss.str(std::string());
 
-                            ss << renderer::object_nr_triangles() << " Triangles";
+                            ss << engine::object_nr_triangles() << " Triangles";
                             SameLine();
                             Text(ss.str().c_str());
                         }
@@ -300,44 +300,44 @@ void workspace_panel()
                         static bool show_dimensions = false;
                         if(Button("Calculate Dimensions"))
                         {
-                            renderer::calculate_object_dimensions();
+                            engine::calculate_object_dimensions();
                             show_dimensions = true;
                         }
                         SameLine();
                         if (Button("Center"))
                         {
-                            renderer::center_object();
+                            engine::center_object();
                         }
                         static float scale;
                         if(DragFloat("Normalize Object Scale", &scale, 0.005))
                         {
-                            renderer::rescale_object(scale);
+                            engine::rescale_object(scale);
                         }
                         Spacing();
                         if (show_dimensions)
                         {
                             Text("Dimensions (before transforms) : ");SameLine();
                             std::ostringstream ss;
-                            ss << renderer::ENGINE_SETTINGS.OBJ_DIMENSIONS[0] << ' ' << renderer::ENGINE_SETTINGS.OBJ_DIMENSIONS[0]
-                            << ' ' << renderer::ENGINE_SETTINGS.OBJ_DIMENSIONS[0];
+                            ss << engine::ENGINE_SETTINGS.OBJ_DIMENSIONS[0] << ' ' << engine::ENGINE_SETTINGS.OBJ_DIMENSIONS[0]
+                            << ' ' << engine::ENGINE_SETTINGS.OBJ_DIMENSIONS[0];
                             Text(ss.str().c_str());
 
                             ss.str(std::string()); //empty stream
 
                             Text("Center (before transforms) : "); SameLine();
-                            ss << renderer::ENGINE_SETTINGS.OBJ_CENTER[0] << ' ' << renderer::ENGINE_SETTINGS.OBJ_CENTER[1]
-                            << ' ' << renderer::ENGINE_SETTINGS.OBJ_CENTER[2];
+                            ss << engine::ENGINE_SETTINGS.OBJ_CENTER[0] << ' ' << engine::ENGINE_SETTINGS.OBJ_CENTER[1]
+                            << ' ' << engine::ENGINE_SETTINGS.OBJ_CENTER[2];
                             Text(ss.str().c_str());
                         }
                     }
                     Spacing();
                     SeparatorText("Scene Parameters");
                     {
-                        DragFloat3("Light Position", glm::value_ptr(renderer::ENGINE_SETTINGS.LIGHT_POS), 0.01f);
+                        DragFloat3("Light Position", glm::value_ptr(engine::ENGINE_SETTINGS.LIGHT_POS), 0.01f);
                         Spacing();
 
                         SameLine();
-                        Checkbox("Render Ground", &renderer::ENGINE_SETTINGS.RENDER_GROUND);
+                        Checkbox("Render Ground", &engine::ENGINE_SETTINGS.RENDER_GROUND);
                         static int current_shader_option = 0;
                         if (Combo("Object Shader", &current_shader_option, 
                         "Stone\0Highlight\0Horror\0Retro\0Matte\0Shiny\0\0\0"))
@@ -380,7 +380,7 @@ void workspace_panel()
                 if(BeginTabItem("Raytracing"))
                 {
                     Spacing();
-                    Checkbox("Enable Raytracing Pass", &renderer::ENGINE_SETTINGS.RAYTRACING_ENBLED);
+                    Checkbox("Enable Raytracing Pass", &engine::ENGINE_SETTINGS.RAYTRACING_ENBLED);
                     Spacing();
 
                     EndTabItem();
@@ -408,8 +408,8 @@ void workspace_panel()
             static int shader_type_option = 0;
             static int prog_type_option   = 0;
 
-            static renderer::shader_type_option shader_type = renderer::FRAGMENT_SHADER;
-            static renderer::shader_prg_option prog_type    = renderer::OBJECT_SHADER;
+            static engine::shader_type_option shader_type = engine::FRAGMENT_SHADER;
+            static engine::shader_prg_option prog_type    = engine::OBJECT_SHADER;
 
             //FIXME quick implementation
             if (keep_file_updated && shader_path != nullptr)
@@ -419,8 +419,8 @@ void workspace_panel()
                 sstream << file_stream.rdbuf();
                 strcpy(shader_code_buffer, sstream.str().c_str());
                 file_stream.close();              
-                if (renderer::update_shader(prog_type, shader_type, shader_code_buffer))
-                    renderer::link_program(prog_type);
+                if (engine::update_shader(prog_type, shader_type, shader_code_buffer))
+                    engine::link_program(prog_type);
             }
             else if(shader_filename != nullptr)
             {
@@ -431,33 +431,33 @@ void workspace_panel()
             if (Combo("Shader Type", &shader_type_option, "Fragment Shader\0Vertex Shader\0\0\0"))
             {
                 if(shader_type_option == 0)
-                    shader_type = renderer::FRAGMENT_SHADER;
+                    shader_type = engine::FRAGMENT_SHADER;
                 if(shader_type_option == 1)
-                    shader_type = renderer::VERTEX_SHADER;
+                    shader_type = engine::VERTEX_SHADER;
                 should_load_shader = true;
             }
             SameLine();
             if (Combo("Program", &prog_type_option, "Object Shader\0Screen Shader\0Ray Tracing Shader\0\0\0"))
             {
                 if(prog_type_option == 0)
-                    prog_type = renderer::OBJECT_SHADER;
+                    prog_type = engine::OBJECT_SHADER;
                 if(prog_type_option == 1)
-                    prog_type = renderer::POSTPROCESS_SHADER;
+                    prog_type = engine::POSTPROCESS_SHADER;
                 if(prog_type_option == 2)
-                    prog_type = renderer::RAYTRACING_SHADER;
+                    prog_type = engine::RAYTRACING_SHADER;
                 should_load_shader = true;
             }
             SameLine();
             if(Button("Unroll Includes"))
             {
-                if (renderer::unroll_includes(prog_type, shader_type))
+                if (engine::unroll_includes(prog_type, shader_type))
                     should_load_shader = true;
             }
             PopItemWidth();
 
             if (should_load_shader)
             {
-                const char *shader_src = renderer::get_shader_source_reflection(prog_type, shader_type);
+                const char *shader_src = engine::get_shader_source_reflection(prog_type, shader_type);
                 strcpy(shader_code_buffer, shader_src);
                 should_load_shader = false;
             }
@@ -467,12 +467,12 @@ void workspace_panel()
             Spacing();
             if(Button("Compile"))
             {
-                renderer::update_shader(prog_type, shader_type, shader_code_buffer);
+                engine::update_shader(prog_type, shader_type, shader_code_buffer);
             }
             SameLine();
             if(Button("Link"))
             {
-                renderer::link_program(prog_type);
+                engine::link_program(prog_type);
             }
             EndTabItem();
         }
@@ -494,7 +494,7 @@ void conditional_gui()
         {
             if(load_obj_path)
             {
-                renderer::ENGINE_SETTINGS.OBJECT_PATH = window::file_dialog.GetSelected();
+                engine::ENGINE_SETTINGS.OBJECT_PATH = window::file_dialog.GetSelected();
                 load_obj_path = false;
             }
             else if(load_shader_path)

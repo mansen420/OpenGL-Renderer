@@ -127,11 +127,11 @@ bool internal_process_shader(const char* source, char* &processed_source_holder,
     log_file  << preprocessor_log.rdbuf() << std::endl;
     return true;
 }    
-bool renderer::preprocessor::process_shader(const char* source, char* &processed_source_holder)
+bool engine::preprocessor::process_shader(const char* source, char* &processed_source_holder)
 {
     return internal_process_shader(source, processed_source_holder);
 }
-void renderer::preprocessor::write_unrolled_shaders()
+void engine::preprocessor::write_unrolled_shaders()
 {
     std::string read_dir_path = SHADER_DIR_PATH;
 
@@ -147,7 +147,7 @@ void renderer::preprocessor::write_unrolled_shaders()
             continue;
 
         char* processed_shader = nullptr;
-        if(!renderer::preprocessor::process_shader(source, processed_shader))
+        if(!engine::preprocessor::process_shader(source, processed_shader))
             continue;
 
         delete[] source;

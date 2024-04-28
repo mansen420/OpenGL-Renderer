@@ -1,6 +1,6 @@
 #pragma once
 #include "glm/glm.hpp"
-namespace renderer
+namespace engine
 {
     namespace camera
     {

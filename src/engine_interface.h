@@ -7,7 +7,7 @@
 
 #include <string> 
 
-namespace renderer
+namespace engine
 {
     enum shader_prg_option
     {

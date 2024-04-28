@@ -1,7 +1,7 @@
 #pragma once
 
 /// @brief Core engine module
-namespace renderer
+namespace engine
 { //TODO this defines the public interface to the event handler.
 
     void terminate();
