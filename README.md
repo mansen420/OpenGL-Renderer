@@ -3,6 +3,7 @@
 
 https://github.com/mansen420/OpenGL-Renderer/assets/50342436/7eb2b624-3534-4338-af53-d79fcd2f6e14
 
+[Head of Saint John the Baptist](https://threedscans.com/bode-museum/haupt-johannes-des-taufers-in-einer-schussel/)
 
 ![Screenshot from 2024-03-12 01-00-41](https://github.com/mansen420/OpenGL-Renderer/assets/50342436/f2a6d3cb-5f1c-452c-975e-0274d295ed47)
 
