@@ -16,7 +16,6 @@ static renderer::camera::camera_parameter_t internal_state;
 
 static double previous_time;
 
-//TODO find a way to synchronize camera movement. preferable synchronize it to system time.
 void renderer::camera::init()
 {
     previous_time = glfwGetTime();

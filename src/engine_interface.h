@@ -1,5 +1,6 @@
 #pragma once
 
+//TODO the biggest problem with the engine interface is the glm include. We shouldn't include this here. ever.
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
@@ -132,13 +133,10 @@ namespace renderer
             RAYTRACING_ENBLED = false;
         }
     };
+    //Global engine settings.
+    //Any parameters changed here will be reflected in the engine upon the next call to update_state()
     extern engine_state_t ENGINE_SETTINGS;
 
-    //TODO should state be manipulated by variables? or functions?
-    //if state is manipulated by varaibles, that is more straightforward,
-    //and we do not need to provide read-only access to state.
-    //if state is manipulated by functions, we do not have to sync internal and external data...
-    
     namespace camera
     {
         struct camera_parameter_t
@@ -183,14 +181,23 @@ namespace renderer
         };
         extern camera_parameter_t CAMERA_PARAMS;
     }
-
+    
+    //Returns the number of vertices of the object currently being rendered.
     size_t object_nr_vertices();
+    //Returns the number of triangles of the object currently being rendered.
     size_t object_nr_triangles();   
+    //Internally calculates object dimensions.
+    //TODO this should be done automatically at a slight performance cost.
     void calculate_object_dimensions();
+    //Attempts to place the object being currently rendered at the origin of the world.
+    //It does this by displacing the object by the negative of its average distance from the origin for every axis. 
     void center_object();
+    //Scales the size of the object being currently rendered with relation to 1 unit in the world,
+    //i.e., a scale of 2 will resize any object such that its longest axis is equal to 2 units in the world space.
     void rescale_object(float scale);
 
     //TODO improve shader public interface
+    //comment from future me : How? If only past me was kind enough to mention what he meant here
 
     //Returns const internal source data of specified shader.
     const char* get_shader_source_reflection(shader_prg_option program_type, shader_type_option shader_type);
@@ -213,9 +220,11 @@ namespace renderer
     //Initializes internal engine state. Call this only once, and only after you call window::init.
     int          init();
     //Frees resources. Call this only once, and only after renderer::init.
+    //TODO make sure calling init() after terminate() is a valid operation.
     void    terminate();
     //Invokes OpenGL pipeline.
     void render_scene();
-    //Updates internal engine state. Call this once per frame, or whenever engine parameters change.
+    //Updates internal engine state. 
+    //Call this once per frame, or whenever engine parameters change, at your convenience.
     void update_state();
 }

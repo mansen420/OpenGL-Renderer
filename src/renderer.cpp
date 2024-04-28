@@ -2,12 +2,12 @@
 #include "global_constants.h"
 #include <algorithm>        //for std::clamp
 #include <map>
-#include "shader_utils.h"
-#include "object_interface.h"
-#include "camera_module.h"
 #include <fstream>
 #include <thread>
 #include <filesystem>
+#include "shader_utils.h"
+#include "object_interface.h"
+#include "camera_module.h"
 #include "read_file.h"
 #include "gl_enum_converters.h"
 //TODO add error logging for all opengl calls
@@ -220,7 +220,6 @@ namespace renderer
         return true;
     }
     
-    //TODO make these return size_t 
     void calculate_object_dimensions()
     {
         obj_ptr->calculate_dimensions();

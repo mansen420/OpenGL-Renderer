@@ -100,6 +100,7 @@ bool shader_manager::shader_t::compile() const{return compileShader(type, ID, so
 bool shader_manager::shader_t::unroll_includes()
 {
     char* processed_source =  nullptr;
+    //TODO check if this fails
     renderer::preprocessor::process_shader(source_code.c_str(), processed_source);
     source_code = std::string(processed_source);
     delete[] processed_source;
