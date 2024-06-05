@@ -10,8 +10,8 @@ https://github.com/mansen420/OpenGL-Renderer/assets/50342436/7eb2b624-3534-4338-
 [Sleeping Hermaphroditus](https://threedscans.com/uncategorized/sleeping-hermaphroditus/)
 
 ## State of the Project
-  **Heavily W.I.P**\
-  Check the [dev diary](https://github.com/mansen420/OpenGL-Renderer/blob/dev/dev_diary.md) for updates on progress!
+ This engine is not being devloped anymore.\
+ Instead, I decided to develop an engine with Vulkan instead of OpenGL, track progress [here!](https://github.com/mansen420/vulkan_my_impl)
   
   #### Features 
   - [x]  Runtime shader editing
@@ -30,7 +30,7 @@ https://github.com/mansen420/OpenGL-Renderer/assets/50342436/7eb2b624-3534-4338-
 ## Dependencies
   This project uses cmake as its build system, so you should have it installed.\
   Additionally, you should have all the [dependencies required for GLFW](https://www.glfw.org/docs/3.3/compile.html#compile_deps).\
-  Also, your system should support OpenGL 4.5+.
+  Also, your system should support OpenGL 4.5.
 ## Building this project
   Provided that you have cmake installed, building this project is the following process :
 
@@ -63,7 +63,6 @@ This will compile and link with the GLFW library, and generate an executable cal
 This project is **heavily a work in progress** and so far is only maintained for Linux. \
 GCC compiles the project with no issue. The Visual Studio compiler is known to throw many errors.
 We have not tested with MinGW, but you can try compiling with it if you are on Windows. \
-Whether or not it will compile for macOS, I do not know.
 
 
 In any case, this project is still in very early development, and we will consider extending support for more systems once the project reaches a mature state. 
